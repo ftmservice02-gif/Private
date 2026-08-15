@@ -1,0 +1,283 @@
+<meta charset="utf-8" />
+<title>IT Project Board — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared/styles.css" />
+
+<button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
+</button>
+
+<div class="shell">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-top">
+        <span class="sb-top-label" data-i18n="sb.workspace">Workspace</span>
+        <div class="sb-top-icons">
+          <button class="sb-icon-btn" data-toast="เมนูเพิ่มเติมยังไม่เปิดใช้งานในตัวอย่างนี้" aria-label="เมนู">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+          </button>
+          <button class="sb-icon-btn" id="sidebarCollapseBtn" aria-label="ย่อแถบด้านข้าง">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 6l-6 6 6 6M18 6l-6 6 6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sb-logo-row">
+        <div class="sb-logo-badge">
+          <img src="fatima-logo.svg?v=3" alt="Fatima" />
+        </div>
+      </div>
+      <div class="sb-workspace-row" data-toast="สลับ workspace ยังไม่เปิดใช้งานในตัวอย่างนี้">
+        <div class="sb-workspace-text">
+          <div class="sb-workspace-name" id="sbWorkspaceName" data-i18n="sb.mainWorkspace">Fatima workspace</div>
+          <div class="sb-workspace-caption" data-i18n="sb.caption">Project management</div>
+        </div>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="color:var(--sb-text-faint);flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <button class="sb-add-workspace" data-toast="เพิ่ม workspace ใหม่ยังไม่เปิดใช้งานในตัวอย่างนี้" style="display:none;" aria-label="เพิ่ม workspace"></button>
+      <div class="sb-divider"></div>
+
+      <div class="sb-section-label" id="sbContentLabel">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
+        <span data-i18n="sb.content">Content</span>
+      </div>
+      <div class="sb-nav-list" id="sbNavList">
+        <a class="sb-nav-item" data-view="workspace" href="workspace.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span data-i18n="sb.manageWorkspace">Manage workspace</span>
+        </a>
+        <a class="sb-nav-item" data-view="users" href="users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
+          <span data-i18n="sb.manageUsers">Manage users</span>
+        </a>
+        <a class="sb-nav-item" data-view="board" id="sbBoardLink" href="board.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>
+          <span id="sbBoardLabel">Test Project</span>
+        </a>
+        <a class="sb-nav-item" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>
+          <span data-i18n="sb.dashboard">Dashboard and reporting</span>
+        </a>
+      </div>
+
+      <div class="sb-spacer"></div>
+
+      <div class="sb-auth-row">
+        <span class="sb-auth-name" id="sbAuthName"></span>
+        <button class="sb-logout-btn" id="sbLogoutBtn" data-i18n="auth.logout" type="button">Log out</button>
+      </div>
+
+      <button class="lang-toggle-btn" id="langToggleBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 4 6 4 9s-1.5 6.3-4 9c-2.5-2.7-4-6-4-9s1.5-6.3 4-9z"/></svg>
+        <span id="langToggleLabel">ไทย</span>
+      </button>
+
+      <div class="sb-progress-card">
+        <div class="sb-progress-label" data-i18n="sb.progressLabel">Project progress</div>
+        <div class="sb-progress-pct" id="sbProgressPct">0%</div>
+        <div class="sb-progress-sub" id="sbProgressSub"></div>
+        <a class="sb-progress-btn" id="sbProgressBtn" href="dashboard.html" data-i18n="sb.progressBtn">View details</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Main area ============ -->
+  <div class="main-area" id="mainArea">
+    <div class="view-panel active" id="dashboardView">
+      <div class="db-breadcrumb">
+        <a href="workspace.html" data-i18n="ws.content">Content</a> / <span data-i18n="sb.dashboard">Dashboard and reporting</span>
+      </div>
+      <h1 class="db-title" data-i18n="sb.dashboard">Dashboard and reporting</h1>
+      <div class="db-sub" id="dbSub"></div>
+      <div class="db-duration-card" id="dbDuration"></div>
+      <div class="db-tiles" id="dbTiles"></div>
+      <div class="db-bar-wrap">
+        <div class="db-bar-label"><span data-i18n="db.statusBreakdown">Status breakdown</span></div>
+        <div class="db-stack-bar" id="dbStackBar"></div>
+        <div class="db-legend" id="dbLegend"></div>
+      </div>
+      <div id="dbGroupList"></div>
+      <div class="db-gantt-wrap">
+        <div class="db-bar-label"><span data-i18n="db.gantt">Gantt chart — activity timeline</span></div>
+        <div class="db-gantt" id="dbGantt"></div>
+      </div>
+    </div>
+  </div>
+  <!-- /main-area -->
+</div>
+<!-- /shell -->
+
+<div class="toast" id="toast"></div>
+
+<script src="shared/shared.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PM = window.PM;
+
+  function esc(s) { return PM.esc(s); }
+  function tr(key) { return PM.tr(key); }
+  function statusLabel(k) { return PM.statusLabel(k); }
+  function fmtDate(s) { return PM.fmtDate(s); }
+  function todayIso() { return PM.todayIso(); }
+  function daysBetweenInclusive(a, b) { return PM.daysBetweenInclusive(a, b); }
+  function taskDurationDays(t) { return PM.taskDurationDays(t); }
+  function taskDurationPct(t, total) { return PM.taskDurationPct(t, total); }
+  function projectDateBounds() { return PM.projectDateBounds(); }
+
+  function dbTile(num, label, cls) {
+    return '<div class="db-tile ' + cls + '"><div class="db-tile-num">' + num + '</div><div class="db-tile-label">' + label + '</div></div>';
+  }
+
+  // Prefers the manually-set Total project days budget (from the Board toolbar) as the
+  // headline number, falling back to the calendar span of task dates when no budget is set.
+  function renderProjectDuration() {
+    var el = document.getElementById("dbDuration");
+    var bounds = projectDateBounds();
+    var budget = PM.state.totalDaysBudget;
+    if (!bounds && !budget) {
+      el.innerHTML = '<div class="db-gantt-empty">' + esc(tr("db.noTimeline")) + '</div>';
+      return;
+    }
+    var totalDays = budget || daysBetweenInclusive(bounds.start, bounds.end);
+    var elapsed = 0;
+    if (bounds) {
+      var today = todayIso();
+      var clampedToday = today < bounds.start ? bounds.start : today;
+      elapsed = Math.max(0, daysBetweenInclusive(bounds.start, clampedToday));
+    }
+    var pct = totalDays ? Math.min(100, Math.round((elapsed / totalDays) * 100)) : 0;
+    var headLabel = tr("db.projectDuration") + (bounds ? " · " + fmtDate(bounds.start) + " – " + fmtDate(bounds.end) : "");
+    var subLabel = PM.lang === "th"
+      ? ("วันที่ " + elapsed + " จาก " + totalDays + " วัน · ผ่านไปแล้ว " + pct + "%")
+      : ("Day " + elapsed + " of " + totalDays + " · " + pct + "% elapsed");
+    el.innerHTML =
+      '<div class="db-duration-num">' + totalDays + '<small>' + esc(tr("db.days")) +
+        (budget ? ' · ' + esc(tr("db.budgetTag")) : '') + '</small></div>' +
+      '<div class="db-duration-meta">' +
+        '<div class="db-duration-range">' + esc(headLabel) + '</div>' +
+        '<div class="db-duration-track"><div class="db-duration-fill" style="width:' + pct + '%;"></div></div>' +
+        '<div class="db-duration-sub">' + esc(subLabel) + '</div>' +
+      '</div>';
+  }
+
+  function renderGanttChart() {
+    var el = document.getElementById("dbGantt");
+    var bounds = projectDateBounds();
+    if (!bounds || !PM.state.tasks.length) {
+      el.innerHTML = '<div class="db-gantt-empty">' + esc(tr("db.noTimeline")) + '</div>';
+      return;
+    }
+    var totalDays = daysBetweenInclusive(bounds.start, bounds.end);
+    var todayPct = PM.pctFromStart(todayIso(), bounds, totalDays);
+    var todayLine = todayPct !== null ? '<div class="db-gantt-today-line" style="left:' + todayPct + '%;"></div>' : "";
+
+    var scaleHtml = '<div class="db-gantt-scale"><div class="db-gantt-scale-label"></div>' +
+      '<div class="db-gantt-scale-track">' +
+        PM.monthTicks(bounds).map(function (m) { return '<div class="db-gantt-tick" style="left:' + m.pct + '%;">' + esc(m.label) + '</div>'; }).join("") +
+      '</div></div>';
+
+    var rowsHtml = PM.state.groups.map(function (g) {
+      var gTasks = PM.state.tasks.filter(function (t) { return t.groupId === g.id; });
+      if (!gTasks.length) return "";
+      var rows = gTasks.map(function (t) {
+        var pos = PM.barPosition(t, bounds, totalDays);
+        var durDays = taskDurationDays(t);
+        var durPct = taskDurationPct(t, totalDays);
+        var dayWord = PM.lang === "th" ? "วัน" : (durDays === 1 ? "day" : "days");
+        var pctWord = PM.lang === "th" ? "ของระยะเวลาโครงการ" : "of project duration";
+        var bar = pos
+          ? '<div class="db-gantt-bar status-' + t.status + '" style="left:' + pos.left + '%;width:' + pos.width + '%;" title="' +
+              esc(t.name) + ' — ' + durDays + ' ' + dayWord + ' (' + durPct + '% ' + pctWord + ')">' +
+              '<span>' + durDays + (PM.lang === "th" ? "ว" : "d") + '</span>' +
+              (pos.width > 10 ? '<span class="db-gantt-bar-pct">' + durPct + '%</span>' : '') +
+            '</div>'
+          : "";
+        return '<div class="db-gantt-row"><div class="db-gantt-row-label" title="' + esc(t.name) + '">' + esc(t.name) + '</div>' +
+          '<div class="db-gantt-track">' + todayLine + bar + '</div></div>';
+      }).join("");
+      return '<div class="db-gantt-group-head" style="color:' + g.color + ';">' + esc(g.name) + '</div>' + rows;
+    }).join("");
+
+    el.innerHTML = scaleHtml + '<div class="db-gantt-body">' + rowsHtml + '</div>';
+  }
+
+  function renderDashboard() {
+    var counts = { not_started: 0, working: 0, stuck: 0, done: 0 };
+    PM.state.tasks.forEach(function (t) { counts[t.status] = (counts[t.status] || 0) + 1; });
+    var total = PM.state.tasks.length;
+
+    var titleText = PM.state.title || "Untitled project";
+    document.getElementById("dbSub").textContent = PM.lang === "th"
+      ? (total + " งาน ในทั้งหมด " + PM.state.groups.length + " กลุ่ม ของ “" + titleText + "”")
+      : (total + " task" + (total === 1 ? "" : "s") + " across " + PM.state.groups.length + " group" + (PM.state.groups.length === 1 ? "" : "s") + " in “" + titleText + "”");
+
+    document.getElementById("dbTiles").innerHTML =
+      dbTile(total, tr("db.totalTasks"), "") +
+      dbTile(counts.not_started, statusLabel("not_started"), "") +
+      dbTile(counts.working, statusLabel("working"), "working") +
+      dbTile(counts.stuck, statusLabel("stuck"), "stuck") +
+      dbTile(counts.done, statusLabel("done"), "done");
+
+    var segs = [
+      { key: "done", color: "var(--done-bg)", n: counts.done },
+      { key: "working", color: "var(--working-bg)", n: counts.working },
+      { key: "stuck", color: "var(--stuck-bg)", n: counts.stuck },
+      { key: "not_started", color: "var(--notstarted-bg)", n: counts.not_started }
+    ];
+    document.getElementById("dbStackBar").innerHTML = total ? segs.map(function (s) {
+      var pct = (s.n / total) * 100;
+      return pct > 0 ? '<div class="db-stack-seg" style="width:' + pct + '%;background:' + s.color + ';"></div>' : '';
+    }).join("") : "";
+    document.getElementById("dbLegend").innerHTML = segs.map(function (s) {
+      return '<div class="db-legend-item"><span class="db-legend-dot" style="background:' + s.color + ';"></span>' +
+        statusLabel(s.key) + ' (' + s.n + ')</div>';
+    }).join("");
+
+    document.getElementById("dbGroupList").innerHTML = PM.state.groups.map(function (g) {
+      var gTasks = PM.state.tasks.filter(function (t) { return t.groupId === g.id; });
+      var gDone = gTasks.filter(function (t) { return t.status === "done"; }).length;
+      var pct = gTasks.length ? Math.round((gDone / gTasks.length) * 100) : 0;
+      return '<div class="db-group-row">' +
+        '<div class="db-group-name" style="color:' + g.color + ';">' + esc(g.name) + '</div>' +
+        '<div class="db-group-track"><div class="db-group-fill" style="width:' + pct + '%;background:' + g.color + ';"></div></div>' +
+        '<div class="db-group-frac">' + gDone + ' / ' + gTasks.length + '</div>' +
+      '</div>';
+    }).join("");
+
+    renderProjectDuration();
+    renderGanttChart();
+  }
+
+  function render() {
+    renderDashboard();
+    PM.syncSidebarLinks();
+    PM.renderSidebarProgress();
+  }
+
+  // ---------------- init ----------------
+  // Gated: nothing else runs until the session is confirmed valid server-side.
+
+  PM.requireAuth().then(function () {
+    PM.resolveProjectId();
+    PM.state = PM.loadCachedState() || PM.seedState();
+    PM.initSidebar("dashboard", render);
+    render();
+
+    var idOrNull = PM.currentProjectId || null;
+    PM.fetchProjectState(idOrNull).then(function (data) {
+      PM.state = data;
+      if (!PM.currentProjectId && data.id) {
+        PM.currentProjectId = data.id;
+        try { localStorage.setItem(PM.CURRENT_PROJECT_KEY, data.id); } catch (e) {}
+      }
+      render();
+    }).catch(function () {
+      PM.showToast("Offline — using local data (API unreachable)");
+    });
+  }).catch(function () {}); // requireAuth already redirected to login.html
+})();
+</script>

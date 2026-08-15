@@ -1,0 +1,204 @@
+<meta charset="utf-8" />
+<title>IT Project Board — Log In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared/styles.css" />
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo-row">
+      <img src="fatima-logo.svg?v=3" alt="Fatima" />
+    </div>
+
+    <!-- ============ Setup mode: shown only when the workspace has zero users ============ -->
+    <div class="auth-mode" id="setupMode">
+      <h1 class="auth-title" data-i18n="auth.setupTitle">Create the admin account</h1>
+      <p class="auth-intro" data-i18n="auth.setupIntro">No users yet — create the first admin account to get started.</p>
+      <div id="setupError"></div>
+      <form id="setupForm">
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.setupName">Your name</label>
+          <input type="text" class="auth-input" id="setupName" required autocomplete="name" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.setupEmail">Email</label>
+          <input type="email" class="auth-input" id="setupEmail" required autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.setupPassword">Choose a password</label>
+          <input type="password" class="auth-input" id="setupPassword" required minlength="6" autocomplete="new-password" />
+          <div class="auth-hint" data-i18n="auth.passwordHint">At least 6 characters</div>
+        </div>
+        <button type="submit" class="auth-btn" id="setupSubmitBtn" data-i18n="auth.setupBtn">Create account &amp; log in</button>
+      </form>
+    </div>
+
+    <!-- ============ Login mode ============ -->
+    <div class="auth-mode" id="loginMode">
+      <h1 class="auth-title" data-i18n="auth.title">Log in</h1>
+      <div id="loginError"></div>
+      <form id="loginForm">
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.identifier">Name or email</label>
+          <input type="text" class="auth-input" id="loginIdentifier" required autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.password">Password</label>
+          <input type="password" class="auth-input" id="loginPassword" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="auth-btn" id="loginSubmitBtn" data-i18n="auth.loginBtn">Log in</button>
+      </form>
+      <div class="auth-footer">
+        <button type="button" id="showClaimBtn" data-i18n="auth.claimLink">First time here? Set up your password</button>
+      </div>
+    </div>
+
+    <!-- ============ Claim mode: set a first password for an account added via Manage users ============ -->
+    <div class="auth-mode" id="claimMode">
+      <h1 class="auth-title" data-i18n="auth.claimTitle">Set up your password</h1>
+      <p class="auth-intro" data-i18n="auth.claimIntro">If an admin already added you in Manage users, claim your account here.</p>
+      <div id="claimError"></div>
+      <form id="claimForm">
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.claimIdentifier">Your name or email</label>
+          <input type="text" class="auth-input" id="claimIdentifier" required autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.claimEmail">Email (optional, if not set yet)</label>
+          <input type="email" class="auth-input" id="claimEmail" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" data-i18n="auth.claimPassword">Choose a password</label>
+          <input type="password" class="auth-input" id="claimPassword" required minlength="6" autocomplete="new-password" />
+          <div class="auth-hint" data-i18n="auth.passwordHint">At least 6 characters</div>
+        </div>
+        <button type="submit" class="auth-btn" id="claimSubmitBtn" data-i18n="auth.claimBtn">Set password &amp; log in</button>
+      </form>
+      <div class="auth-footer">
+        <button type="button" id="showLoginBtn" data-i18n="auth.backToLogin">Back to log in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="shared/shared.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PM = window.PM;
+  PM.applyI18n();
+
+  function tr(key) { return PM.tr(key); }
+  function nextUrl() {
+    var url = new URL(window.location.href);
+    return url.searchParams.get("next") || "workspace.html";
+  }
+
+  function showMode(id) {
+    document.querySelectorAll(".auth-mode").forEach(function (el) { el.classList.toggle("active", el.id === id); });
+  }
+  function showError(containerId, message) {
+    document.getElementById(containerId).innerHTML = message ? '<div class="auth-error">' + PM.esc(message) + '</div>' : "";
+  }
+  function setBusy(btn, busy, busyLabel, idleKey) {
+    btn.disabled = busy;
+    btn.textContent = busy ? busyLabel : tr(idleKey);
+  }
+
+  function afterLogin(data) {
+    PM.setAuthSession(data.token, data.user);
+    window.location.href = nextUrl();
+  }
+
+  // ---------------- setup (first admin) ----------------
+
+  document.getElementById("setupForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("setupSubmitBtn");
+    showError("setupError", "");
+    var name = document.getElementById("setupName").value.trim();
+    var email = document.getElementById("setupEmail").value.trim();
+    var password = document.getElementById("setupPassword").value;
+    setBusy(btn, true, tr("auth.loggingIn"), "auth.setupBtn");
+    fetch(PM.API_BASE + "/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, email: email, role: "admin", password: password })
+    })
+      .then(function (r) { return r.json().then(function (body) { if (!r.ok) throw new Error(body.error || tr("auth.genericError")); return body; }); })
+      .then(function () {
+        return fetch(PM.API_BASE + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: email, password: password })
+        });
+      })
+      .then(function (r) { return r.json().then(function (body) { if (!r.ok) throw new Error(body.error || tr("auth.genericError")); return body; }); })
+      .then(afterLogin)
+      .catch(function (err) { showError("setupError", err.message); setBusy(btn, false, "", "auth.setupBtn"); });
+  });
+
+  // ---------------- login ----------------
+
+  document.getElementById("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("loginSubmitBtn");
+    showError("loginError", "");
+    var identifier = document.getElementById("loginIdentifier").value.trim();
+    var password = document.getElementById("loginPassword").value;
+    setBusy(btn, true, tr("auth.loggingIn"), "auth.loginBtn");
+    fetch(PM.API_BASE + "/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: identifier, password: password })
+    })
+      .then(function (r) { return r.json().then(function (body) { if (!r.ok) throw new Error(body.error || tr("auth.genericError")); return body; }); })
+      .then(afterLogin)
+      .catch(function (err) { showError("loginError", err.message); setBusy(btn, false, "", "auth.loginBtn"); });
+  });
+
+  document.getElementById("showClaimBtn").addEventListener("click", function () {
+    showError("loginError", "");
+    showMode("claimMode");
+  });
+  document.getElementById("showLoginBtn").addEventListener("click", function () {
+    showError("claimError", "");
+    showMode("loginMode");
+  });
+
+  // ---------------- claim (set first password on an existing passwordless account) ----------------
+
+  document.getElementById("claimForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("claimSubmitBtn");
+    showError("claimError", "");
+    var identifier = document.getElementById("claimIdentifier").value.trim();
+    var email = document.getElementById("claimEmail").value.trim();
+    var password = document.getElementById("claimPassword").value;
+    setBusy(btn, true, tr("auth.loggingIn"), "auth.claimBtn");
+    fetch(PM.API_BASE + "/auth/claim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: identifier, email: email, password: password })
+    })
+      .then(function (r) { return r.json().then(function (body) { if (!r.ok) throw new Error(body.error || tr("auth.genericError")); return body; }); })
+      .then(afterLogin)
+      .catch(function (err) { showError("claimError", err.message); setBusy(btn, false, "", "auth.claimBtn"); });
+  });
+
+  // ---------------- init: already logged in? go straight through. otherwise
+  // decide whether to show first-run setup or the normal login form. ----------------
+
+  if (PM.getAuthToken()) {
+    PM.requireAuth().then(function () { window.location.href = nextUrl(); }).catch(function () {});
+  }
+
+  fetch(PM.API_BASE + "/auth/bootstrap-check")
+    .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); })
+    .then(function (data) { showMode(data.needsSetup ? "setupMode" : "loginMode"); })
+    .catch(function () { showMode("loginMode"); });
+})();
+</script>

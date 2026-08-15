@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+jsdomtest/node_modules/
+
+# Secrets / environment
+.env
+.env.*
+server/.env
+
+# Logs
+*.log
+logs/
+.pm2/
+
+# OS cruft
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
