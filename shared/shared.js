@@ -30,21 +30,48 @@
   PM.I18N = {
     en: {
       "sb.workspace": "Workspace", "sb.mainWorkspace": "Fatima workspace", "sb.myAgents": "My agents",
+      "sb.notifications": "Notifications", "sb.markAllRead": "Mark all read", "sb.noNotifications": "No notifications yet",
+      "sb.mentionMessage": "{name} mentioned you in \"{task}\": {excerpt}",
       "sb.content": "Content", "sb.manageWorkspace": "Manage workspace", "sb.dashboard": "Dashboard and reporting",
-      "sb.manageUsers": "Manage users",
-      "sb.caption": "Project management", "sb.progressLabel": "Project progress", "sb.progressBtn": "View details",
+      "sb.manageUsers": "Manage users", "sb.documentData": "Document DATA",
+      "doc.fileName": "File name", "doc.fromTask": "From task", "doc.postedBy": "Posted by",
+      "doc.empty": "No files attached to any update in this project yet.",
+      "doc.noTask": "Unfiled",
+      "doc.statFiles": "Files", "doc.statFolders": "Folders", "doc.statProjects": "Projects",
+      "doc.stuckFolderName": "Problems & Obstacles",
+      "sb.caption": "Project management", "sb.progressLabel": "Your progress", "sb.progressBtn": "View details",
+      "sb.progressLabelProject": "This project's progress", "sb.progressLabelAll": "All your projects' progress",
       "sb.progressSub": "{done}/{total} tasks completed",
       "ws.addDescription": "Add workspace description", "ws.feedback": "Feedback", "ws.agents": "Agents",
       "ws.members": "Members", "ws.recents": "Recents", "ws.content": "Content", "ws.collaborators": "Collaborators",
-      "ws.permissions": "Permissions", "ws.aiCredits": "AI credits won't be charged", "ws.filters": "Filters",
+      "ws.permissions": "Permissions", "ws.permNote": "Roles are managed from Manage users.",
+      "ws.permDenied": "Admin access is required to view Permissions.",
+      "ws.aiCredits": "AI credits won't be charged", "ws.filters": "Filters",
       "ws.newProject": "New project", "ws.newProjectPrompt": "Project name",
+      "ws.newProjectPanelTitle": "New project", "ws.projectNameLabel": "Project name",
+      "ws.createProject": "Create project", "ws.projectNameRequired": "Enter a project name first",
+      "ws.importLabel": "Import from Excel, Microsoft Project XML, or PDF (optional)",
+      "ws.importHint": "Click to choose a .xlsx, .xls, MS Project XML (.xml), or text-based .pdf file",
+      "ws.importParsing": "Reading file…",
+      "ws.importSummary": "Found {groups} group(s), {tasks} task(s), {subitems} subitem(s)",
+      "ws.importSummaryOcr": " — some pages had no text layer and were read with OCR; please double-check names, dates, and owners before creating.",
+      "ws.importSkippedPages": " ({skipped} of {total} page(s) couldn't be read and were skipped)",
+      "ws.importOcrProgress": "No text layer on page {page}/{total} — reading it with OCR (this can take a while)…",
+      "ws.importError": "Could not read this file",
+      "ws.importPdfScannedError": "Could not find any readable text on this PDF, even after trying OCR — the pages may be blank or too low-quality to read. Try a clearer scan, or export as Excel/XML instead.",
+      "ws.importStillParsing": "Still reading the file — please wait",
+      "ws.importedGroupName": "Imported tasks", "ws.importedTaskName": "Imported task",
+      "ws.createProjectError": "Could not create project",
+      "ws.deleteProject": "Delete project",
+      "ws.deleteProjectConfirm": "Delete project \"{name}\"? This permanently removes every task, subitem, and update in it. This cannot be undone.",
+      "ws.projectDeleted": "Project deleted", "ws.deleteProjectError": "Could not delete project",
       "ws.membersPanelTitle": "Workspace members",
       "ws.addMemberNamePlaceholder": "Full name", "ws.addMemberEmailPlaceholder": "email@company.com",
       "ws.addMemberBtn": "Add",
-      "ws.noCleanup": "No cleanup suggestions found", "ws.cleanupMode": "Cleanup mode",
       "ws.assetName": "Asset name", "ws.aiSummary": "AI summary", "ws.creator": "Creator",
       "ws.creationDate": "Creation date", "ws.lastModified": "Last modified", "ws.folder": "Folder",
       "ws.noAssetsMatch": "No assets match your search.",
+      "ws.collabNoProject": "Open a project first to see its collaborators.",
       "db.statusBreakdown": "Status breakdown", "db.totalTasks": "Total tasks",
       "db.summary": "{n} task{s} across {g} group{gs} in “{title}”",
       "db.projectDuration": "Project duration", "db.days": "days", "db.budgetTag": "budget",
@@ -53,16 +80,22 @@
       "tb.aiSuggestions": "AI suggestions", "tb.new": "New", "tb.integrate": "Integrate", "tb.automate": "Automate",
       "tb.invite": "Invite", "tab.mainTable": "Main table",
       "tb.invitePanelTitle": "Invite to this project", "tb.inviteHint": "Pick who can see and edit this board",
-      "tb.inviteAdd": "Invite", "tb.inviteRemove": "Remove", "tb.inviteAdded": "Added to project",
+      "tb.inviteAdd": "Invite", "tb.inviteRemove": "Remove", "tb.inviteAdded": "Added to project — invite email sent",
       "tb.inviteRemoved": "Removed from project", "tb.inviteError": "Could not update project members",
       "toolbar.newTask": "New task", "toolbar.person": "Person", "toolbar.filter": "Filter", "toolbar.sort": "Sort",
-      "toolbar.hide": "Hide", "toolbar.groupBy": "Group by", "toolbar.hideColumns": "Hide columns",
+      "toolbar.hide": "Hide", "toolbar.hideColumns": "Hide columns",
       "topmenu.boardData": "Board data", "topmenu.loadSample": "Load sample project", "topmenu.resetBoard": "Reset board (clear all)",
       "common.search": "Search",
       "col.task": "Task", "col.owner": "Owner", "col.status": "Status", "col.dueDate": "Due date",
-      "col.timeline": "Timeline", "col.priority": "Priority", "col.subitem": "Subitem", "col.date": "Date",
+      "col.timeline": "Timeline", "col.priority": "Priority", "col.folder": "Folder", "col.subitem": "Subitem", "col.date": "Date",
       "board.addTask": "Add task", "board.addSubitem": "Add subitem",
       "board.taskPlaceholder": "Task name", "board.subitemPlaceholder": "Subitem name", "board.assignOwner": "Assign owner",
+      "board.assignFolder": "Set folder", "board.unassignedFolder": "No folder", "board.createFolder": "Create \"{name}\"",
+      "board.rootFolder": "All folders", "board.selectFolder": "Use \"{name}\"", "board.openSubfolder": "Open subfolder",
+      "board.folderCreateHint": "Type a name above and hit Create to add a new folder here.",
+      "board.addSubfolderHere": "Add subfolder here", "board.addingUnder": "Adding inside \"{name}\"",
+      "board.addTaskTo": "Add task to group", "board.newGroup": "New group", "board.noGroupsYet": "No groups yet",
+      "board.unassigned": "Unassigned", "board.noProjectMembers": "No project members yet — invite people first.",
       "board.setDates": "Set dates", "board.daysSelected": "days selected",
       "board.overdueBy": "{n} day{s} overdue",
       "board.totalDaysLabel": "Total project days",
@@ -70,15 +103,40 @@
       "board.allocatedOverBy": "over by {n} day{s}",
       "board.budgetWarnToast": "Activities now total {used} days — {n} day{s} over your {total}-day budget",
       "board.save": "Save", "board.budgetSaved": "Project day budget saved",
+      "save.idle": "All changes saved", "save.dirty": "Unsaved changes", "save.saving": "Saving…",
+      "save.saved": "All changes saved", "save.error": "Couldn't save — click to retry",
       "status.not_started": "Not started", "status.working": "Working on it", "status.stuck": "Stuck", "status.done": "Done",
       "pri.critical": "Critical", "pri.high": "High", "pri.medium": "Medium", "pri.low": "Low",
       "bulk.export": "Export", "bulk.delete": "Delete", "bulk.cancel": "Cancel",
       "bulk.itemSelected": "item selected", "bulk.itemsSelected": "items selected",
-      "panel.updates": "Updates", "panel.files": "Files", "panel.activityLog": "Activity Log",
-      "panel.updateViaEmail": "Update via email", "panel.giveFeedback": "Give feedback",
+      "panel.updates": "Updates",
       "panel.composePlaceholder": "Write an update and mention others with @", "panel.postUpdate": "Post update",
       "panel.replyPlaceholder": "Write a reply and mention others with @",
       "panel.noUpdates": "No updates yet — be the first to post one.", "panel.like": "Like", "panel.reply": "Reply",
+      "panel.replyingTo": "Replying to {name}",
+      "panel.duplicateTask": "Duplicate task", "panel.deleteTask": "Delete task",
+      "panel.deleteTaskConfirm": "Delete task \"{name}\"? This cannot be undone.",
+      "panel.taskDuplicated": "Task duplicated", "panel.taskDeleted": "Task deleted",
+      "panel.duplicateSubitem": "Duplicate subitem", "panel.deleteSubitem": "Delete subitem",
+      "panel.deleteSubitemConfirm": "Delete subitem \"{name}\"? This cannot be undone.",
+      "panel.subitemDuplicated": "Subitem duplicated", "panel.subitemDeleted": "Subitem deleted",
+      "stuck.reasonTitle": "Stuck reason", "stuck.reasonPlaceholder": "Why is this stuck?",
+      "stuck.addReason": "Add stuck reason", "stuck.attachFile": "Attach photo or file",
+      "stuck.removeAttachment": "Remove attachment",
+      "panel.linkCopied": "Task link copied", "panel.mentionHint": "Mention a project member",
+      "panel.emojiHint": "Insert an emoji",
+      "panel.updateViaEmail": "Update via email", "panel.attachHint": "Attach a file",
+      "panel.attachTooLarge": "File is larger than 15MB", "panel.attachUploading": "Uploading…",
+      "panel.attachAdded": "File attached", "panel.attachError": "Couldn't upload the file",
+      "panel.emailSubject": "Update", "panel.emailBodyTask": "Task", "panel.emailBodyLink": "Link",
+      "panel.emailBodyLatest": "Latest update",
+      "panel.fmtClear": "Normal text", "panel.fmtBold": "Bold", "panel.fmtItalic": "Italic",
+      "panel.fmtUnderline": "Underline", "panel.fmtStrike": "Strikethrough", "panel.fmtColor": "Text color",
+      "panel.fmtSize": "Text size", "panel.fmtBulletList": "Bulleted list", "panel.fmtNumberList": "Numbered list",
+      "panel.fmtChecklist": "Checklist item",
+      "panel.fmtTable": "Insert table", "panel.fmtLink": "Insert link", "panel.fmtAlign": "Align text",
+      "panel.fmtHr": "Divider line", "panel.fmtUndo": "Undo", "panel.fmtRedo": "Redo",
+      "panel.fmtLinkPrompt": "Link URL",
       "users.title": "Manage users", "users.sub": "{n} user{s} in this workspace",
       "users.name": "Name", "users.email": "Email", "users.role": "Role", "users.actions": "Actions",
       "users.namePlaceholder": "Full name", "users.emailPlaceholder": "email@company.com",
@@ -107,21 +165,48 @@
     },
     th: {
       "sb.workspace": "เวิร์กสเปซ", "sb.mainWorkspace": "Fatima workspace", "sb.myAgents": "เอเจนต์ของฉัน",
+      "sb.notifications": "การแจ้งเตือน", "sb.markAllRead": "อ่านทั้งหมดแล้ว", "sb.noNotifications": "ยังไม่มีการแจ้งเตือน",
+      "sb.mentionMessage": "{name} แท็กคุณใน \"{task}\": {excerpt}",
       "sb.content": "เนื้อหา", "sb.manageWorkspace": "จัดการเวิร์กสเปซ", "sb.dashboard": "แดชบอร์ดและรายงาน",
-      "sb.manageUsers": "จัดการผู้ใช้งาน",
-      "sb.caption": "ระบบจัดการโปรเจกต์", "sb.progressLabel": "ความคืบหน้าโครงการ", "sb.progressBtn": "ดูรายละเอียด",
+      "sb.manageUsers": "จัดการผู้ใช้งาน", "sb.documentData": "Document DATA",
+      "doc.fileName": "ชื่อไฟล์", "doc.fromTask": "จากงาน", "doc.postedBy": "โพสต์โดย",
+      "doc.empty": "ยังไม่มีไฟล์แนบใน Update ของโปรเจกต์นี้",
+      "doc.noTask": "ไม่มีงานที่สังกัด",
+      "doc.statFiles": "ไฟล์", "doc.statFolders": "โฟลเดอร์", "doc.statProjects": "โปรเจกต์",
+      "doc.stuckFolderName": "ปัญหาและอุปสรรค์",
+      "sb.caption": "ระบบจัดการโปรเจกต์", "sb.progressLabel": "ความคืบหน้าของคุณ", "sb.progressBtn": "ดูรายละเอียด",
+      "sb.progressLabelProject": "ความคืบหน้าโครงการนี้", "sb.progressLabelAll": "ความคืบหน้าทุกโครงการของคุณ",
       "sb.progressSub": "ทำเสร็จแล้ว {done}/{total} งาน",
       "ws.addDescription": "เพิ่มคำอธิบายเวิร์กสเปซ", "ws.feedback": "ข้อเสนอแนะ", "ws.agents": "เอเจนต์",
       "ws.members": "สมาชิก", "ws.recents": "ล่าสุด", "ws.content": "เนื้อหา", "ws.collaborators": "ผู้ร่วมงาน",
-      "ws.permissions": "สิทธิ์การเข้าถึง", "ws.aiCredits": "จะไม่มีการเรียกเก็บเครดิต AI", "ws.filters": "ตัวกรอง",
+      "ws.permissions": "สิทธิ์การเข้าถึง", "ws.permNote": "จัดการสิทธิ์ผู้ใช้งานได้ที่หน้าจัดการผู้ใช้งาน",
+      "ws.permDenied": "ต้องมีสิทธิ์ผู้ดูแลระบบเพื่อดู Permissions",
+      "ws.aiCredits": "จะไม่มีการเรียกเก็บเครดิต AI", "ws.filters": "ตัวกรอง",
       "ws.newProject": "โปรเจกต์ใหม่", "ws.newProjectPrompt": "ชื่อโปรเจกต์",
+      "ws.newProjectPanelTitle": "โปรเจกต์ใหม่", "ws.projectNameLabel": "ชื่อโปรเจกต์",
+      "ws.createProject": "สร้างโปรเจกต์", "ws.projectNameRequired": "กรุณากรอกชื่อโปรเจกต์ก่อน",
+      "ws.importLabel": "นำเข้าจาก Excel, Microsoft Project XML หรือ PDF (ไม่บังคับ)",
+      "ws.importHint": "คลิกเพื่อเลือกไฟล์ .xlsx, .xls, MS Project XML (.xml) หรือ PDF ที่มีข้อความจริง",
+      "ws.importParsing": "กำลังอ่านไฟล์…",
+      "ws.importSummary": "พบ {groups} กลุ่ม, {tasks} งาน, {subitems} งานย่อย",
+      "ws.importSummaryOcr": " — บางหน้าไม่มีข้อความจริง ใช้ OCR อ่านแทน กรุณาตรวจสอบชื่องาน วันที่ และผู้รับผิดชอบก่อนสร้างโปรเจกต์",
+      "ws.importSkippedPages": " (ข้าม {skipped} จาก {total} หน้า เนื่องจากอ่านไม่ได้)",
+      "ws.importOcrProgress": "หน้า {page}/{total} ไม่มีข้อความจริง กำลังใช้ OCR อ่าน (อาจใช้เวลาสักครู่)…",
+      "ws.importError": "ไม่สามารถอ่านไฟล์นี้ได้",
+      "ws.importPdfScannedError": "ไม่พบข้อความที่อ่านได้ใน PDF นี้แม้จะลองใช้ OCR แล้ว — หน้าอาจว่างเปล่าหรือคุณภาพต่ำเกินไป ลองใช้ไฟล์สแกนที่ชัดกว่า หรือ export เป็น Excel/XML แทน",
+      "ws.importStillParsing": "กำลังอ่านไฟล์อยู่ กรุณารอสักครู่",
+      "ws.importedGroupName": "งานที่นำเข้า", "ws.importedTaskName": "งานที่นำเข้า",
+      "ws.createProjectError": "ไม่สามารถสร้างโปรเจกต์ได้",
+      "ws.deleteProject": "ลบโปรเจกต์",
+      "ws.deleteProjectConfirm": "ลบโปรเจกต์ \"{name}\" ใช่หรือไม่? งาน งานย่อย และ Update ทั้งหมดในโปรเจกต์นี้จะถูกลบถาวร ไม่สามารถย้อนกลับได้",
+      "ws.projectDeleted": "ลบโปรเจกต์แล้ว", "ws.deleteProjectError": "ไม่สามารถลบโปรเจกต์ได้",
       "ws.membersPanelTitle": "สมาชิกในเวิร์กสเปซ",
       "ws.addMemberNamePlaceholder": "ชื่อ-นามสกุล", "ws.addMemberEmailPlaceholder": "email@company.com",
       "ws.addMemberBtn": "เพิ่ม",
-      "ws.noCleanup": "ไม่พบคำแนะนำในการจัดระเบียบ", "ws.cleanupMode": "โหมดจัดระเบียบ",
       "ws.assetName": "ชื่อไฟล์งาน", "ws.aiSummary": "สรุปโดย AI", "ws.creator": "ผู้สร้าง",
       "ws.creationDate": "วันที่สร้าง", "ws.lastModified": "แก้ไขล่าสุด", "ws.folder": "โฟลเดอร์",
       "ws.noAssetsMatch": "ไม่พบรายการที่ตรงกับการค้นหา",
+      "ws.collabNoProject": "เปิดโครงการก่อนเพื่อดูผู้ร่วมงานของโครงการนั้น",
       "db.statusBreakdown": "สัดส่วนตามสถานะ", "db.totalTasks": "งานทั้งหมด",
       "db.summary": "{n} งาน ใน {g} กลุ่ม ของ “{title}”",
       "db.projectDuration": "ระยะเวลาโครงการ", "db.days": "วัน", "db.budgetTag": "งบที่ตั้งไว้",
@@ -130,16 +215,22 @@
       "tb.aiSuggestions": "คำแนะนำ AI", "tb.new": "ใหม่", "tb.integrate": "เชื่อมต่อ", "tb.automate": "ระบบอัตโนมัติ",
       "tb.invite": "เชิญ", "tab.mainTable": "ตารางหลัก",
       "tb.invitePanelTitle": "เชิญเข้าโครงการนี้", "tb.inviteHint": "เลือกคนที่จะเห็นและแก้ไขบอร์ดนี้ได้",
-      "tb.inviteAdd": "เชิญ", "tb.inviteRemove": "นำออก", "tb.inviteAdded": "เพิ่มเข้าโครงการแล้ว",
+      "tb.inviteAdd": "เชิญ", "tb.inviteRemove": "นำออก", "tb.inviteAdded": "เพิ่มเข้าโครงการแล้ว — ส่งอีเมลเชิญแล้ว",
       "tb.inviteRemoved": "นำออกจากโครงการแล้ว", "tb.inviteError": "อัปเดตสมาชิกโครงการไม่สำเร็จ",
       "toolbar.newTask": "งานใหม่", "toolbar.person": "บุคคล", "toolbar.filter": "กรอง", "toolbar.sort": "เรียงลำดับ",
-      "toolbar.hide": "ซ่อน", "toolbar.groupBy": "จัดกลุ่มตาม", "toolbar.hideColumns": "ซ่อนคอลัมน์",
+      "toolbar.hide": "ซ่อน", "toolbar.hideColumns": "ซ่อนคอลัมน์",
       "topmenu.boardData": "ข้อมูลบอร์ด", "topmenu.loadSample": "โหลดโปรเจกต์ตัวอย่าง", "topmenu.resetBoard": "ล้างบอร์ด (ลบทั้งหมด)",
       "common.search": "ค้นหา",
       "col.task": "งาน", "col.owner": "ผู้รับผิดชอบ", "col.status": "สถานะ", "col.dueDate": "กำหนดเสร็จ",
-      "col.timeline": "ไทม์ไลน์", "col.priority": "ความสำคัญ", "col.subitem": "งานย่อย", "col.date": "วันที่",
+      "col.timeline": "ไทม์ไลน์", "col.priority": "ความสำคัญ", "col.folder": "โฟลเดอร์", "col.subitem": "งานย่อย", "col.date": "วันที่",
       "board.addTask": "เพิ่มงาน", "board.addSubitem": "เพิ่มงานย่อย",
       "board.taskPlaceholder": "ชื่องาน", "board.subitemPlaceholder": "ชื่องานย่อย", "board.assignOwner": "มอบหมายผู้รับผิดชอบ",
+      "board.assignFolder": "ตั้งค่าโฟลเดอร์", "board.unassignedFolder": "ไม่มีโฟลเดอร์", "board.createFolder": "สร้าง \"{name}\"",
+      "board.rootFolder": "โฟลเดอร์ทั้งหมด", "board.selectFolder": "ใช้ \"{name}\"", "board.openSubfolder": "เปิดโฟลเดอร์ย่อย",
+      "board.folderCreateHint": "พิมพ์ชื่อในช่องค้นหาด้านบน แล้วกด \"สร้าง\" เพื่อเพิ่มโฟลเดอร์ใหม่ตรงนี้",
+      "board.addSubfolderHere": "เพิ่มโฟลเดอร์ย่อยตรงนี้", "board.addingUnder": "กำลังเพิ่มในโฟลเดอร์ \"{name}\"",
+      "board.addTaskTo": "เพิ่มงานลงกลุ่ม", "board.newGroup": "กลุ่มใหม่", "board.noGroupsYet": "ยังไม่มีกลุ่ม",
+      "board.unassigned": "ยังไม่มอบหมาย", "board.noProjectMembers": "ยังไม่มีสมาชิกโปรเจกต์ — เชิญคนเข้าร่วมก่อน",
       "board.setDates": "ตั้งค่าวันที่", "board.daysSelected": "วันที่เลือก",
       "board.overdueBy": "เกินกำหนด {n} วัน",
       "board.totalDaysLabel": "จำนวนวันทั้งหมดของโครงการ",
@@ -147,15 +238,40 @@
       "board.allocatedOverBy": "เกิน {n} วัน",
       "board.budgetWarnToast": "กิจกรรมรวมแล้ว {used} วัน — เกินงบ {total} วัน อยู่ {n} วัน",
       "board.save": "บันทึก", "board.budgetSaved": "บันทึกจำนวนวันโครงการแล้ว",
+      "save.idle": "บันทึกล่าสุดแล้ว", "save.dirty": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก", "save.saving": "กำลังบันทึก…",
+      "save.saved": "บันทึกล่าสุดแล้ว", "save.error": "บันทึกไม่สำเร็จ — คลิกเพื่อลองใหม่",
       "status.not_started": "ยังไม่เริ่ม", "status.working": "กำลังดำเนินการ", "status.stuck": "ติดปัญหา", "status.done": "เสร็จแล้ว",
       "pri.critical": "วิกฤต", "pri.high": "สูง", "pri.medium": "ปานกลาง", "pri.low": "ต่ำ",
       "bulk.export": "ส่งออก", "bulk.delete": "ลบ", "bulk.cancel": "ยกเลิก",
       "bulk.itemSelected": "รายการที่เลือก", "bulk.itemsSelected": "รายการที่เลือก",
-      "panel.updates": "อัปเดต", "panel.files": "ไฟล์", "panel.activityLog": "บันทึกกิจกรรม",
-      "panel.updateViaEmail": "อัปเดตผ่านอีเมล", "panel.giveFeedback": "ให้ข้อเสนอแนะ",
+      "panel.updates": "อัปเดต",
       "panel.composePlaceholder": "เขียนอัปเดตและแท็กเพื่อนร่วมทีมด้วย @", "panel.postUpdate": "โพสต์อัปเดต",
       "panel.replyPlaceholder": "เขียนตอบกลับและแท็กเพื่อนร่วมทีมด้วย @",
       "panel.noUpdates": "ยังไม่มีอัปเดต — เป็นคนแรกที่โพสต์เลย", "panel.like": "ถูกใจ", "panel.reply": "ตอบกลับ",
+      "panel.replyingTo": "กำลังตอบกลับ {name}",
+      "panel.duplicateTask": "ทำสำเนางาน", "panel.deleteTask": "ลบงานนี้",
+      "panel.deleteTaskConfirm": "ลบงาน \"{name}\" ใช่หรือไม่? ไม่สามารถย้อนกลับได้",
+      "panel.taskDuplicated": "ทำสำเนางานแล้ว", "panel.taskDeleted": "ลบงานแล้ว",
+      "panel.duplicateSubitem": "ทำสำเนางานย่อย", "panel.deleteSubitem": "ลบงานย่อยนี้",
+      "panel.deleteSubitemConfirm": "ลบงานย่อย \"{name}\" ใช่หรือไม่? ไม่สามารถย้อนกลับได้",
+      "panel.subitemDuplicated": "ทำสำเนางานย่อยแล้ว", "panel.subitemDeleted": "ลบงานย่อยแล้ว",
+      "stuck.reasonTitle": "สาเหตุที่ติดขัด", "stuck.reasonPlaceholder": "เหตุใดจึงติดขัด?",
+      "stuck.addReason": "เพิ่มสาเหตุที่ติดขัด", "stuck.attachFile": "แนบรูปหรือไฟล์",
+      "stuck.removeAttachment": "ลบไฟล์แนบ",
+      "panel.linkCopied": "คัดลอกลิงก์งานแล้ว", "panel.mentionHint": "แท็กสมาชิกในโปรเจกต์",
+      "panel.emojiHint": "แทรกอีโมจิ",
+      "panel.updateViaEmail": "อัปเดตผ่านอีเมล", "panel.attachHint": "แนบไฟล์",
+      "panel.attachTooLarge": "ไฟล์ใหญ่เกิน 15MB", "panel.attachUploading": "กำลังอัปโหลด…",
+      "panel.attachAdded": "แนบไฟล์แล้ว", "panel.attachError": "อัปโหลดไฟล์ไม่สำเร็จ",
+      "panel.emailSubject": "อัปเดต", "panel.emailBodyTask": "งาน", "panel.emailBodyLink": "ลิงก์",
+      "panel.emailBodyLatest": "อัปเดตล่าสุด",
+      "panel.fmtClear": "ข้อความปกติ", "panel.fmtBold": "ตัวหนา", "panel.fmtItalic": "ตัวเอียง",
+      "panel.fmtUnderline": "ขีดเส้นใต้", "panel.fmtStrike": "ขีดฆ่า", "panel.fmtColor": "สีตัวอักษร",
+      "panel.fmtSize": "ขนาดตัวอักษร", "panel.fmtBulletList": "รายการหัวข้อย่อย", "panel.fmtNumberList": "รายการลำดับเลข",
+      "panel.fmtChecklist": "รายการเช็คลิสต์",
+      "panel.fmtTable": "แทรกตาราง", "panel.fmtLink": "แทรกลิงก์", "panel.fmtAlign": "จัดแนวข้อความ",
+      "panel.fmtHr": "เส้นคั่น", "panel.fmtUndo": "ย้อนกลับ", "panel.fmtRedo": "ทำซ้ำ",
+      "panel.fmtLinkPrompt": "URL ของลิงก์",
       "users.title": "จัดการผู้ใช้งาน", "users.sub": "มีผู้ใช้งาน {n} คนในเวิร์กสเปซนี้",
       "users.name": "ชื่อ", "users.email": "อีเมล", "users.role": "บทบาท", "users.actions": "จัดการ",
       "users.namePlaceholder": "ชื่อ-นามสกุล", "users.emailPlaceholder": "email@company.com",
@@ -450,6 +566,13 @@
     s.tasks.forEach(function (t) {
       if (!Array.isArray(t.updates)) t.updates = [];
       if (!Array.isArray(t.subitems)) t.subitems = [];
+      if (t.stuckReason === undefined) t.stuckReason = "";
+      if (!Array.isArray(t.stuckAttachments)) t.stuckAttachments = [];
+      t.subitems.forEach(function (sub) {
+        if (!Array.isArray(sub.updates)) sub.updates = [];
+        if (sub.stuckReason === undefined) sub.stuckReason = "";
+        if (!Array.isArray(sub.stuckAttachments)) sub.stuckAttachments = [];
+      });
     });
     if (!s.createdAt) s.createdAt = new Date().toISOString();
     if (!s.updatedAt) s.updatedAt = s.createdAt;
@@ -475,24 +598,69 @@
   PM.projectList = [];
   PM.state = null; // each page sets this during its own init (see initProjectState below)
 
+  // ---------------- save status ----------------
+  // Pages that mutate PM.state (currently only board.html) can subscribe with
+  // PM.onSaveStatus(fn) to render a status pill / Save button. Pages that
+  // never call PM.persist() simply never see a status change — no fake
+  // indicator on pages with nothing to save.
+  var saveStatus = "idle"; // idle | dirty | saving | saved | error
+  var saveStatusHandler = null;
+  PM.onSaveStatus = function (fn) {
+    saveStatusHandler = fn;
+    if (fn) fn(saveStatus);
+  };
+  function setSaveStatus(s) {
+    saveStatus = s;
+    if (saveStatusHandler) saveStatusHandler(s);
+  }
+  PM.getSaveStatus = function () { return saveStatus; };
+
   var saveTimer = null;
+  function flushSave() {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    setSaveStatus("saving");
+    try { localStorage.setItem(PM.STORAGE_KEY, JSON.stringify(PM.state)); } catch (e) {}
+    var url = PM.currentProjectId ? (PM.API_BASE + "/projects/" + PM.currentProjectId + "/state") : (PM.API_BASE + "/state");
+    return PM.authFetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(PM.state)
+    }).then(function (r) {
+      if (!r.ok) throw new Error("save failed: " + r.status);
+      setSaveStatus("saved");
+    }).catch(function (err) {
+      setSaveStatus("error");
+      throw err;
+    });
+  }
   // Debounced localStorage write + PUT to the Postgres-backed API.
   PM.persist = function () {
     PM.state.updatedAt = new Date().toISOString();
+    setSaveStatus("dirty");
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      try { localStorage.setItem(PM.STORAGE_KEY, JSON.stringify(PM.state)); } catch (e) {}
-      var url = PM.currentProjectId ? (PM.API_BASE + "/projects/" + PM.currentProjectId + "/state") : (PM.API_BASE + "/state");
-      PM.authFetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(PM.state)
-      }).catch(function () {});
-    }, 150);
+    saveTimer = setTimeout(function () { flushSave().catch(function () {}); }, 600);
   };
-  window.addEventListener("beforeunload", function () {
+  // Bypasses the debounce and saves immediately — used by a manual Save
+  // button so a click always reflects the current state right away.
+  PM.saveNow = function () {
+    if (!PM.state) return Promise.resolve();
+    return flushSave().catch(function () {});
+  };
+  window.addEventListener("beforeunload", function (e) {
     if (!PM.state) return;
     try { localStorage.setItem(PM.STORAGE_KEY, JSON.stringify(PM.state)); } catch (e) {}
+    if (saveTimer) {
+      // Best-effort flush so a fast navigation away doesn't lose the last
+      // few changes sitting in the debounce window — but the browser is
+      // free to cancel this in-flight fetch mid-navigation, so it is not
+      // reliable on its own. Also ask the browser to confirm before
+      // actually leaving, giving the flush a real chance to land.
+      clearTimeout(saveTimer);
+      flushSave().catch(function () {});
+      e.preventDefault();
+      e.returnValue = "";
+    }
   });
 
   // ---------------- auth ----------------
@@ -604,12 +772,52 @@
       .catch(function () { return PM.projectList; });
   };
 
-  PM.createProjectApi = function (title) {
+  // Sidebar "Progress" card's default data source — every task across
+  // every project the current user can see, combined. Only used when no
+  // single project is selected (workspace.html, users.html); board.html/
+  // dashboard.html show that one project's own progress instead, computed
+  // straight from PM.state (see renderSidebarProgress below).
+  PM.allProjectsProgress = null; // {done, total} once loaded, else null (renders as 0%)
+  PM.loadAllProjectsProgress = function () {
+    return PM.authFetch(PM.API_BASE + "/all-projects-progress")
+      .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); })
+      .then(function (data) {
+        PM.allProjectsProgress = { done: data.done || 0, total: data.total || 0 };
+        return PM.allProjectsProgress;
+      })
+      .catch(function () { return PM.allProjectsProgress; });
+  };
+
+  // seedState is optional — {groups, tasks}, e.g. from PM.ProjectImport —
+  // seeded atomically in the same request/transaction as project creation,
+  // so an import failure can never leave a project behind with the default
+  // "To-Do" group but none of the imported data.
+  PM.createProjectApi = function (title, seedState) {
+    var body = { title: title };
+    if (seedState && Array.isArray(seedState.groups) && seedState.groups.length) {
+      body.groups = seedState.groups;
+      body.tasks = seedState.tasks || [];
+    }
     return PM.authFetch(PM.API_BASE + "/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: title })
-    }).then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) return r.json().catch(function () { return {}; }).then(function (data) {
+        throw new Error((data && data.error) || ("bad response (" + r.status + ")"));
+      });
+      return r.json();
+    });
+  };
+
+  PM.deleteProjectApi = function (projectId) {
+    return PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(projectId), { method: "DELETE" })
+      .then(function (r) {
+        if (!r.ok) return r.json().catch(function () { return {}; }).then(function (data) {
+          throw new Error((data && data.error) || ("bad response (" + r.status + ")"));
+        });
+        return r.json();
+      });
   };
 
   // ---------------- project members (board "Invite" picker) ----------------
@@ -630,6 +838,27 @@
     return PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(projectId) + "/members/" + encodeURIComponent(userId), {
       method: "DELETE"
     }).then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
+  };
+
+  // ---------------- notifications (@mentions) ----------------
+
+  PM.loadNotifications = function () {
+    return PM.authFetch(PM.API_BASE + "/notifications")
+      .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); })
+      .then(function (list) { return Array.isArray(list) ? list : []; });
+  };
+  PM.createNotification = function (payload) {
+    return PM.authFetch(PM.API_BASE + "/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
+  };
+  PM.markNotificationRead = function (id) {
+    return PM.authFetch(PM.API_BASE + "/notifications/" + encodeURIComponent(id) + "/read", { method: "POST" });
+  };
+  PM.markAllNotificationsRead = function () {
+    return PM.authFetch(PM.API_BASE + "/notifications/read-all", { method: "POST" });
   };
 
   // ---------------- users ----------------
@@ -685,15 +914,38 @@
 
   // ---------------- sidebar (shared markup on every page) ----------------
 
+  // Two scopes, switched by which page is active (set via initSidebar's
+  // activeView param): on board.html/dashboard.html — a specific project is
+  // open — show THAT project's own progress (every task in PM.state, right
+  // now, no extra request needed). Everywhere else (workspace.html,
+  // users.html — no single project selected) show the combined total
+  // across every project the user can see (PM.allProjectsProgress, loaded
+  // once by PM.loadAllProjectsProgress() in initSidebar). Renders 0% until
+  // that load resolves, then this gets called again to fill it in.
   PM.renderSidebarProgress = function () {
     var pctEl = document.getElementById("sbProgressPct");
     var subEl = document.getElementById("sbProgressSub");
-    if (!pctEl || !subEl || !PM.state) return;
-    var total = PM.state.tasks.length;
-    var done = PM.state.tasks.filter(function (t) { return t.status === "done"; }).length;
+    var labelEl = document.getElementById("sbProgressLabel");
+    if (!pctEl || !subEl) return;
+    // "documents" is deliberately excluded — that page spans every visible
+    // project (grouped by project), so the sidebar progress card should
+    // show the all-projects aggregate there too, not one project's numbers.
+    var showingOneProject = (PM._sidebarActiveView === "board" || PM._sidebarActiveView === "dashboard")
+      && PM.state && Array.isArray(PM.state.tasks);
+    var done, total, labelKey;
+    if (showingOneProject) {
+      total = PM.state.tasks.length;
+      done = PM.state.tasks.filter(function (t) { return t.status === "done"; }).length;
+      labelKey = "sb.progressLabelProject";
+    } else {
+      done = (PM.allProjectsProgress && PM.allProjectsProgress.done) || 0;
+      total = (PM.allProjectsProgress && PM.allProjectsProgress.total) || 0;
+      labelKey = "sb.progressLabelAll";
+    }
     var pct = total ? Math.round((done / total) * 100) : 0;
     pctEl.textContent = pct + "%";
     subEl.textContent = PM.tr("sb.progressSub").replace("{done}", done).replace("{total}", total);
+    if (labelEl) labelEl.textContent = PM.tr(labelKey);
   };
 
   // Points the board/dashboard sidebar links + progress button at the current
@@ -705,9 +957,11 @@
     var idParam = PM.currentProjectId ? ("?id=" + encodeURIComponent(PM.currentProjectId)) : "";
     var boardLink = document.getElementById("sbBoardLink");
     var dashLink = document.getElementById("sbDashboardLink");
+    var docsLink = document.getElementById("sbDocumentsLink");
     var progressBtn = document.getElementById("sbProgressBtn");
     if (boardLink) boardLink.href = "board.html" + idParam;
     if (dashLink) dashLink.href = "dashboard.html" + idParam;
+    if (docsLink) docsLink.href = "documents.html" + idParam;
     if (progressBtn) progressBtn.href = "dashboard.html" + idParam;
   };
 
@@ -716,6 +970,7 @@
   // `activeView` highlights the matching nav item; `onLangChange` lets the
   // calling page re-render its own dynamic text after a language switch.
   PM.initSidebar = function (activeView, onLangChange) {
+    PM._sidebarActiveView = activeView;
     var authNameEl = document.getElementById("sbAuthName");
     if (authNameEl) authNameEl.textContent = PM.currentUser ? PM.currentUser.name : "";
     var logoutBtn = document.getElementById("sbLogoutBtn");
@@ -754,6 +1009,132 @@
     PM.syncSidebarLinks();
     PM.renderSidebarProgress();
     PM.applyI18n();
+    PM.initNotificationBell();
+    PM.loadAllProjectsProgress().then(PM.renderSidebarProgress);
+  };
+
+  // ---------------- notification bell (@mentions) ----------------
+  // One shared popover + unread list, wired to every trigger button found
+  // on the page: the sidebar bell (injected via JS, since the sidebar's
+  // HTML is copy-pasted across all four pages) and the board topbar's chat
+  // icon (static markup, id="topbarChatBtn") when present.
+  var notifications = [];
+  var notifTriggerBtns = [];
+  PM.initNotificationBell = function () {
+    var alreadyInjected = !!document.getElementById("sbNotifBtn");
+    var iconsWrap = document.querySelector(".sb-top-icons");
+    if (iconsWrap && !alreadyInjected) {
+      var wrap = document.createElement("div");
+      wrap.style.position = "relative";
+      wrap.innerHTML =
+        '<button class="sb-icon-btn" id="sbNotifBtn" aria-label="' + PM.esc(PM.tr("sb.notifications")) + '" aria-haspopup="true">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>' +
+          '<span class="sb-notif-badge" style="display:none;"></span>' +
+        '</button>';
+      iconsWrap.insertBefore(wrap, iconsWrap.firstChild);
+    }
+
+    // The board topbar's "chat" icon — already in the static HTML on
+    // board.html, just needs a badge added and to be wired the same way.
+    var topbarChatBtn = document.getElementById("topbarChatBtn");
+    if (topbarChatBtn && !topbarChatBtn.querySelector(".sb-notif-badge")) {
+      topbarChatBtn.style.position = "relative";
+      var topbarBadge = document.createElement("span");
+      topbarBadge.className = "sb-notif-badge";
+      topbarBadge.style.display = "none";
+      topbarChatBtn.appendChild(topbarBadge);
+    }
+
+    if (alreadyInjected) return; // popover + shared wiring only needs to happen once per page
+
+    // Appended to <body> with position:fixed, not nested in the sidebar —
+    // .sidebar has overflow:hidden (for the collapse animation), which
+    // would otherwise clip a dropdown positioned inside it.
+    var popover = document.createElement("div");
+    popover.className = "sb-notif-popover";
+    popover.id = "sbNotifPopover";
+    popover.style.display = "none";
+    popover.style.position = "fixed";
+    document.body.appendChild(popover);
+
+    function renderNotifPopover() {
+      var unreadCount = notifications.filter(function (n) { return !n.read; }).length;
+      var header =
+        '<div class="sb-notif-header">' +
+          '<span class="sb-notif-title">' + PM.esc(PM.tr("sb.notifications")) + '</span>' +
+          (unreadCount ? '<button class="sb-notif-markall" id="sbNotifMarkAll">' + PM.esc(PM.tr("sb.markAllRead")) + '</button>' : '') +
+        '</div>';
+      var body = notifications.length
+        ? notifications.map(function (n) {
+            var href = n.taskId ? ("board.html?id=" + encodeURIComponent(n.projectId || "") + "&task=" + encodeURIComponent(n.taskId)) : null;
+            return '<button class="sb-notif-item' + (n.read ? '' : ' unread') + '" data-id="' + PM.esc(n.id) + '" data-href="' + PM.esc(href || '') + '">' +
+              PM.esc(n.message) +
+              '<span class="sb-notif-time">' + PM.esc(PM.timeAgo(n.createdAt)) + '</span>' +
+            '</button>';
+          }).join("")
+        : '<div class="sb-notif-empty">' + PM.esc(PM.tr("sb.noNotifications")) + '</div>';
+      popover.innerHTML = header + body;
+
+      var markAllBtn = document.getElementById("sbNotifMarkAll");
+      if (markAllBtn) markAllBtn.addEventListener("click", function () {
+        PM.markAllNotificationsRead().then(function () {
+          notifications.forEach(function (n) { n.read = true; });
+          updateBadge();
+          renderNotifPopover();
+        });
+      });
+      popover.querySelectorAll(".sb-notif-item").forEach(function (el) {
+        el.addEventListener("click", function () {
+          var id = el.dataset.id;
+          var n = notifications.find(function (x) { return x.id === id; });
+          if (n && !n.read) {
+            PM.markNotificationRead(id).catch(function () {});
+            n.read = true;
+            updateBadge();
+          }
+          if (el.dataset.href) window.location.href = el.dataset.href;
+        });
+      });
+    }
+
+    function updateBadge() {
+      var unread = notifications.some(function (n) { return !n.read; });
+      document.querySelectorAll(".sb-notif-badge").forEach(function (badge) {
+        badge.style.display = unread ? "block" : "none";
+      });
+    }
+
+    function refresh() {
+      return PM.loadNotifications().then(function (list) {
+        notifications = list;
+        updateBadge();
+      }).catch(function () {});
+    }
+
+    function openNear(btn) {
+      var rect = btn.getBoundingClientRect();
+      popover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 316)) + "px";
+      popover.style.top = Math.min(rect.bottom + 6, window.innerHeight - 400) + "px";
+      popover.style.display = "block";
+      renderNotifPopover();
+      refresh().then(renderNotifPopover);
+    }
+
+    notifTriggerBtns = [document.getElementById("sbNotifBtn"), document.getElementById("topbarChatBtn")].filter(Boolean);
+    notifTriggerBtns.forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (popover.style.display === "none") openNear(btn); else popover.style.display = "none";
+      });
+    });
+
+    document.addEventListener("click", function (e) {
+      if (popover.style.display === "none" || e.target.closest("#sbNotifPopover")) return;
+      var onTrigger = notifTriggerBtns.some(function (btn) { return e.target === btn || btn.contains(e.target); });
+      if (!onTrigger) popover.style.display = "none";
+    });
+
+    refresh();
   };
 
   // Delegated on every page: (a) the many "not implemented in this demo"

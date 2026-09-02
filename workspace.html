@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css" />
+<link rel="stylesheet" href="shared/styles.css?v=64" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -30,14 +30,12 @@
           <img src="fatima-logo.svg?v=3" alt="Fatima" />
         </div>
       </div>
-      <div class="sb-workspace-row" data-toast="สลับ workspace ยังไม่เปิดใช้งานในตัวอย่างนี้">
+      <div class="sb-workspace-row sb-workspace-row--static">
         <div class="sb-workspace-text">
           <div class="sb-workspace-name" id="sbWorkspaceName" data-i18n="sb.mainWorkspace">Fatima workspace</div>
           <div class="sb-workspace-caption" data-i18n="sb.caption">Project management</div>
         </div>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="color:var(--sb-text-faint);flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <button class="sb-add-workspace" data-toast="เพิ่ม workspace ใหม่ยังไม่เปิดใช้งานในตัวอย่างนี้" style="display:none;" aria-label="เพิ่ม workspace"></button>
       <div class="sb-divider"></div>
 
       <div class="sb-section-label" id="sbContentLabel">
@@ -49,17 +47,21 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
           <span data-i18n="sb.manageWorkspace">Manage workspace</span>
         </a>
-        <a class="sb-nav-item" data-view="users" href="users.html">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
-          <span data-i18n="sb.manageUsers">Manage users</span>
-        </a>
-        <a class="sb-nav-item" data-view="board" id="sbBoardLink" href="board.html">
+        <a class="sb-nav-item sb-nav-sub" data-view="board" id="sbBoardLink" href="board.html">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>
           <span id="sbBoardLabel">Test Project</span>
         </a>
-        <a class="sb-nav-item" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
+        <a class="sb-nav-item sb-nav-sub" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>
           <span data-i18n="sb.dashboard">Dashboard and reporting</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="documents" id="sbDocumentsLink" href="documents.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+          <span data-i18n="sb.documentData">Document DATA</span>
+        </a>
+        <a class="sb-nav-item" data-view="users" href="users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
+          <span data-i18n="sb.manageUsers">Manage users</span>
         </a>
       </div>
 
@@ -76,7 +78,7 @@
       </button>
 
       <div class="sb-progress-card">
-        <div class="sb-progress-label" data-i18n="sb.progressLabel">Project progress</div>
+        <div class="sb-progress-label" id="sbProgressLabel" data-i18n="sb.progressLabel">Project progress</div>
         <div class="sb-progress-pct" id="sbProgressPct">0%</div>
         <div class="sb-progress-sub" id="sbProgressSub"></div>
         <a class="sb-progress-btn" id="sbProgressBtn" href="dashboard.html" data-i18n="sb.progressBtn">View details</a>
@@ -103,14 +105,6 @@
           </div>
         </div>
         <div class="ws-hero-actions">
-          <button class="tb-icon-btn" data-toast="ขอบคุณสำหรับความสนใจ — ฟีเจอร์ Feedback ยังไม่เปิดใช้งานในตัวอย่างนี้">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-9 8.5A8.38 8.38 0 013 11.5a8.5 8.5 0 0117 0z"/></svg>
-            <span data-i18n="ws.feedback">Feedback</span>
-          </button>
-          <button class="tb-icon-btn" data-toast="Agents ยังไม่เปิดใช้งานในตัวอย่างนี้">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M9 12h.01M15 12h.01M8 3l1.5 4M16 3l-1.5 4"/></svg>
-            <span data-i18n="ws.agents">Agents</span>
-          </button>
           <button class="invite-btn" id="membersOpenBtn">
             <span data-i18n="ws.members">Members</span><span id="membersCountBadge"></span>
           </button>
@@ -122,19 +116,15 @@
 
       <div class="ws-tabs">
         <div class="ws-tabbar">
-          <div class="ws-tab" data-toast="Recents ยังไม่เปิดใช้งานในตัวอย่างนี้" data-i18n="ws.recents">Recents</div>
-          <div class="ws-tab active" data-i18n="ws.content">Content</div>
-          <div class="ws-tab" data-toast="Collaborators ยังไม่เปิดใช้งานในตัวอย่างนี้" data-i18n="ws.collaborators">Collaborators</div>
-          <div class="ws-tab disabled" data-toast="ต้องมีสิทธิ์ผู้ดูแลระบบเพื่อดู Permissions" data-i18n="ws.permissions">Permissions</div>
+          <div class="ws-tab" data-view="recents" data-i18n="ws.recents">Recents</div>
+          <div class="ws-tab active" data-view="content" data-i18n="ws.content">Content</div>
+          <div class="ws-tab" data-view="collaborators" data-i18n="ws.collaborators">Collaborators</div>
+          <div class="ws-tab" data-view="permissions" data-i18n="ws.permissions">Permissions</div>
         </div>
         <div class="ws-tabs-spacer"></div>
-        <span class="ws-note">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
-          <span data-i18n="ws.aiCredits">AI credits won't be charged</span>
-        </span>
       </div>
 
-      <div class="ws-toolbar">
+      <div class="ws-toolbar" id="wsContentToolbar">
         <label class="search-box" id="wsSearchBox">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input class="search-input" id="wsSearchInput" placeholder="Search" data-i18n-placeholder="common.search" />
@@ -148,33 +138,43 @@
           <span data-i18n="ws.newProject">New project</span>
         </button>
         <div class="toolbar-spacer"></div>
-        <span class="ws-cleanup-status">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>
-          <span data-i18n="ws.noCleanup">No cleanup suggestions found</span>
-        </span>
-        <label class="ws-cleanup-toggle">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4L12 3z"/></svg>
-          <span data-i18n="ws.cleanupMode">Cleanup mode</span>
-          <input type="checkbox" id="cleanupToggle" />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
       </div>
 
-      <div class="ws-table-wrap">
+      <div class="ws-table-wrap" id="wsContentTableWrap">
         <table class="ws-table">
           <thead>
             <tr>
               <th style="width:30px;"></th>
               <th data-i18n="ws.assetName">Asset name</th>
-              <th data-i18n="ws.aiSummary">AI summary</th>
               <th data-i18n="ws.creator">Creator</th>
               <th data-i18n="ws.creationDate">Creation date</th>
               <th data-i18n="ws.lastModified">Last modified</th>
               <th data-i18n="ws.folder">Folder</th>
+              <th style="width:40px;"></th>
             </tr>
           </thead>
           <tbody id="wsTableBody"></tbody>
         </table>
+      </div>
+
+      <div class="ws-collab-wrap" id="wsCollabWrap" style="display:none;">
+        <label class="search-box" id="wsCollabSearchBox">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input class="search-input" id="wsCollabSearchInput" placeholder="Search" data-i18n-placeholder="common.search" />
+        </label>
+        <div class="ws-collab-card">
+          <div class="dept-groups" id="wsCollabGroups"></div>
+        </div>
+      </div>
+
+      <div class="ws-perm-wrap" id="wsPermWrap" style="display:none;">
+        <div class="ws-perm-header">
+          <span class="ws-perm-note" data-i18n="ws.permNote">Roles are managed from Manage users.</span>
+          <a class="tbar-btn" href="users.html" style="border-color:var(--accent);color:var(--accent-soft-text);text-decoration:none;" data-i18n="sb.manageUsers">Manage users</a>
+        </div>
+        <div class="ws-collab-card">
+          <div class="dept-groups" id="wsPermGroups"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -194,14 +194,54 @@
   <div class="panel-body" id="membersBody"></div>
 </div>
 
+<!-- ============ New project panel ============ -->
+<div class="panel-backdrop" id="newProjectBackdrop"></div>
+<div class="updates-panel" id="newProjectPanel" role="dialog" aria-label="New project">
+  <div class="panel-header">
+    <button class="panel-close" id="newProjectCloseBtn" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="panel-title" data-i18n="ws.newProjectPanelTitle">New project</div>
+  </div>
+  <div class="panel-body">
+    <div class="np-field">
+      <label class="np-label" for="npNameInput" data-i18n="ws.projectNameLabel">Project name</label>
+      <input type="text" class="np-input" id="npNameInput" data-i18n-placeholder="ws.newProjectPrompt" placeholder="Project name" />
+    </div>
+    <div class="np-field">
+      <label class="np-label" data-i18n="ws.importLabel">Import from Excel or Microsoft Project XML (optional)</label>
+      <div class="np-dropzone" id="npDropzone">
+        <input type="file" id="npFileInput" accept=".xlsx,.xls,.xml,.pdf" style="display:none;" />
+        <div class="np-dropzone-idle" id="npDropzoneIdle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          <span data-i18n="ws.importHint">Click to choose a .xlsx, .xls, or MS Project XML (.xml) file</span>
+        </div>
+        <div class="np-dropzone-file" id="npDropzoneFile" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+          <span class="np-file-name" id="npFileName"></span>
+          <button type="button" class="np-file-remove" id="npFileRemoveBtn" aria-label="Remove file">&times;</button>
+        </div>
+      </div>
+      <div class="np-import-status" id="npImportStatus"></div>
+    </div>
+    <button type="button" class="np-create-btn" id="npCreateBtn" data-i18n="ws.createProject">Create project</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js"></script>
+<script src="shared/vendor/xlsx.full.min.js"></script>
+<script src="shared/vendor/pdf.min.js"></script>
+<script src="shared/vendor/tesseract.min.js"></script>
+<script src="shared/shared.js?v=67"></script>
+<script src="shared/project-import.js?v=8"></script>
 <script>
 (function () {
   "use strict";
   var PM = window.PM;
+  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = "shared/vendor/pdf.worker.min.js";
   var wsSearchQuery = "";
+  var wsActiveView = "content";
 
   function esc(s) { return PM.esc(s); }
   function tr(key) { return PM.tr(key); }
@@ -214,37 +254,62 @@
   function renderWorkspaceTable() {
     var body = document.getElementById("wsTableBody");
     if (!body) return;
-    var creatorSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
     var boardIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>';
     var projectRows = PM.projectList.length
       ? PM.projectList.map(function (p) {
           return {
-            name: p.title || "Untitled project", href: "board.html?id=" + encodeURIComponent(p.id),
-            icon: boardIcon, created: p.createdAt, modified: p.updatedAt
+            id: p.id, name: p.title || "Untitled project", href: "board.html?id=" + encodeURIComponent(p.id),
+            icon: boardIcon, created: p.createdAt, modified: p.updatedAt, creator: p.creatorName || "", createdBy: p.createdBy || null
           };
         })
       : (PM.state ? [{
-          name: PM.state.title || "Untitled project", href: "board.html" + (PM.currentProjectId ? "?id=" + encodeURIComponent(PM.currentProjectId) : ""),
-          icon: boardIcon, created: PM.state.createdAt, modified: PM.state.updatedAt
+          id: PM.currentProjectId, name: PM.state.title || "Untitled project", href: "board.html" + (PM.currentProjectId ? "?id=" + encodeURIComponent(PM.currentProjectId) : ""),
+          icon: boardIcon, created: PM.state.createdAt, modified: PM.state.updatedAt, creator: PM.state.creatorName || "", createdBy: null
         }] : []);
     var assets = projectRows.concat([
       {
         name: tr("sb.dashboard"), href: "dashboard.html" + (PM.currentProjectId ? "?id=" + encodeURIComponent(PM.currentProjectId) : ""),
         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>',
-        created: PM.state && PM.state.createdAt, modified: PM.state && PM.state.updatedAt
+        created: PM.state && PM.state.createdAt, modified: PM.state && PM.state.updatedAt, creator: PM.state && PM.state.creatorName || ""
       }
     ]).filter(function (a) { return assetMatchesSearch(a.name); });
 
+    if (wsActiveView === "recents") {
+      // Most recently updated first — same asset set as Content, just a
+      // different lens on it (no separate "last opened by me" tracking yet).
+      assets = assets.slice().sort(function (a, b) {
+        return new Date(b.modified || 0) - new Date(a.modified || 0);
+      });
+    }
+
+    var creatorSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
     body.innerHTML = assets.map(function (a) {
+      var creatorHtml = a.creator
+        ? '<div class="ws-creator-cell" title="' + esc(a.creator) + '">' +
+            '<div class="ws-creator-avatar" style="background:' + PM.avatarColor(a.creator) + ';color:#fff;">' + esc(PM.initials(a.creator)) + '</div>' +
+            '<span class="ws-creator-name">' + esc(a.creator) + '</span>' +
+          '</div>'
+        // No creator on record (e.g. legacy row, or the synthetic Dashboard
+        // entry which isn't a real project) — the plain icon placeholder.
+        : '<div class="ws-creator-avatar">' + creatorSvg + '</div>';
+      // Only a real project (has an id) can be deleted — never the synthetic
+      // Dashboard row. The server re-checks admin-or-creator on delete
+      // regardless; this is just to not show the control to someone who'd
+      // only get a 403 for clicking it.
+      var canDelete = a.id && PM.currentUser && (PM.currentUser.role === "admin" || PM.currentUser.id === a.createdBy);
+      var deleteBtnHtml = canDelete
+        ? '<button type="button" class="ws-row-delete-btn" data-action="delete-project" data-project="' + esc(a.id) + '" data-name="' + esc(a.name) + '" title="' + esc(tr("ws.deleteProject")) + '" aria-label="' + esc(tr("ws.deleteProject")) + '">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7"/></svg>' +
+          '</button>'
+        : "";
       return '<tr data-href="' + esc(a.href) + '">' +
         '<td><input type="checkbox" onclick="event.stopPropagation()" aria-label="เลือก ' + esc(a.name) + '" /></td>' +
         '<td><div class="ws-asset-name"><div class="ws-asset-icon-chip">' + a.icon + '</div><span>' + esc(a.name) + '</span></div></td>' +
-        '<td><button class="ws-ai-summary-btn" data-toast="สรุปด้วย AI ยังไม่เปิดใช้งานในตัวอย่างนี้" aria-label="AI summary">' +
-          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h11M4 12h16M4 18h11"/><path d="M19 5l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z"/></svg></button></td>' +
-        '<td><div class="ws-creator-avatar">' + creatorSvg + '</div></td>' +
+        '<td>' + creatorHtml + '</td>' +
         '<td>' + PM.fmtLongDate(a.created) + '</td>' +
         '<td>' + PM.fmtLongDate(a.modified) + '</td>' +
         '<td><span class="ws-folder-dash">—</span></td>' +
+        '<td>' + deleteBtnHtml + '</td>' +
       '</tr>';
     }).join("") || '<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:22px;">' + tr("ws.noAssetsMatch") + '</td></tr>';
   }
@@ -303,8 +368,8 @@
     '</div>';
   }
 
-  function renderMemberGroup(g) {
-    var collapsed = collapsedMemberDepts.has(g.key);
+  function renderMemberGroup(g, collapsedSet) {
+    var collapsed = collapsedSet.has(g.key);
     var label = g.key === MEMBERS_UNASSIGNED_KEY ? tr("users.unassignedGroup") : g.name;
     return '<div class="member-group' + (collapsed ? ' collapsed' : '') + '" data-dept="' + esc(g.key) + '">' +
       '<div class="member-group-head" data-action="toggle-member-dept" data-dept="' + esc(g.key) + '">' +
@@ -319,17 +384,13 @@
   function renderMembersBody() {
     var body = document.getElementById("membersBody");
     var groups = groupMembersByDepartment(members);
-    var listHtml = groups.map(renderMemberGroup).join("") || '<div class="no-updates">' + esc(tr("users.noUsers")) + '</div>';
+    var listHtml = groups.map(function (g) { return renderMemberGroup(g, collapsedMemberDepts); }).join("") || '<div class="no-updates">' + esc(tr("users.noUsers")) + '</div>';
 
     body.innerHTML =
-      '<div class="compose-box">' +
-        '<div class="member-add-row">' +
-          '<input type="text" id="memberAddName" placeholder="' + esc(tr("ws.addMemberNamePlaceholder")) + '" />' +
-          '<input type="email" id="memberAddEmail" placeholder="' + esc(tr("ws.addMemberEmailPlaceholder")) + '" />' +
-        '</div>' +
-        '<div class="compose-toolbar"><div class="compose-spacer"></div>' +
-          '<button class="post-btn" id="memberAddBtn">' + esc(tr("ws.addMemberBtn")) + '</button>' +
-        '</div>' +
+      '<div class="member-add-card">' +
+        '<input type="text" class="member-add-input" id="memberAddName" placeholder="' + esc(tr("ws.addMemberNamePlaceholder")) + '" />' +
+        '<input type="email" class="member-add-input" id="memberAddEmail" placeholder="' + esc(tr("ws.addMemberEmailPlaceholder")) + '" />' +
+        '<button class="member-add-btn" id="memberAddBtn">' + esc(tr("ws.addMemberBtn")) + '</button>' +
       '</div>' +
       listHtml;
 
@@ -367,6 +428,132 @@
     }).catch(function () { membersLoaded = false; });
   }
 
+  // ---------------- Collaborators tab ----------------
+  // One group per project the user can see (PM.projectList — same list the
+  // Content tab shows), each with that project's own invited members —
+  // not the whole workspace roster (that's the Members panel / Permissions
+  // tab) and not just whichever one project happens to be "current".
+  var collabSearchQuery = "";
+  var collapsedCollabProjects = new Set();
+  var collapsedPermDepts = new Set();
+
+  function collabMatchesSearch(u) {
+    if (!collabSearchQuery) return true;
+    var q = collabSearchQuery.toLowerCase();
+    return (u.name || "").toLowerCase().indexOf(q) !== -1 || (u.email || "").toLowerCase().indexOf(q) !== -1;
+  }
+
+  var projectsWithMembers = []; // [{project, members}], one entry per visible project
+  var projectsMembersLoaded = false;
+
+  function loadAllProjectsMembers() {
+    return PM.loadProjectList().then(function (list) {
+      return Promise.all(
+        list.map(function (p) {
+          return PM.loadProjectMembers(p.id).then(function (members) {
+            return { project: p, members: members };
+          });
+        })
+      );
+    }).then(function (results) {
+      projectsWithMembers = results;
+      projectsMembersLoaded = true;
+    }).catch(function () { projectsMembersLoaded = false; });
+  }
+
+  function renderCollabProjectGroup(entry) {
+    var filtered = entry.members.filter(collabMatchesSearch);
+    if (collabSearchQuery && filtered.length === 0) return "";
+    var key = entry.project.id;
+    var collapsed = collapsedCollabProjects.has(key);
+    var itemsHtml = filtered.length
+      ? filtered.map(renderMemberItem).join("")
+      : '<div class="no-updates">' + esc(tr("board.noProjectMembers")) + '</div>';
+    return '<div class="member-group' + (collapsed ? ' collapsed' : '') + '" data-project="' + esc(key) + '">' +
+      '<div class="member-group-head" data-action="toggle-collab-project" data-project="' + esc(key) + '">' +
+        '<svg class="member-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>' +
+        '<span class="member-group-name">' + esc(entry.project.title || "Untitled project") + '</span>' +
+        '<span class="member-group-count">' + entry.members.length + '</span>' +
+      '</div>' +
+      '<div class="member-group-items">' + itemsHtml + '</div>' +
+    '</div>';
+  }
+
+  function renderCollabTab() {
+    var wrap = document.getElementById("wsCollabGroups");
+    if (!wrap) return;
+    if (!projectsMembersLoaded) {
+      wrap.innerHTML = '<div class="no-updates">' + esc(tr("users.loadError")) + '</div>';
+      return;
+    }
+    wrap.innerHTML = projectsWithMembers.map(renderCollabProjectGroup).join("")
+      || '<div class="no-updates">' + esc(tr("ws.noAssetsMatch")) + '</div>';
+    wrap.querySelectorAll('[data-action="toggle-collab-project"]').forEach(function (el) {
+      el.addEventListener("click", function () {
+        var key = el.dataset.project;
+        if (collapsedCollabProjects.has(key)) collapsedCollabProjects.delete(key); else collapsedCollabProjects.add(key);
+        renderCollabTab();
+      });
+    });
+  }
+
+  function renderPermTab() {
+    var wrap = document.getElementById("wsPermGroups");
+    if (!wrap) return;
+    if (!membersLoaded) {
+      wrap.innerHTML = '<div class="no-updates">' + esc(tr("users.loadError")) + '</div>';
+      return;
+    }
+    var groups = groupMembersByDepartment(members);
+    wrap.innerHTML = groups.map(function (g) { return renderMemberGroup(g, collapsedPermDepts); }).join("")
+      || '<div class="no-updates">' + esc(tr("users.noUsers")) + '</div>';
+    wrap.querySelectorAll('[data-action="toggle-member-dept"]').forEach(function (el) {
+      el.addEventListener("click", function () {
+        var key = el.dataset.dept;
+        if (collapsedPermDepts.has(key)) collapsedPermDepts.delete(key); else collapsedPermDepts.add(key);
+        renderPermTab();
+      });
+    });
+  }
+
+  function setWsTab(view) {
+    if (view === "permissions" && (!PM.currentUser || PM.currentUser.role !== "admin")) {
+      PM.showToast(tr("ws.permDenied"));
+      return;
+    }
+    wsActiveView = view;
+    document.querySelectorAll(".ws-tab[data-view]").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.view === view);
+    });
+    var showContent = view === "content" || view === "recents";
+    var showCollab = view === "collaborators";
+    var showPerm = view === "permissions";
+    document.getElementById("wsContentToolbar").style.display = showContent ? "" : "none";
+    document.getElementById("wsContentTableWrap").style.display = showContent ? "" : "none";
+    document.getElementById("wsCollabWrap").style.display = showCollab ? "" : "none";
+    document.getElementById("wsPermWrap").style.display = showPerm ? "" : "none";
+    if (showContent) renderWorkspaceTable();
+    if (showCollab) {
+      renderCollabTab();
+      if (!projectsMembersLoaded) loadAllProjectsMembers().then(renderCollabTab);
+    }
+    if (showPerm) {
+      renderPermTab();
+      if (!membersLoaded) loadMembers().then(renderPermTab);
+    }
+  }
+
+  document.querySelectorAll(".ws-tab[data-view]").forEach(function (el) {
+    el.addEventListener("click", function () { setWsTab(el.dataset.view); });
+  });
+
+  document.getElementById("wsCollabSearchInput").addEventListener("input", function (e) {
+    collabSearchQuery = e.target.value;
+    renderCollabTab();
+  });
+  document.getElementById("wsCollabSearchBox").addEventListener("focusin", function () { this.classList.add("focused"); });
+  document.getElementById("wsCollabSearchBox").addEventListener("focusout", function () { this.classList.remove("focused"); });
+
   function openMembersPanel() {
     document.getElementById("membersPanel").classList.add("open");
     document.getElementById("membersBackdrop").classList.add("open");
@@ -394,19 +581,136 @@
   document.getElementById("wsSearchBox").addEventListener("focusin", function () { this.classList.add("focused"); });
   document.getElementById("wsSearchBox").addEventListener("focusout", function () { this.classList.remove("focused"); });
 
-  document.getElementById("cleanupToggle").addEventListener("change", function (e) {
-    PM.showToast(e.target.checked ? "Cleanup mode ยังไม่เปิดใช้งานในตัวอย่างนี้" : "ปิด cleanup mode แล้ว");
+  // ---------------- New project panel (with optional Excel/MSP-XML import) ----------------
+
+  var npImportResult = null; // {groups, tasks} once a file's been parsed, else null
+  var npParsing = false;
+
+  function npResetImport() {
+    npImportResult = null;
+    npParsing = false;
+    document.getElementById("npFileInput").value = "";
+    document.getElementById("npDropzoneIdle").style.display = "";
+    document.getElementById("npDropzoneFile").style.display = "none";
+    var statusEl = document.getElementById("npImportStatus");
+    statusEl.className = "np-import-status";
+    statusEl.textContent = "";
+  }
+  function openNewProjectPanel() {
+    document.getElementById("npNameInput").value = "";
+    document.getElementById("npCreateBtn").disabled = false;
+    npResetImport();
+    document.getElementById("newProjectPanel").classList.add("open");
+    document.getElementById("newProjectBackdrop").classList.add("open");
+    setTimeout(function () { document.getElementById("npNameInput").focus(); }, 50);
+  }
+  function closeNewProjectPanel() {
+    document.getElementById("newProjectPanel").classList.remove("open");
+    document.getElementById("newProjectBackdrop").classList.remove("open");
+  }
+
+  document.getElementById("wsNewProjectBtn").addEventListener("click", openNewProjectPanel);
+  document.getElementById("newProjectCloseBtn").addEventListener("click", closeNewProjectPanel);
+  document.getElementById("newProjectBackdrop").addEventListener("click", closeNewProjectPanel);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && document.getElementById("newProjectPanel").classList.contains("open")) closeNewProjectPanel();
   });
 
-  document.getElementById("wsNewProjectBtn").addEventListener("click", function () {
-    var name = prompt(tr("ws.newProjectPrompt"), "");
-    if (name === null) return;
-    name = name.trim();
-    if (!name) return;
-    PM.createProjectApi(name).then(function (project) {
+  document.getElementById("npDropzoneIdle").addEventListener("click", function () {
+    document.getElementById("npFileInput").click();
+  });
+  document.getElementById("npFileRemoveBtn").addEventListener("click", function (e) {
+    e.stopPropagation();
+    npResetImport();
+  });
+  document.getElementById("npFileInput").addEventListener("change", function () {
+    var file = this.files[0];
+    if (!file) return;
+    document.getElementById("npDropzoneIdle").style.display = "none";
+    document.getElementById("npDropzoneFile").style.display = "flex";
+    document.getElementById("npFileName").textContent = file.name;
+    var statusEl = document.getElementById("npImportStatus");
+    statusEl.className = "np-import-status";
+    statusEl.textContent = tr("ws.importParsing");
+    npParsing = true;
+    PM.ProjectImport.parseFile(file, {
+      fallbackGroupName: tr("ws.importedGroupName"),
+      fallbackTaskName: tr("ws.importedTaskName"),
+      onOcrProgress: function (page, total) {
+        statusEl.className = "np-import-status";
+        statusEl.textContent = tr("ws.importOcrProgress").replace("{page}", page).replace("{total}", total);
+      }
+    }).then(function (result) {
+      npParsing = false;
+      npImportResult = result;
+      var subCount = result.tasks.reduce(function (n, t) { return n + t.subitems.length; }, 0);
+      statusEl.className = "np-import-status ok";
+      statusEl.textContent = tr("ws.importSummary")
+        .replace("{groups}", result.groups.length)
+        .replace("{tasks}", result.tasks.length)
+        .replace("{subitems}", subCount) +
+        (result.usedOcr ? tr("ws.importSummaryOcr") : "") +
+        (result.skippedPages ? tr("ws.importSkippedPages").replace("{skipped}", result.skippedPages).replace("{total}", result.totalPages) : "");
+    }).catch(function (err) {
+      npParsing = false;
+      npImportResult = null;
+      statusEl.className = "np-import-status error";
+      statusEl.textContent = (err && err.message) || tr("ws.importError");
+    });
+  });
+
+  document.getElementById("npCreateBtn").addEventListener("click", function () {
+    var name = document.getElementById("npNameInput").value.trim();
+    if (!name) {
+      PM.showToast(tr("ws.projectNameRequired"));
+      document.getElementById("npNameInput").focus();
+      return;
+    }
+    if (npParsing) {
+      PM.showToast(tr("ws.importStillParsing"));
+      return;
+    }
+    var btn = this;
+    btn.disabled = true;
+    // Import data (if any) is seeded in this same request/transaction —
+    // see PM.createProjectApi — so there's no separate save step that can
+    // fail after the project already exists.
+    PM.createProjectApi(name, npImportResult).then(function (project) {
       window.location.href = "board.html?id=" + encodeURIComponent(project.id);
-    }).catch(function () {
-      PM.showToast("Could not create project");
+    }).catch(function (err) {
+      btn.disabled = false;
+      console.error("Create project failed:", err);
+      PM.showToast((err && err.message) || tr("ws.createProjectError"));
+    });
+  });
+
+  // Delegated on the tbody container itself (not per-row, and not on
+  // document) — renderWorkspaceTable() replaces the tbody's innerHTML on
+  // every render, which would drop a directly-attached listener, but the
+  // container element survives so a listener bound to it doesn't. Binding
+  // here rather than on document also matters: shared.js's own delegated
+  // click handler on document.body navigates any click inside a
+  // `tr[data-href]` to the board — since tbody sits between this button and
+  // body in the bubble path, stopping propagation here (not just
+  // preventDefault) is what keeps that navigation from firing too.
+  document.getElementById("wsTableBody").addEventListener("click", function (e) {
+    var btn = e.target.closest('[data-action="delete-project"]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var id = btn.dataset.project;
+    var name = btn.dataset.name;
+    if (!window.confirm(tr("ws.deleteProjectConfirm").replace("{name}", name))) return;
+    btn.disabled = true;
+    PM.deleteProjectApi(id).then(function () {
+      PM.showToast(tr("ws.projectDeleted"));
+      return PM.loadProjectList();
+    }).then(function () {
+      renderWorkspaceTable();
+    }).catch(function (err) {
+      btn.disabled = false;
+      console.error("Delete project failed:", err);
+      PM.showToast((err && err.message) || tr("ws.deleteProjectError"));
     });
   });
 

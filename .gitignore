@@ -12,6 +12,9 @@ server/.env
 logs/
 .pm2/
 
+# User-uploaded task attachments
+server/uploads/
+
 # OS cruft
 .DS_Store
 

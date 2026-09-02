@@ -1,0 +1,500 @@
+<meta charset="utf-8" />
+<title>IT Project Board — Document Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared/styles.css?v=64" />
+
+<button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
+</button>
+
+<div class="shell">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-top">
+        <span class="sb-top-label" data-i18n="sb.workspace">Workspace</span>
+        <div class="sb-top-icons">
+          <button class="sb-icon-btn" data-toast="เมนูเพิ่มเติมยังไม่เปิดใช้งานในตัวอย่างนี้" aria-label="เมนู">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+          </button>
+          <button class="sb-icon-btn" id="sidebarCollapseBtn" aria-label="ย่อแถบด้านข้าง">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 6l-6 6 6 6M18 6l-6 6 6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sb-logo-row">
+        <div class="sb-logo-badge">
+          <img src="fatima-logo.svg?v=3" alt="Fatima" />
+        </div>
+      </div>
+      <div class="sb-workspace-row sb-workspace-row--static">
+        <div class="sb-workspace-text">
+          <div class="sb-workspace-name" id="sbWorkspaceName" data-i18n="sb.mainWorkspace">Fatima workspace</div>
+          <div class="sb-workspace-caption" data-i18n="sb.caption">Project management</div>
+        </div>
+      </div>
+      <div class="sb-divider"></div>
+
+      <div class="sb-section-label" id="sbContentLabel">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
+        <span data-i18n="sb.content">Content</span>
+      </div>
+      <div class="sb-nav-list" id="sbNavList">
+        <a class="sb-nav-item" data-view="workspace" href="workspace.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span data-i18n="sb.manageWorkspace">Manage workspace</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="board" id="sbBoardLink" href="board.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>
+          <span id="sbBoardLabel">Test Project</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>
+          <span data-i18n="sb.dashboard">Dashboard and reporting</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="documents" id="sbDocumentsLink" href="documents.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+          <span data-i18n="sb.documentData">Document DATA</span>
+        </a>
+        <a class="sb-nav-item" data-view="users" href="users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
+          <span data-i18n="sb.manageUsers">Manage users</span>
+        </a>
+      </div>
+
+      <div class="sb-spacer"></div>
+
+      <div class="sb-auth-row">
+        <span class="sb-auth-name" id="sbAuthName"></span>
+        <button class="sb-logout-btn" id="sbLogoutBtn" data-i18n="auth.logout" type="button">Log out</button>
+      </div>
+
+      <button class="lang-toggle-btn" id="langToggleBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 4 6 4 9s-1.5 6.3-4 9c-2.5-2.7-4-6-4-9s1.5-6.3 4-9z"/></svg>
+        <span id="langToggleLabel">ไทย</span>
+      </button>
+
+      <div class="sb-progress-card">
+        <div class="sb-progress-label" id="sbProgressLabel" data-i18n="sb.progressLabel">Project progress</div>
+        <div class="sb-progress-pct" id="sbProgressPct">0%</div>
+        <div class="sb-progress-sub" id="sbProgressSub"></div>
+        <a class="sb-progress-btn" id="sbProgressBtn" href="dashboard.html" data-i18n="sb.progressBtn">View details</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Main area ============ -->
+  <div class="main-area" id="mainArea">
+    <div class="view-panel active" id="documentsView">
+      <div class="db-breadcrumb">
+        <a href="workspace.html" data-i18n="ws.content">Content</a> / <span data-i18n="sb.documentData">Document DATA</span>
+      </div>
+      <h1 class="db-title" data-i18n="sb.documentData">Document DATA</h1>
+      <div class="db-sub" id="docSub"></div>
+
+      <div class="ws-toolbar" style="margin-top:14px;">
+        <label class="search-box" id="docSearchBox">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input class="search-input" id="docSearchInput" placeholder="Search" data-i18n-placeholder="common.search" />
+        </label>
+      </div>
+
+      <div id="docProjectGroups"></div>
+    </div>
+  </div>
+  <!-- /main-area -->
+</div>
+<!-- /shell -->
+
+<div class="toast" id="toast"></div>
+
+<script src="shared/shared.js?v=67"></script>
+<script>
+(function () {
+  "use strict";
+  var PM = window.PM;
+
+  function esc(s) { return PM.esc(s); }
+  function tr(key) { return PM.tr(key); }
+  function fmtDate(s) { return PM.fmtDate(s); }
+
+  var docSearchQuery = "";
+  var collapsedDocProjects = new Set();
+  var collapsedDocFolders = new Set(); // keyed "projectId::taskName"
+
+  var imageIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+  var folderIconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>';
+  var chevronRightSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 6l6 6-6 6"/></svg>';
+  var chevronDownSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>';
+  var fileStackIconSvg = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
+  var foldersIconSvg = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>';
+  var emptyBoxIconSvg = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>';
+
+  // File-type badge: a small colored square with a 3-letter extension
+  // label (image files get the picture glyph instead) — quick visual
+  // scanning without needing a distinct pictogram per file type.
+  var FILE_TYPE_COLORS = {
+    pdf: "#ef4444", doc: "#2f6fed", docx: "#2f6fed",
+    xls: "#1a9d6c", xlsx: "#1a9d6c", csv: "#1a9d6c",
+    ppt: "#e8792e", pptx: "#e8792e",
+    zip: "#8a6a4a", rar: "#8a6a4a", "7z": "#8a6a4a"
+  };
+  function fileTypeBadge(f) {
+    if (f.isImage) return { color: "#8b5cf6", inner: imageIconSvg };
+    var ext = (f.name.split(".").pop() || "").toLowerCase();
+    var color = FILE_TYPE_COLORS[ext] || "#676879";
+    var label = ext.length <= 4 ? ext.toUpperCase() : "";
+    return { color: color, inner: esc(label) };
+  }
+
+  // Attachments aren't a separate table — they're just <a>/<img> tags
+  // embedded in each rich-HTML update's stored text (see wireComposeAttach
+  // in board.html). Pulls the attachments out of one already-loaded
+  // project's state (see loadAllProjectsDocuments for how every visible
+  // project gets loaded this way).
+  //
+  // A file's folder is exactly the folder its source update lives under on
+  // the board — as a *list of segments*, not a joined-then-resplit string:
+  // group name, task name, then each subitem-folder level. Group and task
+  // names are free text and often legitimately contain "/" (e.g. "Configure
+  // VLAN / routing / firewall policy") — joining with "/" and splitting
+  // that back apart would shred a name like that into fake nested folders,
+  // so each segment stays exactly the literal string it came from all the
+  // way through rendering.
+  function collectAttachmentsFromUpdates(updates, folderSegs, results) {
+    (updates || []).forEach(function (u) {
+      if (!u.isHtml || !u.text) return;
+      var div = document.createElement("div");
+      div.innerHTML = u.text;
+      div.querySelectorAll('a[href*="/uploads/"]').forEach(function (a) {
+        var img = a.querySelector("img");
+        var name = img ? (img.getAttribute("alt") || "") : a.textContent.replace(/^\s*\u{1F4CE}\s*/u, "").replace(/\s*\([^)]*\)\s*$/, "").trim();
+        if (!name) {
+          try { name = decodeURIComponent(a.href.split("/").pop()); } catch (e) { name = a.href.split("/").pop(); }
+        }
+        results.push({
+          url: a.href,
+          name: name,
+          isImage: !!img,
+          folderSegs: folderSegs,
+          author: u.author || "",
+          time: u.time || ""
+        });
+      });
+    });
+  }
+  // The board itself groups every task under a Group ("Design",
+  // "Procurement", ...) before you ever get to the task's own folder — so
+  // that group name is the true top level of the hierarchy, one step above
+  // the task-as-root-folder rule (see board.html). Mirrors that here as
+  // Group › Task › Subitem-folder-levels so Document DATA's tree matches
+  // the board section-by-section instead of jumping straight from project
+  // to task.
+  function groupNameLookup(state) {
+    var byId = {};
+    (state.groups || []).forEach(function (g) { byId[g.id] = g.name || ""; });
+    return byId;
+  }
+  function taskRootSegs(groupById, t) {
+    var groupName = groupById[t.groupId] || "";
+    var segs = [];
+    if (groupName) segs.push(groupName);
+    segs.push(t.name || tr("doc.noTask"));
+    return segs;
+  }
+  // A subitem's own folder is stored relative to its task, e.g. "Configs" or
+  // "Configs/2024" — that value was already sanitized so a single level can
+  // never contain "/" (see the folder picker's search input in board.html),
+  // so splitting *this* value is safe: unlike a group/task name, every "/"
+  // left in it really is an intentional level boundary the app itself put
+  // there when the user nested a subfolder.
+  function subitemSegs(taskSegs, s) {
+    var extra = s.folder ? s.folder.split("/").filter(Boolean) : [];
+    return taskSegs.concat(extra);
+  }
+
+  function extractAttachments(state) {
+    var results = [];
+    var groupById = groupNameLookup(state);
+    (state.tasks || []).forEach(function (t) {
+      var taskSegs = taskRootSegs(groupById, t);
+      collectAttachmentsFromUpdates(t.updates, taskSegs, results);
+      (t.subitems || []).forEach(function (s) {
+        collectAttachmentsFromUpdates(s.updates, subitemSegs(taskSegs, s), results);
+      });
+    });
+    results.sort(function (a, b) { return (b.time || "").localeCompare(a.time || ""); });
+    return results;
+  }
+
+  // Every task is a folder the moment it exists (its root folder is always
+  // its own name — see board.html), and every subitem with a folder set is
+  // a subfolder the moment that's chosen — neither needs a file attached
+  // first. This walks a project's state for those segment lists so
+  // buildDocFolderTree can seed empty folder nodes for them, keeping
+  // Document DATA in sync with whatever folders exist on the board right
+  // now, not just the ones that happen to already hold a file.
+  function extractFolderSegLists(state) {
+    var lists = [];
+    var groupById = groupNameLookup(state);
+    (state.tasks || []).forEach(function (t) {
+      var taskSegs = taskRootSegs(groupById, t);
+      lists.push(taskSegs);
+      (t.subitems || []).forEach(function (s) {
+        lists.push(subitemSegs(taskSegs, s));
+      });
+    });
+    return lists;
+  }
+
+  // A task/subitem that's currently Stuck and has a reason and/or attached
+  // evidence gets one extra, always-red folder inside its own folder — the
+  // stuck reason text plus its attachments, so anyone browsing Document DATA
+  // sees exactly what's blocking that item without opening the board.
+  // Disappears again the moment the item leaves Stuck (the underlying data
+  // stays on the task/subitem either way — see board.html — only this
+  // derived folder view goes away).
+  function stuckFolderName() { return tr("doc.stuckFolderName"); }
+  function extractStuckEntries(state) {
+    var groupById = groupNameLookup(state);
+    var entries = [];
+    (state.tasks || []).forEach(function (t) {
+      var taskSegs = taskRootSegs(groupById, t);
+      if (t.status === "stuck" && ((t.stuckReason && t.stuckReason.trim()) || (t.stuckAttachments && t.stuckAttachments.length))) {
+        entries.push({ segs: taskSegs.concat([stuckFolderName()]), reason: t.stuckReason || "", attachments: t.stuckAttachments || [] });
+      }
+      (t.subitems || []).forEach(function (s) {
+        var subSegs = subitemSegs(taskSegs, s);
+        if (s.status === "stuck" && ((s.stuckReason && s.stuckReason.trim()) || (s.stuckAttachments && s.stuckAttachments.length))) {
+          entries.push({ segs: subSegs.concat([stuckFolderName()]), reason: s.stuckReason || "", attachments: s.stuckAttachments || [] });
+        }
+      });
+    });
+    return entries;
+  }
+  function stuckEntryMatchesSearch(entry) {
+    if (!docSearchQuery) return true;
+    var q = docSearchQuery.toLowerCase();
+    if (entry.segs.join(" / ").toLowerCase().indexOf(q) !== -1) return true;
+    if ((entry.reason || "").toLowerCase().indexOf(q) !== -1) return true;
+    return (entry.attachments || []).some(function (a) { return (a.name || "").toLowerCase().indexOf(q) !== -1; });
+  }
+
+  // One group per project the user can see — mirrors the Collaborators tab
+  // pattern in workspace.html (loadAllProjectsMembers), because files are
+  // organized by project too, not lumped into one flat cross-project list.
+  var projectsWithDocs = []; // [{project, files, folderSegLists, stuckEntries}], one entry per visible project
+  var docsLoaded = false;
+
+  function loadAllProjectsDocuments() {
+    return PM.loadProjectList().then(function (list) {
+      return Promise.all(
+        list.map(function (p) {
+          return PM.fetchProjectState(p.id).then(function (state) {
+            return { project: p, files: extractAttachments(state), folderSegLists: extractFolderSegLists(state), stuckEntries: extractStuckEntries(state) };
+          }).catch(function () {
+            return { project: p, files: [], folderSegLists: [], stuckEntries: [] };
+          });
+        })
+      );
+    }).then(function (results) {
+      projectsWithDocs = results;
+      docsLoaded = true;
+    }).catch(function () { docsLoaded = false; });
+  }
+
+  function docMatchesSearch(f) {
+    if (!docSearchQuery) return true;
+    var q = docSearchQuery.toLowerCase();
+    return f.name.toLowerCase().indexOf(q) !== -1 || f.folderSegs.join(" / ").toLowerCase().indexOf(q) !== -1;
+  }
+
+  // Builds the same nested folder structure the board's own folder picker
+  // does (see buildFolderTree in board.html) — one node per segment,
+  // including "virtual" intermediate folders implied by a deeper segment
+  // list, so a task with a subitem filed under e.g. "Configs/2024" shows up
+  // here as Task › Configs › 2024, exactly like it appears when picking a
+  // folder on the board. Segments are taken as-is (never re-split by "/"),
+  // so a group/task name that happens to contain "/" stays one folder.
+  function buildDocFolderTree(files, folderSegLists, stuckEntries) {
+    var root = { name: "", path: "", children: {}, files: [] };
+    function ensureSegs(segs) {
+      var node = root, cur = [];
+      segs.forEach(function (seg) {
+        cur.push(seg);
+        if (!node.children[seg]) node.children[seg] = { name: seg, path: cur.join(" / "), children: {}, files: [] };
+        node = node.children[seg];
+      });
+      return node;
+    }
+    (folderSegLists || []).forEach(function (segs) { ensureSegs(segs); });
+    files.forEach(function (f) { ensureSegs(f.folderSegs).files.push(f); });
+    var origin = PM.API_BASE.replace(/\/api$/, "");
+    (stuckEntries || []).forEach(function (entry) {
+      var node = ensureSegs(entry.segs);
+      node.isProblem = true;
+      node.reason = entry.reason;
+      (entry.attachments || []).forEach(function (a) {
+        node.files.push({
+          url: origin + a.url,
+          name: a.name,
+          isImage: (a.mime || "").indexOf("image/") === 0,
+          folderSegs: entry.segs,
+          author: "",
+          time: ""
+        });
+      });
+    });
+    return root;
+  }
+  function countFilesInNode(node) {
+    var n = node.files.length;
+    Object.keys(node.children).forEach(function (k) { n += countFilesInNode(node.children[k]); });
+    return n;
+  }
+  function countFolderNodes(node) {
+    var keys = Object.keys(node.children);
+    var n = keys.length;
+    keys.forEach(function (k) { n += countFolderNodes(node.children[k]); });
+    return n;
+  }
+
+  function renderDocFolderNode(projectId, node) {
+    var folderKey = projectId + "::" + node.path;
+    var collapsed = docSearchQuery ? false : collapsedDocFolders.has(folderKey);
+    // Board order, not alphabetical: buildDocFolderTree adds each group's
+    // tasks (and each task's subitems) in the same sequence the board API
+    // already returns them in (sort_order — drag-and-drop position), and
+    // object key insertion order preserves that as long as nothing re-sorts
+    // it here.
+    var childKeys = Object.keys(node.children);
+
+    var fileRowsHtml = node.files.map(function (f) {
+      var badge = fileTypeBadge(f);
+      return '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="doc-file-row">' +
+          '<div class="doc-file-icon" style="background:' + badge.color + '22; color:' + badge.color + ';">' + badge.inner + '</div>' +
+          '<span class="doc-file-name">' + esc(f.name) + '</span>' +
+          '<span class="doc-file-meta">' + esc(f.author) + (f.time ? " · " + esc(fmtDate(f.time.slice(0, 10))) : "") + '</span>' +
+        '</a>';
+    }).join("");
+    // Each level's own .doc-file-list already carries the standard indent +
+    // connector line (see CSS), so nesting child folder divs straight
+    // inside it is what produces the growing indent per depth — no manual
+    // per-level offset needed here.
+    var childrenHtml = childKeys.map(function (k) { return renderDocFolderNode(projectId, node.children[k]); }).join("");
+    var reasonHtml = (node.isProblem && node.reason) ? '<div class="doc-problem-reason">' + esc(node.reason) + '</div>' : "";
+
+    return '<div class="doc-folder' + (collapsed ? ' collapsed' : '') + (node.isProblem ? ' doc-folder-problem' : '') + '">' +
+        '<div class="doc-folder-head" data-action="toggle-doc-folder" data-folder-key="' + esc(folderKey) + '">' +
+          '<button class="doc-folder-toggle">' + (collapsed ? chevronRightSvg : chevronDownSvg) + '</button>' +
+          '<span class="doc-folder-icon">' + folderIconSvg + '</span>' +
+          '<span class="doc-folder-name">' + esc(node.name) + '</span>' +
+          '<span class="doc-folder-count">' + countFilesInNode(node) + '</span>' +
+        '</div>' +
+        '<div class="doc-file-list">' + reasonHtml + fileRowsHtml + childrenHtml + '</div>' +
+      '</div>';
+  }
+
+  function renderDocProjectGroup(entry) {
+    var filtered = entry.files.filter(docMatchesSearch);
+    // A search also matches a (possibly still-empty) folder by name — not
+    // just files inside it — so creating a folder makes it findable here
+    // right away, before anything's ever been attached to it.
+    var matchedFolderSegLists = docSearchQuery
+      ? entry.folderSegLists.filter(function (segs) { return segs.join(" / ").toLowerCase().indexOf(docSearchQuery.toLowerCase()) !== -1; })
+      : entry.folderSegLists;
+    var matchedStuckEntries = (entry.stuckEntries || []).filter(stuckEntryMatchesSearch);
+    if (docSearchQuery && filtered.length === 0 && matchedFolderSegLists.length === 0 && matchedStuckEntries.length === 0) return "";
+    var key = entry.project.id;
+    var collapsed = collapsedDocProjects.has(key);
+    var tree = buildDocFolderTree(filtered, matchedFolderSegLists, matchedStuckEntries);
+    var topKeys = Object.keys(tree.children); // board order — see renderDocFolderNode
+    var bodyHtml = topKeys.length
+      ? topKeys.map(function (k) { return renderDocFolderNode(key, tree.children[k]); }).join("")
+      : '<div class="doc-empty-state">' + emptyBoxIconSvg + '<span>' + esc(tr("doc.empty")) + '</span></div>';
+    var initials = (entry.project.title || "?").trim().slice(0, 2).toUpperCase();
+
+    return '<div class="doc-project-card' + (collapsed ? ' collapsed' : '') + '">' +
+      '<div class="doc-project-head" data-action="toggle-doc-project" data-project="' + esc(key) + '">' +
+        '<div class="doc-project-icon">' + esc(initials) + '</div>' +
+        '<span class="doc-project-title">' + esc(entry.project.title || "Untitled project") + '</span>' +
+        '<span class="doc-project-count">' + countFilesInNode(tree) + '</span>' +
+        '<span class="doc-project-chevron">' + chevronDownSvg + '</span>' +
+      '</div>' +
+      '<div class="doc-project-body">' + bodyHtml + '</div>' +
+    '</div>';
+  }
+
+  function render() {
+    var wrap = document.getElementById("docProjectGroups");
+    if (!docsLoaded) {
+      wrap.innerHTML = '<div class="no-updates">' + esc(tr("users.loadError")) + '</div>';
+      return;
+    }
+    var totalFiles = 0, totalFolders = 0;
+    projectsWithDocs.forEach(function (e) {
+      var t = buildDocFolderTree(e.files, e.folderSegLists, e.stuckEntries);
+      totalFiles += countFilesInNode(t);
+      totalFolders += countFolderNodes(t);
+    });
+    document.getElementById("docSub").innerHTML = '<div class="doc-stats">' +
+      '<div class="doc-stat-chip">' + fileStackIconSvg +
+        '<div><div class="doc-stat-num">' + totalFiles + '</div><div class="doc-stat-label">' + esc(tr("doc.statFiles")) + '</div></div>' +
+      '</div>' +
+      '<div class="doc-stat-chip">' + foldersIconSvg +
+        '<div><div class="doc-stat-num">' + totalFolders + '</div><div class="doc-stat-label">' + esc(tr("doc.statFolders")) + '</div></div>' +
+      '</div>' +
+      '<div class="doc-stat-chip">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>' +
+        '<div><div class="doc-stat-num">' + projectsWithDocs.length + '</div><div class="doc-stat-label">' + esc(tr("doc.statProjects")) + '</div></div>' +
+      '</div>' +
+    '</div>';
+
+    wrap.innerHTML = projectsWithDocs.map(renderDocProjectGroup).join("")
+      || '<div class="no-updates">' + esc(tr("ws.noAssetsMatch")) + '</div>';
+    wrap.querySelectorAll('[data-action="toggle-doc-project"]').forEach(function (el) {
+      el.addEventListener("click", function () {
+        var key = el.dataset.project;
+        if (collapsedDocProjects.has(key)) collapsedDocProjects.delete(key); else collapsedDocProjects.add(key);
+        render();
+      });
+    });
+    wrap.querySelectorAll('[data-action="toggle-doc-folder"]').forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var key = el.dataset.folderKey;
+        if (collapsedDocFolders.has(key)) collapsedDocFolders.delete(key); else collapsedDocFolders.add(key);
+        render();
+      });
+    });
+  }
+
+  var searchInput = document.getElementById("docSearchInput");
+  searchInput.addEventListener("input", function (e) { docSearchQuery = e.target.value; render(); });
+  searchInput.addEventListener("focus", function () { document.getElementById("docSearchBox").classList.add("focused"); });
+  searchInput.addEventListener("blur", function () { document.getElementById("docSearchBox").classList.remove("focused"); });
+
+  function renderAll() {
+    render();
+    PM.syncSidebarLinks();
+    PM.renderSidebarProgress();
+  }
+
+  // ---------------- init ----------------
+  // Gated: nothing else runs until the session is confirmed valid server-side.
+
+  PM.requireAuth().then(function () {
+    PM.resolveProjectId();
+    PM.state = PM.loadCachedState() || PM.seedState();
+    PM.initSidebar("documents", renderAll);
+    renderAll();
+
+    loadAllProjectsDocuments().then(renderAll).catch(function () {
+      PM.showToast("Offline — using local data (API unreachable)");
+    });
+  }).catch(function () {}); // requireAuth already redirected to login.html
+})();
+</script>

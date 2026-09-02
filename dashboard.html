@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css" />
+<link rel="stylesheet" href="shared/styles.css?v=64" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -30,14 +30,12 @@
           <img src="fatima-logo.svg?v=3" alt="Fatima" />
         </div>
       </div>
-      <div class="sb-workspace-row" data-toast="สลับ workspace ยังไม่เปิดใช้งานในตัวอย่างนี้">
+      <div class="sb-workspace-row sb-workspace-row--static">
         <div class="sb-workspace-text">
           <div class="sb-workspace-name" id="sbWorkspaceName" data-i18n="sb.mainWorkspace">Fatima workspace</div>
           <div class="sb-workspace-caption" data-i18n="sb.caption">Project management</div>
         </div>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="color:var(--sb-text-faint);flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <button class="sb-add-workspace" data-toast="เพิ่ม workspace ใหม่ยังไม่เปิดใช้งานในตัวอย่างนี้" style="display:none;" aria-label="เพิ่ม workspace"></button>
       <div class="sb-divider"></div>
 
       <div class="sb-section-label" id="sbContentLabel">
@@ -49,17 +47,21 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
           <span data-i18n="sb.manageWorkspace">Manage workspace</span>
         </a>
-        <a class="sb-nav-item" data-view="users" href="users.html">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
-          <span data-i18n="sb.manageUsers">Manage users</span>
-        </a>
-        <a class="sb-nav-item" data-view="board" id="sbBoardLink" href="board.html">
+        <a class="sb-nav-item sb-nav-sub" data-view="board" id="sbBoardLink" href="board.html">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>
           <span id="sbBoardLabel">Test Project</span>
         </a>
-        <a class="sb-nav-item" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
+        <a class="sb-nav-item sb-nav-sub" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>
           <span data-i18n="sb.dashboard">Dashboard and reporting</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="documents" id="sbDocumentsLink" href="documents.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+          <span data-i18n="sb.documentData">Document DATA</span>
+        </a>
+        <a class="sb-nav-item" data-view="users" href="users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
+          <span data-i18n="sb.manageUsers">Manage users</span>
         </a>
       </div>
 
@@ -76,7 +78,7 @@
       </button>
 
       <div class="sb-progress-card">
-        <div class="sb-progress-label" data-i18n="sb.progressLabel">Project progress</div>
+        <div class="sb-progress-label" id="sbProgressLabel" data-i18n="sb.progressLabel">Project progress</div>
         <div class="sb-progress-pct" id="sbProgressPct">0%</div>
         <div class="sb-progress-sub" id="sbProgressSub"></div>
         <a class="sb-progress-btn" id="sbProgressBtn" href="dashboard.html" data-i18n="sb.progressBtn">View details</a>
@@ -112,7 +114,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js"></script>
+<script src="shared/shared.js?v=67"></script>
 <script>
 (function () {
   "use strict";
