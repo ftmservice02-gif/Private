@@ -5,6 +5,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
+const { execFile } = require("child_process");
 const multer = require("multer");
 const pool = require("./db");
 const { sendProjectInviteEmail } = require("./mailer");
@@ -852,6 +854,70 @@ app.post("/api/uploads", requireAuth, (req, res) => {
 });
 
 app.use("/uploads", express.static(uploadsDir));
+
+// ---------------- .mpp import (Microsoft Project native file) ----------------
+// The browser has no way to parse .mpp — it's a proprietary binary format —
+// so this shells out to MPXJ (a Java library; see server/mpxj/) to convert
+// the upload to MSPDI XML, which is exactly the format
+// shared/project-import.js's MS Project XML import already parses. The
+// client-side import flow is therefore unchanged for every format except
+// this one extra network hop; see PM.ProjectImport.parseFile's ".mpp"
+// branch in project-import.js.
+
+const mppTmpDir = path.join(os.tmpdir(), "pm-board-mpp-import");
+fs.mkdirSync(mppTmpDir, { recursive: true });
+
+const mppUpload = multer({
+  storage: multer.diskStorage({
+    destination: mppTmpDir,
+    filename: (req, file, cb) => cb(null, crypto.randomBytes(16).toString("hex") + ".mpp"),
+  }),
+  limits: { fileSize: 30 * 1024 * 1024 }, // MS Project files can run larger than a typical chat attachment
+});
+
+// Built by server/mpxj/build.sh — gitignored (see the comment in
+// server/mpxj/pom.xml for why it's rebuilt locally rather than committed).
+const MPXJ_JAR = path.join(__dirname, "mpxj", "target", "mpxj-convert-1.0.jar");
+
+app.post("/api/import/mpp", requireAuth, (req, res) => {
+  mppUpload.single("file")(req, res, (err) => {
+    if (err) {
+      const msg = err.code === "LIMIT_FILE_SIZE" ? "File is larger than 30MB" : "Upload failed";
+      return res.status(400).json({ error: msg });
+    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    const inPath = req.file.path;
+    const cleanupIn = () => fs.unlink(inPath, () => {});
+
+    if (!fs.existsSync(MPXJ_JAR)) {
+      cleanupIn();
+      return res.status(501).json({ error: "MPP import isn't set up on this server yet — run server/mpxj/build.sh (needs Java + Maven), then retry" });
+    }
+
+    const outPath = inPath + ".xml";
+    execFile(
+      "java",
+      ["-cp", MPXJ_JAR, "org.mpxj.sample.MpxjConvert", inPath, outPath],
+      { timeout: 30000 },
+      (convErr) => {
+        cleanupIn();
+        if (convErr) {
+          fs.unlink(outPath, () => {});
+          console.error("[mpp-import] MPXJ conversion failed:", convErr.message);
+          return res.status(400).json({ error: "Could not read this .mpp file — it may be corrupt, password-protected, or an unsupported MS Project version" });
+        }
+        fs.readFile(outPath, "utf8", (readErr, xml) => {
+          fs.unlink(outPath, () => {});
+          if (readErr) {
+            console.error("[mpp-import] Failed to read converted XML:", readErr.message);
+            return res.status(500).json({ error: "Conversion succeeded but the result couldn't be read" });
+          }
+          res.json({ xml });
+        });
+      }
+    );
+  });
+});
 
 const PORT = process.env.PORT || 8790;
 app.listen(PORT, () => {

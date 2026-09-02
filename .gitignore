@@ -2,6 +2,10 @@
 node_modules/
 jsdomtest/node_modules/
 
+# Built by server/mpxj/build.sh (a ~30MB shaded jar — see the comment in
+# server/mpxj/pom.xml for why this is rebuilt locally instead of committed)
+server/mpxj/target/
+
 # Secrets / environment
 .env
 .env.*

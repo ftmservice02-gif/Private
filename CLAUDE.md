@@ -60,13 +60,21 @@ Browser  ──fetch (Bearer token)──►  Express API (server/, :8790)  ─�
 │   │                        requireAuth), save-status state machine, API client functions.
 │   │                        Loaded by every page except login.html's setup flow.
 │   ├── styles.css           Single shared stylesheet (CSS custom properties for theming) for all pages
-│   ├── project-import.js    Excel (.xlsx/.xls) and MS Project XML import → board {groups,tasks} shape
+│   ├── project-import.js    Excel (.xlsx/.xls), MS Project XML, and .mpp (via the server, see below)
+│   │                        import → board {groups,tasks} shape
 │   └── vendor/               Vendored third-party libs (no npm/CDN for these): pdf.js, Tesseract.js
 │                            (+ tessdata for English/Thai OCR), SheetJS (xlsx.full.min.js) — used by
 │                            workspace.html's "import from Excel/MSP-XML/PDF" flow (PDF text or OCR).
 └── server/
     ├── server.js             Express app: all /api/* routes (see "Backend routes" below)
     ├── db.js                 pg Pool + a DATE type-parser fix (keeps dates as raw "YYYY-MM-DD" strings)
+    ├── mpxj/                  Maven project (pom.xml + build.sh) that builds a shaded jar bundling
+    │                        MPXJ (github.com/joniles/mpxj) — POST /api/import/mpp shells out to it
+    │                        to convert an uploaded .mpp to MSPDI XML, which project-import.js then
+    │                        parses with the same code path as a regular MS Project XML import.
+    │                        target/ (the built jar, ~30MB) is gitignored — run mpxj/build.sh once
+    │                        (needs a JDK 11+ and Maven) to enable .mpp import; without it the
+    │                        endpoint returns a 501 telling the admin to run the build.
     ├── mailer.js              Nodemailer (Gmail SMTP) — project invite emails; no-ops if SMTP env vars unset
     ├── migrate.js             Runs schema.sql, then seeds server/seed-data.json if `projects` is empty
     ├── schema.sql             The entire DB schema (additive, idempotent — see "Database" above)
@@ -137,6 +145,20 @@ static file server as long-lived processes.
 "http://localhost:8790/api"` — there is no environment-based API URL
 switching yet, so a non-localhost deploy needs that line changed (and the
 `APP_BASE_URL` env var kept in sync for invite email links).
+
+**Optional: `.mpp` (native Microsoft Project) import** — the workspace
+"Import from Excel, Microsoft Project (.mpp/.xml), or PDF" flow accepts
+`.mpp` too, but it needs a one-time build:
+
+```bash
+cd server/mpxj
+./build.sh   # needs a JDK 11+ and Maven; downloads MPXJ from Maven Central
+```
+
+Without this, `.xlsx`/`.xls`/`.xml`/`.pdf` import still works normally —
+only `.mpp` uploads get a "not set up on this server yet" error
+(`POST /api/import/mpp` returns 501). See `server/mpxj/pom.xml` for why the
+built jar isn't just committed to the repo.
 
 ## Code conventions
 

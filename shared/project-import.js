@@ -533,8 +533,26 @@
     return { groups: groups, tasks: tasks };
   }
 
+  // Native .mpp is a proprietary binary format the browser can't parse —
+  // uploaded to the server instead, which shells out to MPXJ (a Java
+  // library, see server/mpxj/) to convert it to MSPDI XML, then handed
+  // straight to parseMspXml just like a real MS Project XML export. See the
+  // comment above POST /api/import/mpp in server.js for the other half.
+  function parseMpp(file) {
+    var form = new FormData();
+    form.append("file", file);
+    return PM.authFetch(PM.API_BASE + "/import/mpp", { method: "POST", body: form })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        return r.json().catch(function () { return {}; }).then(function (data) {
+          throw new Error((data && data.error) || "Could not convert this .mpp file");
+        });
+      })
+      .then(function (data) { return parseMspXml(data.xml); });
+  }
+
   PM.ProjectImport = {
-    SUPPORTED_EXTENSIONS: [".xlsx", ".xls", ".xml", ".pdf"],
+    SUPPORTED_EXTENSIONS: [".xlsx", ".xls", ".xml", ".mpp", ".pdf"],
     // Resolves to { groups, tasks } — the same shape PM.state carries —
     // ready to be merged into a fresh project's state and saved.
     parseFile: function (file, opts) {
@@ -553,6 +571,12 @@
         return file.text().then(function (text) {
           var rows = parseMspXml(text);
           if (!rows.length) throw new Error("No <Task> entries found in this XML file");
+          return buildHierarchy(rows, fallbackGroupName, fallbackTaskName);
+        });
+      }
+      if (ext === ".mpp") {
+        return parseMpp(file).then(function (rows) {
+          if (!rows.length) throw new Error("No <Task> entries found in this file");
           return buildHierarchy(rows, fallbackGroupName, fallbackTaskName);
         });
       }
@@ -578,7 +602,7 @@
           function (err) { return terminatePdfOcrWorker().then(function () { throw err; }); }
         );
       }
-      return Promise.reject(new Error("Unsupported file type — use .xlsx, .xls, .xml, or .pdf"));
+      return Promise.reject(new Error("Unsupported file type — use .xlsx, .xls, .xml, .mpp, or .pdf"));
     }
   };
 })();
