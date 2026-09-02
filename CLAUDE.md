@@ -128,6 +128,12 @@ python3 -m http.server 8743   # serves the static HTML/JS/CSS on http://localhos
 Then open `http://localhost:8743/login.html` (first run: no users yet →
 you'll be prompted to create the admin account).
 
+**Convenience scripts** — once the one-time setup above (`.env`, `npm
+install`, `npm run migrate`) is done, `start.sh` (macOS/Linux) or
+`start.ps1` (Windows: `powershell -ExecutionPolicy Bypass -File start.ps1`)
+runs both the API and the static frontend together from one terminal
+window/tab instead of two, and stops both on Ctrl+C.
+
 **`server/.env` variables** (see `server/db.js`, `server/mailer.js`,
 `server/server.js`):
 
