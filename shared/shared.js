@@ -16,7 +16,12 @@
   PM.LANG_KEY = "engineer-pm-board-lang";
   PM.AUTH_TOKEN_KEY = "engineer-pm-board-auth-token";
   PM.AUTH_USER_KEY = "engineer-pm-board-auth-user";
-  PM.API_BASE = "http://localhost:8790/api";
+  // Derived from wherever the static frontend was loaded from, rather than
+  // hardcoded to localhost — the API always runs on the same host as the
+  // static server, one port over (see ecosystem.config.js). This is what
+  // lets the same build work unmodified in dev (localhost) and once
+  // deployed (LAN IP or a real hostname) without a per-environment edit.
+  PM.API_BASE = window.location.protocol + "//" + window.location.hostname + ":8790/api";
 
   PM.STATUS_ORDER = ["not_started", "working", "stuck", "done"];
   PM.PRIORITY_ORDER = ["critical", "high", "medium", "low"];

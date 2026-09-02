@@ -141,10 +141,12 @@ you'll be prompted to create the admin account).
 **Production**: `pm2 start ecosystem.config.js` runs both the API and the
 static file server as long-lived processes.
 
-**Note**: `shared/shared.js` hardcodes `PM.API_BASE =
-"http://localhost:8790/api"` — there is no environment-based API URL
-switching yet, so a non-localhost deploy needs that line changed (and the
-`APP_BASE_URL` env var kept in sync for invite email links).
+**Note**: `shared/shared.js` derives `PM.API_BASE` from
+`window.location.hostname` (`http://<same-host>:8790/api`) rather than
+hardcoding `localhost` — the API is assumed to always run on the same host
+as the static frontend, one port over. A deploy behind a reverse proxy or
+a split frontend/API host would need that line revisited; keep the
+`APP_BASE_URL` env var in sync too, for invite email links.
 
 **Optional: `.mpp` (native Microsoft Project) import** — the workspace
 "Import from Excel, Microsoft Project (.mpp/.xml), or PDF" flow accepts
