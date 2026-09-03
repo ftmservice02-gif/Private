@@ -28,6 +28,24 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at TIMESTAMPTZ NOT NULL
 );
 
+-- Lookup tables for the "New project" intake form's ชื่อหน่วยงาน (organization)
+-- and ผู้รับผิดชอบโครงการ (project owner) pickers. Created before `projects`
+-- since projects.organization_id/owner_id below reference them. Kept
+-- separate from `users` deliberately — an organization or a project owner
+-- named here isn't necessarily a workspace member with a login, just a name
+-- the intake form remembers so it can be picked again on the next project.
+CREATE TABLE IF NOT EXISTS organizations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS project_owners (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -45,6 +63,21 @@ ALTER TABLE projects ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(i
 -- CREATE TABLE IF NOT EXISTS above is a no-op on an existing table, so the
 -- column needs its own idempotent statement to reach already-provisioned DBs.
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS total_days_budget INTEGER;
+
+-- Additive migration: the "New project" intake form's Section 1 (ข้อมูล
+-- โครงการ) and Section 3 (ข้อมูลลูกค้า) fields. All nullable/optional at the
+-- DB level even where the form marks them required (*) — validation of
+-- required-for-the-form fields happens client-side, same as `title` above,
+-- so an old row saved before this migration doesn't become invalid.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS project_code TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS short_name TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS fiscal_year TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS project_type TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS project_value NUMERIC;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS system_function TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS key_components TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES project_owners(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS groups (
   id TEXT PRIMARY KEY,
@@ -156,5 +189,34 @@ CREATE TABLE IF NOT EXISTS notifications (
   task_id TEXT,
   message TEXT NOT NULL,
   read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- The "New project" intake form's Section 3 (ข้อมูลลูกค้า) sub-lists. Each is
+-- a simple named list scoped to one project — kept as their own tables
+-- (rather than JSONB on `projects`) since the form adds/removes rows one at
+-- a time via their own small API endpoints, same shape as project_members.
+CREATE TABLE IF NOT EXISTS project_contacts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS project_product_registrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS project_sites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  location TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
