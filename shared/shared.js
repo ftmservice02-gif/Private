@@ -16,7 +16,12 @@
   PM.LANG_KEY = "engineer-pm-board-lang";
   PM.AUTH_TOKEN_KEY = "engineer-pm-board-auth-token";
   PM.AUTH_USER_KEY = "engineer-pm-board-auth-user";
-  PM.API_BASE = "http://localhost:8790/api";
+  // Derived from wherever the static frontend was loaded from, rather than
+  // hardcoded to localhost — the API always runs on the same host as the
+  // static server, one port over (see ecosystem.config.js). This is what
+  // lets the same build work unmodified in dev (localhost) and once
+  // deployed (LAN IP or a real hostname) without a per-environment edit.
+  PM.API_BASE = window.location.protocol + "//" + window.location.hostname + ":8790/api";
 
   PM.STATUS_ORDER = ["not_started", "working", "stuck", "done"];
   PM.PRIORITY_ORDER = ["critical", "high", "medium", "low"];
@@ -50,8 +55,8 @@
       "ws.newProject": "New project", "ws.newProjectPrompt": "Project name",
       "ws.newProjectPanelTitle": "New project", "ws.projectNameLabel": "Project name",
       "ws.createProject": "Create project", "ws.projectNameRequired": "Enter a project name first",
-      "ws.importLabel": "Import from Excel, Microsoft Project XML, or PDF (optional)",
-      "ws.importHint": "Click to choose a .xlsx, .xls, MS Project XML (.xml), or text-based .pdf file",
+      "ws.importLabel": "Import from Excel, Microsoft Project (.mpp/.xml), or PDF (optional)",
+      "ws.importHint": "Click to choose a .xlsx, .xls, .mpp, MS Project XML (.xml), or text-based .pdf file",
       "ws.importParsing": "Reading file…",
       "ws.importSummary": "Found {groups} group(s), {tasks} task(s), {subitems} subitem(s)",
       "ws.importSummaryOcr": " — some pages had no text layer and were read with OCR; please double-check names, dates, and owners before creating.",
@@ -185,8 +190,8 @@
       "ws.newProject": "โปรเจกต์ใหม่", "ws.newProjectPrompt": "ชื่อโปรเจกต์",
       "ws.newProjectPanelTitle": "โปรเจกต์ใหม่", "ws.projectNameLabel": "ชื่อโปรเจกต์",
       "ws.createProject": "สร้างโปรเจกต์", "ws.projectNameRequired": "กรุณากรอกชื่อโปรเจกต์ก่อน",
-      "ws.importLabel": "นำเข้าจาก Excel, Microsoft Project XML หรือ PDF (ไม่บังคับ)",
-      "ws.importHint": "คลิกเพื่อเลือกไฟล์ .xlsx, .xls, MS Project XML (.xml) หรือ PDF ที่มีข้อความจริง",
+      "ws.importLabel": "นำเข้าจาก Excel, Microsoft Project (.mpp/.xml) หรือ PDF (ไม่บังคับ)",
+      "ws.importHint": "คลิกเพื่อเลือกไฟล์ .xlsx, .xls, .mpp, MS Project XML (.xml) หรือ PDF ที่มีข้อความจริง",
       "ws.importParsing": "กำลังอ่านไฟล์…",
       "ws.importSummary": "พบ {groups} กลุ่ม, {tasks} งาน, {subitems} งานย่อย",
       "ws.importSummaryOcr": " — บางหน้าไม่มีข้อความจริง ใช้ OCR อ่านแทน กรุณาตรวจสอบชื่องาน วันที่ และผู้รับผิดชอบก่อนสร้างโปรเจกต์",

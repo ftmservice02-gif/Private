@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=64" />
+<link rel="stylesheet" href="shared/styles.css?v=66" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -194,38 +194,168 @@
   <div class="panel-body" id="membersBody"></div>
 </div>
 
-<!-- ============ New project panel ============ -->
+<!-- ============ New project intake form (Section 1: Project Information, -->
+<!-- Section 2: Import, Section 3: Customer Information) ============ -->
 <div class="panel-backdrop" id="newProjectBackdrop"></div>
-<div class="updates-panel" id="newProjectPanel" role="dialog" aria-label="New project">
-  <div class="panel-header">
-    <button class="panel-close" id="newProjectCloseBtn" aria-label="Close">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
-    <div class="panel-title" data-i18n="ws.newProjectPanelTitle">New project</div>
-  </div>
-  <div class="panel-body">
-    <div class="np-field">
-      <label class="np-label" for="npNameInput" data-i18n="ws.projectNameLabel">Project name</label>
-      <input type="text" class="np-input" id="npNameInput" data-i18n-placeholder="ws.newProjectPrompt" placeholder="Project name" />
+<div class="pf-modal" id="projectFormModal" role="dialog" aria-label="New project">
+  <div class="pf-header">
+    <div class="pf-title" id="pfTitle">สร้างโครงการใหม่</div>
+    <div class="pf-header-actions">
+      <button type="button" class="pf-btn pf-btn-outline" id="pfNotifyBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M3 7l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>
+        ส่ง Email แจ้งผู้เกี่ยวข้อง
+      </button>
+      <button type="button" class="pf-btn pf-btn-primary" id="pfSaveAllBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        บันทึกทั้งหมด
+      </button>
+      <button class="panel-close" id="newProjectCloseBtn" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
     </div>
-    <div class="np-field">
-      <label class="np-label" data-i18n="ws.importLabel">Import from Excel or Microsoft Project XML (optional)</label>
-      <div class="np-dropzone" id="npDropzone">
-        <input type="file" id="npFileInput" accept=".xlsx,.xls,.xml,.pdf" style="display:none;" />
-        <div class="np-dropzone-idle" id="npDropzoneIdle">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
-          <span data-i18n="ws.importHint">Click to choose a .xlsx, .xls, or MS Project XML (.xml) file</span>
+  </div>
+  <div class="pf-body">
+    <!-- ---- Section 1: Project Information ---- -->
+    <div class="pf-card">
+      <div class="pf-card-head">
+        <div class="pf-card-title">1. ข้อมูลโครงการ / Project Information</div>
+        <button type="button" class="pf-mini-save" id="pfSaveSection1Btn">บันทึก</button>
+      </div>
+      <div class="pf-grid">
+        <div class="pf-field">
+          <label class="pf-label">รหัสโครงการ / Project Code*</label>
+          <input type="text" class="pf-input" id="pfProjectCode" />
         </div>
-        <div class="np-dropzone-file" id="npDropzoneFile" style="display:none;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
-          <span class="np-file-name" id="npFileName"></span>
-          <button type="button" class="np-file-remove" id="npFileRemoveBtn" aria-label="Remove file">&times;</button>
+        <div class="pf-field">
+          <label class="pf-label">ชื่อโครงการ / Project Name*</label>
+          <input type="text" class="pf-input" id="pfProjectName" />
+        </div>
+        <div class="pf-field">
+          <label class="pf-label">ชื่อย่อโครงการ / Project Short Name</label>
+          <input type="text" class="pf-input" id="pfShortName" />
+        </div>
+        <div class="pf-field">
+          <label class="pf-label">ปีงบประมาณ / Fiscal Year*</label>
+          <input type="text" class="pf-input" id="pfFiscalYear" />
+        </div>
+        <div class="pf-field">
+          <label class="pf-label">ประเภทของโครงการ / Project Type</label>
+          <select class="pf-input" id="pfProjectType">
+            <option value="">-- เลือกประเภทโครงการ --</option>
+            <option value="new">โครงการใหม่ (New)</option>
+            <option value="maintenance">บำรุงรักษา (Maintenance)</option>
+            <option value="upgrade">ปรับปรุง/อัปเกรด (Upgrade)</option>
+            <option value="other">อื่นๆ (Other)</option>
+          </select>
+        </div>
+        <div class="pf-field">
+          <label class="pf-label">มูลค่าโครงการ (บาท) / Project Value (THB)</label>
+          <input type="number" class="pf-input" id="pfProjectValue" placeholder="เช่น 1,000,000" />
+        </div>
+        <div class="pf-field pf-span2">
+          <label class="pf-label">หน้าที่ของระบบ / System Function</label>
+          <input type="text" class="pf-input" id="pfSystemFunction" />
+        </div>
+        <div class="pf-field pf-span2">
+          <label class="pf-label">ส่วนประกอบสำคัญๆ / Key Components</label>
+          <textarea class="pf-input pf-textarea" id="pfKeyComponents"></textarea>
         </div>
       </div>
-      <div class="np-import-status" id="npImportStatus"></div>
     </div>
-    <button type="button" class="np-create-btn" id="npCreateBtn" data-i18n="ws.createProject">Create project</button>
+
+    <!-- ---- Section 2: Import (unlocked once the project is saved) ---- -->
+    <div class="pf-card">
+      <div class="pf-card-head">
+        <div class="pf-card-title">2. นำเข้าข้อมูลงาน / Import Tasks</div>
+      </div>
+      <div id="pfImportLocked" class="pf-locked-note">บันทึกข้อมูลโครงการ (ส่วนที่ 1) ก่อน จึงจะนำเข้าไฟล์ได้</div>
+      <div id="pfImportUnlocked" style="display:none;">
+        <div class="np-dropzone" id="npDropzone">
+          <input type="file" id="npFileInput" accept=".xlsx,.xls,.xml,.mpp,.pdf" style="display:none;" />
+          <div class="np-dropzone-idle" id="npDropzoneIdle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+            <span>คลิกเพื่อเลือกไฟล์ .xlsx, .xls, .mpp, MS Project XML (.xml), หรือ PDF</span>
+          </div>
+          <div class="np-dropzone-file" id="npDropzoneFile" style="display:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+            <span class="np-file-name" id="npFileName"></span>
+            <button type="button" class="np-file-remove" id="npFileRemoveBtn" aria-label="Remove file">&times;</button>
+          </div>
+        </div>
+        <div class="np-import-status" id="npImportStatus"></div>
+        <button type="button" class="pf-btn pf-btn-primary" id="pfImportApplyBtn" style="margin-top:10px;" disabled>นำเข้าข้อมูลนี้เข้าโครงการ</button>
+      </div>
+    </div>
+
+    <!-- ---- Section 3: Customer Information ---- -->
+    <div class="pf-card">
+      <div class="pf-card-head">
+        <div class="pf-card-title">3. ข้อมูลลูกค้า / Customer Information</div>
+        <button type="button" class="pf-mini-save" id="pfSaveSection3Btn">บันทึก</button>
+      </div>
+      <div class="pf-grid">
+        <div class="pf-field">
+          <label class="pf-label">ชื่อหน่วยงาน *</label>
+          <div class="pf-picker-row">
+            <select class="pf-input" id="pfOrganizationSelect">
+              <option value="">-- ยังไม่ได้เลือกหน่วยงาน --</option>
+            </select>
+            <button type="button" class="pf-btn pf-btn-outline" id="pfOrgPickBtn">เลือกหน่วยงาน</button>
+          </div>
+        </div>
+        <div class="pf-field">
+          <label class="pf-label">ผู้รับผิดชอบโครงการ *</label>
+          <button type="button" class="pf-picker-btn" id="pfOwnerPickBtn">-- ยังไม่ได้ระบุผู้รับผิดชอบ (คลิกเพื่อเลือก) --</button>
+        </div>
+      </div>
+
+      <div class="pf-sublist">
+        <div class="pf-label">รายชื่อผู้ติดต่อประสานงาน</div>
+        <div id="pfContactsLocked" class="pf-locked-note">บันทึกโครงการก่อนจึงจะเพิ่มผู้ติดต่อได้</div>
+        <div id="pfContactsUnlocked" style="display:none;">
+          <div class="pf-sublist-items" id="pfContactsList"></div>
+          <div class="pf-sublist-add-row">
+            <input type="text" class="pf-input" id="pfContactNameInput" placeholder="ชื่อผู้ติดต่อ" />
+            <input type="email" class="pf-input" id="pfContactEmailInput" placeholder="อีเมล (ถ้ามี)" />
+            <button type="button" class="pf-btn pf-btn-outline" id="pfContactAddBtn">+ เพิ่ม</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pf-sublist">
+        <div class="pf-label">รายชื่อสำหรับลงทะเบียนผลิตภัณฑ์ (ถ้ามี)</div>
+        <div id="pfRegsLocked" class="pf-locked-note">บันทึกโครงการก่อนจึงจะเพิ่มรายชื่อได้</div>
+        <div id="pfRegsUnlocked" style="display:none;">
+          <div class="pf-sublist-items" id="pfRegsList"></div>
+          <div class="pf-sublist-add-row">
+            <input type="text" class="pf-input" id="pfRegNameInput" placeholder="ชื่อสำหรับลงทะเบียนผลิตภัณฑ์" />
+            <button type="button" class="pf-btn pf-btn-outline" id="pfRegAddBtn">+ เพิ่ม</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pf-sublist">
+        <div class="pf-label">สถานที่ติดตั้ง / Site Location</div>
+        <div id="pfSitesLocked" class="pf-locked-note">บันทึกโครงการก่อนจึงจะเพิ่มสถานที่ได้</div>
+        <div id="pfSitesUnlocked" style="display:none;">
+          <div class="pf-sublist-items" id="pfSitesList"></div>
+          <div class="pf-sublist-add-row">
+            <input type="text" class="pf-input" id="pfSiteInput" placeholder="สถานที่ติดตั้ง" />
+            <button type="button" class="pf-btn pf-btn-outline" id="pfSiteAddBtn">+ เพิ่มสถานที่ติดตั้ง</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- Small popover used by both the organization and owner pickers: a
+     search/filter box, a list of existing rows to pick from, and an
+     "add new" row when no exact match exists. -->
+<div class="pf-popover" id="pfPickerPopover" style="display:none;">
+  <input type="text" class="pf-input" id="pfPickerSearch" placeholder="ค้นหาหรือพิมพ์ชื่อใหม่" />
+  <div class="pf-picker-list" id="pfPickerList"></div>
+  <button type="button" class="pf-btn pf-btn-primary pf-picker-create" id="pfPickerCreateBtn" style="display:none;"></button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -302,6 +432,12 @@
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7"/></svg>' +
           '</button>'
         : "";
+      // Only a real project row (has an id) — not the synthetic Dashboard entry.
+      var detailsBtnHtml = a.id
+        ? '<button type="button" class="ws-row-details-btn" data-action="view-details" data-project="' + esc(a.id) + '" title="รายละเอียดโครงการ" aria-label="รายละเอียดโครงการ">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg>' +
+          '</button>'
+        : "";
       return '<tr data-href="' + esc(a.href) + '">' +
         '<td><input type="checkbox" onclick="event.stopPropagation()" aria-label="เลือก ' + esc(a.name) + '" /></td>' +
         '<td><div class="ws-asset-name"><div class="ws-asset-icon-chip">' + a.icon + '</div><span>' + esc(a.name) + '</span></div></td>' +
@@ -309,7 +445,7 @@
         '<td>' + PM.fmtLongDate(a.created) + '</td>' +
         '<td>' + PM.fmtLongDate(a.modified) + '</td>' +
         '<td><span class="ws-folder-dash">—</span></td>' +
-        '<td>' + deleteBtnHtml + '</td>' +
+        '<td>' + detailsBtnHtml + deleteBtnHtml + '</td>' +
       '</tr>';
     }).join("") || '<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:22px;">' + tr("ws.noAssetsMatch") + '</td></tr>';
   }
@@ -581,7 +717,19 @@
   document.getElementById("wsSearchBox").addEventListener("focusin", function () { this.classList.add("focused"); });
   document.getElementById("wsSearchBox").addEventListener("focusout", function () { this.classList.remove("focused"); });
 
-  // ---------------- New project panel (with optional Excel/MSP-XML import) ----------------
+  // ---------------- New project intake form ----------------
+  // Section 1 (ข้อมูลโครงการ) + Section 3 (ข้อมูลลูกค้า) save straight to
+  // `projects` via POST (first save, creates the project) or PUT .../details
+  // (every save after). Section 2 (import) and Section 3's three sub-lists
+  // only unlock once the project actually has an id — see pfUnlockAfterCreate.
+
+  var pfProjectId = null;
+  var pfOrganizations = [];
+  var pfOwners = [];
+  var pfSelectedOrgId = null;
+  var pfSelectedOwnerId = null;
+  var pfContacts = [], pfRegs = [], pfSites = [];
+  var pfPickerTarget = null; // "org" | "owner" | null
 
   var npImportResult = null; // {groups, tasks} once a file's been parsed, else null
   var npParsing = false;
@@ -595,26 +743,339 @@
     var statusEl = document.getElementById("npImportStatus");
     statusEl.className = "np-import-status";
     statusEl.textContent = "";
-  }
-  function openNewProjectPanel() {
-    document.getElementById("npNameInput").value = "";
-    document.getElementById("npCreateBtn").disabled = false;
-    npResetImport();
-    document.getElementById("newProjectPanel").classList.add("open");
-    document.getElementById("newProjectBackdrop").classList.add("open");
-    setTimeout(function () { document.getElementById("npNameInput").focus(); }, 50);
-  }
-  function closeNewProjectPanel() {
-    document.getElementById("newProjectPanel").classList.remove("open");
-    document.getElementById("newProjectBackdrop").classList.remove("open");
+    document.getElementById("pfImportApplyBtn").disabled = true;
   }
 
-  document.getElementById("wsNewProjectBtn").addEventListener("click", openNewProjectPanel);
-  document.getElementById("newProjectCloseBtn").addEventListener("click", closeNewProjectPanel);
-  document.getElementById("newProjectBackdrop").addEventListener("click", closeNewProjectPanel);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && document.getElementById("newProjectPanel").classList.contains("open")) closeNewProjectPanel();
+  function pfPopulateOrgSelect() {
+    var sel = document.getElementById("pfOrganizationSelect");
+    var current = sel.value;
+    sel.innerHTML = '<option value="">-- ยังไม่ได้เลือกหน่วยงาน --</option>' +
+      pfOrganizations.map(function (o) { return '<option value="' + PM.esc(o.id) + '">' + PM.esc(o.name) + '</option>'; }).join("");
+    sel.value = current || "";
+  }
+
+  function pfLoadLookups() {
+    return Promise.all([
+      PM.authFetch(PM.API_BASE + "/organizations").then(function (r) { return r.ok ? r.json() : []; }),
+      PM.authFetch(PM.API_BASE + "/project-owners").then(function (r) { return r.ok ? r.json() : []; })
+    ]).then(function (results) {
+      pfOrganizations = results[0] || [];
+      pfOwners = results[1] || [];
+      pfPopulateOrgSelect();
+    });
+  }
+
+  function pfUnlockAfterCreate() {
+    ["Import", "Contacts", "Regs", "Sites"].forEach(function (key) {
+      document.getElementById("pf" + key + "Locked").style.display = "none";
+      document.getElementById("pf" + key + "Unlocked").style.display = "";
+    });
+  }
+
+  function resetProjectForm() {
+    pfProjectId = null;
+    pfSelectedOrgId = null;
+    pfSelectedOwnerId = null;
+    pfContacts = []; pfRegs = []; pfSites = [];
+    document.getElementById("pfProjectCode").value = "";
+    document.getElementById("pfProjectName").value = "";
+    document.getElementById("pfShortName").value = "";
+    document.getElementById("pfFiscalYear").value = "";
+    document.getElementById("pfProjectType").value = "";
+    document.getElementById("pfProjectValue").value = "";
+    document.getElementById("pfSystemFunction").value = "";
+    document.getElementById("pfKeyComponents").value = "";
+    document.getElementById("pfOrganizationSelect").value = "";
+    var ownerBtn = document.getElementById("pfOwnerPickBtn");
+    ownerBtn.textContent = "-- ยังไม่ได้ระบุผู้รับผิดชอบ (คลิกเพื่อเลือก) --";
+    ownerBtn.classList.remove("chosen");
+    ["Import", "Contacts", "Regs", "Sites"].forEach(function (key) {
+      document.getElementById("pf" + key + "Locked").style.display = "";
+      document.getElementById("pf" + key + "Unlocked").style.display = "none";
+    });
+    document.getElementById("pfContactsList").innerHTML = "";
+    document.getElementById("pfRegsList").innerHTML = "";
+    document.getElementById("pfSitesList").innerHTML = "";
+    npResetImport();
+  }
+
+  // Fills the form from an existing project's saved details — same
+  // "รายละเอียดโครงการ" button/modal used for creation, just pre-populated
+  // and already unlocked (the project obviously already has an id).
+  function pfLoadExistingProject(id) {
+    document.getElementById("pfTitle").textContent = "กำลังโหลด...";
+    return PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(id) + "/details").then(function (r) {
+      if (!r.ok) throw new Error("โหลดรายละเอียดโครงการไม่สำเร็จ");
+      return r.json();
+    }).then(function (d) {
+      pfProjectId = d.id;
+      document.getElementById("pfTitle").textContent = "รายละเอียดโครงการ";
+      document.getElementById("pfProjectCode").value = d.projectCode || "";
+      document.getElementById("pfProjectName").value = d.title || "";
+      document.getElementById("pfShortName").value = d.shortName || "";
+      document.getElementById("pfFiscalYear").value = d.fiscalYear || "";
+      document.getElementById("pfProjectType").value = d.projectType || "";
+      document.getElementById("pfProjectValue").value = d.projectValue == null ? "" : d.projectValue;
+      document.getElementById("pfSystemFunction").value = d.systemFunction || "";
+      document.getElementById("pfKeyComponents").value = d.keyComponents || "";
+      pfSelectedOrgId = d.organizationId || null;
+      document.getElementById("pfOrganizationSelect").value = pfSelectedOrgId || "";
+      pfSelectedOwnerId = d.ownerId || null;
+      var ownerBtn = document.getElementById("pfOwnerPickBtn");
+      if (d.ownerName) { ownerBtn.textContent = d.ownerName; ownerBtn.classList.add("chosen"); }
+
+      pfContacts = d.contacts || [];
+      pfRegs = d.productRegistrations || [];
+      pfSites = d.sites || [];
+      pfUnlockAfterCreate();
+      pfRenderSubList("pfContactsList", pfContacts, "name", true, "contacts");
+      pfRenderSubList("pfRegsList", pfRegs, "name", false, "product-registrations");
+      pfRenderSubList("pfSitesList", pfSites, "location", false, "sites");
+    }).catch(function (err) {
+      PM.showToast((err && err.message) || "โหลดรายละเอียดโครงการไม่สำเร็จ");
+    });
+  }
+
+  function openProjectFormModal(existingId) {
+    resetProjectForm();
+    document.getElementById("pfTitle").textContent = existingId ? "รายละเอียดโครงการ" : "สร้างโครงการใหม่";
+    pfLoadLookups().then(function () {
+      if (existingId) return pfLoadExistingProject(existingId);
+    });
+    document.getElementById("projectFormModal").classList.add("open");
+    document.getElementById("newProjectBackdrop").classList.add("open");
+    if (!existingId) setTimeout(function () { document.getElementById("pfProjectCode").focus(); }, 50);
+  }
+  function closeProjectFormModal() {
+    document.getElementById("projectFormModal").classList.remove("open");
+    document.getElementById("newProjectBackdrop").classList.remove("open");
+    pfClosePicker();
+    // The form saves incrementally as you go (unlike the old single "Create"
+    // button), so closing just re-renders the list — whatever was saved stays saved.
+    PM.loadProjectList().then(renderWorkspaceTable);
+  }
+
+  document.getElementById("wsNewProjectBtn").addEventListener("click", function () { openProjectFormModal(); });
+  document.getElementById("wsTableBody").addEventListener("click", function (e) {
+    var btn = e.target.closest('[data-action="view-details"]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openProjectFormModal(btn.dataset.project);
   });
+  document.getElementById("newProjectCloseBtn").addEventListener("click", closeProjectFormModal);
+  document.getElementById("newProjectBackdrop").addEventListener("click", closeProjectFormModal);
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (document.getElementById("pfPickerPopover").style.display !== "none") { pfClosePicker(); return; }
+    if (document.getElementById("projectFormModal").classList.contains("open")) closeProjectFormModal();
+  });
+
+  // ---- Section 1 + 3 scalar fields: create on first save, update after ----
+
+  function pfCollectDetailPayload() {
+    return {
+      title: document.getElementById("pfProjectName").value.trim(),
+      projectCode: document.getElementById("pfProjectCode").value.trim(),
+      shortName: document.getElementById("pfShortName").value.trim(),
+      fiscalYear: document.getElementById("pfFiscalYear").value.trim(),
+      projectType: document.getElementById("pfProjectType").value,
+      projectValue: document.getElementById("pfProjectValue").value,
+      systemFunction: document.getElementById("pfSystemFunction").value.trim(),
+      keyComponents: document.getElementById("pfKeyComponents").value.trim(),
+      organizationId: pfSelectedOrgId,
+      ownerId: pfSelectedOwnerId
+    };
+  }
+
+  function pfSaveDetails() {
+    var payload = pfCollectDetailPayload();
+    if (!payload.projectCode) { PM.showToast("กรุณากรอกรหัสโครงการ"); document.getElementById("pfProjectCode").focus(); return; }
+    if (!payload.title) { PM.showToast("กรุณากรอกชื่อโครงการ"); document.getElementById("pfProjectName").focus(); return; }
+    if (!payload.fiscalYear) { PM.showToast("กรุณากรอกปีงบประมาณ"); document.getElementById("pfFiscalYear").focus(); return; }
+
+    var isCreate = !pfProjectId;
+    var req = isCreate
+      ? PM.authFetch(PM.API_BASE + "/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      : PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(pfProjectId) + "/details", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+
+    req.then(function (r) {
+      if (!r.ok) return r.json().catch(function () { return {}; }).then(function (data) { throw new Error((data && data.error) || "บันทึกไม่สำเร็จ"); });
+      return r.json();
+    }).then(function (data) {
+      if (isCreate) {
+        pfProjectId = data.id;
+        pfUnlockAfterCreate();
+      }
+      PM.showToast("บันทึกข้อมูลโครงการแล้ว");
+      PM.loadProjectList().then(renderWorkspaceTable);
+    }).catch(function (err) {
+      PM.showToast((err && err.message) || "บันทึกไม่สำเร็จ");
+    });
+  }
+
+  document.getElementById("pfSaveSection1Btn").addEventListener("click", pfSaveDetails);
+  document.getElementById("pfSaveSection3Btn").addEventListener("click", pfSaveDetails);
+  document.getElementById("pfSaveAllBtn").addEventListener("click", pfSaveDetails);
+
+  document.getElementById("pfOrganizationSelect").addEventListener("change", function () {
+    pfSelectedOrgId = this.value || null;
+  });
+
+  // ---- "ส่ง Email แจ้งผู้เกี่ยวข้อง" — notifies invited project members with an email on file ----
+  document.getElementById("pfNotifyBtn").addEventListener("click", function () {
+    if (!pfProjectId) { PM.showToast("บันทึกข้อมูลโครงการ (ส่วนที่ 1) ก่อนจึงจะส่งอีเมลได้"); return; }
+    PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(pfProjectId) + "/notify-members", { method: "POST" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        PM.showToast(data.notified ? ("ส่งอีเมลแจ้ง " + data.notified + " คนแล้ว") : "ยังไม่มีผู้เกี่ยวข้องที่มีอีเมล — เชิญสมาชิกในโครงการก่อน");
+      }).catch(function () { PM.showToast("ส่งอีเมลไม่สำเร็จ"); });
+  });
+
+  // ---- Organization / owner picker popover (search existing, or create new) ----
+
+  function pfClosePicker() {
+    document.getElementById("pfPickerPopover").style.display = "none";
+    pfPickerTarget = null;
+  }
+  function pfRenderPickerList(query) {
+    var list = pfPickerTarget === "org" ? pfOrganizations : pfOwners;
+    var q = (query || "").trim().toLowerCase();
+    var filtered = q ? list.filter(function (i) { return i.name.toLowerCase().indexOf(q) !== -1; }) : list;
+    var listEl = document.getElementById("pfPickerList");
+    listEl.innerHTML = filtered.length
+      ? filtered.map(function (i) { return '<div class="pf-picker-list-item" data-id="' + PM.esc(i.id) + '" data-name="' + PM.esc(i.name) + '">' + PM.esc(i.name) + '</div>'; }).join("")
+      : '<div class="pf-picker-list-empty">ไม่พบรายการ</div>';
+    var createBtn = document.getElementById("pfPickerCreateBtn");
+    var exact = q && list.some(function (i) { return i.name.toLowerCase() === q; });
+    if (q && !exact) {
+      createBtn.style.display = "";
+      createBtn.textContent = "+ สร้าง \"" + query.trim() + "\"";
+    } else {
+      createBtn.style.display = "none";
+    }
+  }
+  function pfOpenPicker(target, anchorEl) {
+    pfPickerTarget = target;
+    var pop = document.getElementById("pfPickerPopover");
+    var rect = anchorEl.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 6) + "px";
+    pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 336)) + "px";
+    pop.style.display = "flex";
+    var search = document.getElementById("pfPickerSearch");
+    search.value = "";
+    pfRenderPickerList("");
+    setTimeout(function () { search.focus(); }, 0);
+  }
+  function pfApplyPickerSelection(id, name) {
+    if (pfPickerTarget === "org") {
+      pfSelectedOrgId = id;
+      document.getElementById("pfOrganizationSelect").value = id;
+    } else if (pfPickerTarget === "owner") {
+      pfSelectedOwnerId = id;
+      var btn = document.getElementById("pfOwnerPickBtn");
+      btn.textContent = name;
+      btn.classList.add("chosen");
+    }
+    pfClosePicker();
+  }
+
+  document.getElementById("pfOrgPickBtn").addEventListener("click", function () { pfOpenPicker("org", this); });
+  document.getElementById("pfOwnerPickBtn").addEventListener("click", function () { pfOpenPicker("owner", this); });
+  document.getElementById("pfPickerSearch").addEventListener("input", function () { pfRenderPickerList(this.value); });
+  document.getElementById("pfPickerList").addEventListener("click", function (e) {
+    var item = e.target.closest(".pf-picker-list-item");
+    if (item) pfApplyPickerSelection(item.dataset.id, item.dataset.name);
+  });
+  document.getElementById("pfPickerCreateBtn").addEventListener("click", function () {
+    var name = document.getElementById("pfPickerSearch").value.trim();
+    if (!name) return;
+    var endpoint = pfPickerTarget === "org" ? "/organizations" : "/project-owners";
+    PM.authFetch(PM.API_BASE + endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name }) })
+      .then(function (r) { return r.json(); })
+      .then(function (row) {
+        (pfPickerTarget === "org" ? pfOrganizations : pfOwners).push(row);
+        if (pfPickerTarget === "org") pfPopulateOrgSelect();
+        pfApplyPickerSelection(row.id, row.name);
+      });
+  });
+  document.addEventListener("click", function (e) {
+    var pop = document.getElementById("pfPickerPopover");
+    if (pop.style.display === "none") return;
+    if (pop.contains(e.target) || e.target.id === "pfOrgPickBtn" || e.target.id === "pfOwnerPickBtn") return;
+    pfClosePicker();
+  });
+
+  // ---- Section 3 sub-lists: contacts / product registrations / sites ----
+  // Each only exists once the project has an id, so add/remove hit the API
+  // directly (no local-draft-then-save step, unlike Section 1/3's fields).
+
+  function pfRenderSubList(containerId, items, field, showEmail, path) {
+    var el = document.getElementById(containerId);
+    el.innerHTML = items.map(function (it) {
+      var emailHtml = showEmail && it.email ? '<span class="pf-sublist-item-email">' + PM.esc(it.email) + '</span>' : "";
+      return '<div class="pf-sublist-item" data-id="' + PM.esc(it.id) + '">' +
+        '<span class="pf-sublist-item-name">' + PM.esc(it[field]) + '</span>' + emailHtml +
+        '<button type="button" class="pf-sublist-remove" data-path="' + path + '" aria-label="Remove">&times;</button></div>';
+    }).join("");
+  }
+
+  function pfAddSubListItem(path, body, list, containerId, field, showEmail) {
+    if (!pfProjectId) return;
+    PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(pfProjectId) + "/" + path, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) return r.json().catch(function () { return {}; }).then(function (data) { throw new Error((data && data.error) || "เพิ่มไม่สำเร็จ"); });
+      return r.json();
+    }).then(function (row) {
+      list.push(row);
+      pfRenderSubList(containerId, list, field, showEmail, path);
+    }).catch(function (err) { PM.showToast((err && err.message) || "เพิ่มไม่สำเร็จ"); });
+  }
+
+  document.getElementById("pfContactAddBtn").addEventListener("click", function () {
+    var nameEl = document.getElementById("pfContactNameInput");
+    var emailEl = document.getElementById("pfContactEmailInput");
+    var name = nameEl.value.trim();
+    if (!name) return;
+    pfAddSubListItem("contacts", { name: name, email: emailEl.value.trim() }, pfContacts, "pfContactsList", "name", true);
+    nameEl.value = ""; emailEl.value = "";
+  });
+  document.getElementById("pfRegAddBtn").addEventListener("click", function () {
+    var input = document.getElementById("pfRegNameInput");
+    var name = input.value.trim();
+    if (!name) return;
+    pfAddSubListItem("product-registrations", { name: name }, pfRegs, "pfRegsList", "name", false);
+    input.value = "";
+  });
+  document.getElementById("pfSiteAddBtn").addEventListener("click", function () {
+    var input = document.getElementById("pfSiteInput");
+    var location = input.value.trim();
+    if (!location) return;
+    pfAddSubListItem("sites", { location: location }, pfSites, "pfSitesList", "location", false);
+    input.value = "";
+  });
+
+  [
+    { containerId: "pfContactsList", list: function () { return pfContacts; }, set: function (v) { pfContacts = v; }, field: "name", showEmail: true },
+    { containerId: "pfRegsList", list: function () { return pfRegs; }, set: function (v) { pfRegs = v; }, field: "name", showEmail: false },
+    { containerId: "pfSitesList", list: function () { return pfSites; }, set: function (v) { pfSites = v; }, field: "location", showEmail: false }
+  ].forEach(function (cfg) {
+    document.getElementById(cfg.containerId).addEventListener("click", function (e) {
+      var btn = e.target.closest(".pf-sublist-remove");
+      if (!btn || !pfProjectId) return;
+      var itemEl = e.target.closest(".pf-sublist-item");
+      var id = itemEl.getAttribute("data-id");
+      var path = btn.getAttribute("data-path");
+      PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(pfProjectId) + "/" + path + "/" + encodeURIComponent(id), { method: "DELETE" })
+        .then(function () {
+          cfg.set(cfg.list().filter(function (it) { return it.id !== id; }));
+          pfRenderSubList(cfg.containerId, cfg.list(), cfg.field, cfg.showEmail, path);
+        }).catch(function () { PM.showToast("ลบไม่สำเร็จ"); });
+    });
+  });
+
+  // ---- Section 2: import (unlocked once the project has an id) ----
 
   document.getElementById("npDropzoneIdle").addEventListener("click", function () {
     document.getElementById("npFileInput").click();
@@ -651,36 +1112,33 @@
         .replace("{subitems}", subCount) +
         (result.usedOcr ? tr("ws.importSummaryOcr") : "") +
         (result.skippedPages ? tr("ws.importSkippedPages").replace("{skipped}", result.skippedPages).replace("{total}", result.totalPages) : "");
+      document.getElementById("pfImportApplyBtn").disabled = false;
     }).catch(function (err) {
       npParsing = false;
       npImportResult = null;
       statusEl.className = "np-import-status error";
       statusEl.textContent = (err && err.message) || tr("ws.importError");
+      document.getElementById("pfImportApplyBtn").disabled = true;
     });
   });
 
-  document.getElementById("npCreateBtn").addEventListener("click", function () {
-    var name = document.getElementById("npNameInput").value.trim();
-    if (!name) {
-      PM.showToast(tr("ws.projectNameRequired"));
-      document.getElementById("npNameInput").focus();
-      return;
-    }
-    if (npParsing) {
-      PM.showToast(tr("ws.importStillParsing"));
-      return;
-    }
+  // Replaces the project's default "To-Do" group with the parsed file's
+  // groups/tasks — same delete-and-reinsert PUT .../state every board save
+  // already uses, so this is just that save, fired once from here.
+  document.getElementById("pfImportApplyBtn").addEventListener("click", function () {
+    if (!npImportResult || !pfProjectId || npParsing) return;
     var btn = this;
     btn.disabled = true;
-    // Import data (if any) is seeded in this same request/transaction —
-    // see PM.createProjectApi — so there's no separate save step that can
-    // fail after the project already exists.
-    PM.createProjectApi(name, npImportResult).then(function (project) {
-      window.location.href = "board.html?id=" + encodeURIComponent(project.id);
+    PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(pfProjectId) + "/state", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: document.getElementById("pfProjectName").value.trim() || "New project", groups: npImportResult.groups, tasks: npImportResult.tasks })
+    }).then(function (r) {
+      if (!r.ok) throw new Error("นำเข้าข้อมูลไม่สำเร็จ");
+      PM.showToast("นำเข้าข้อมูลเรียบร้อยแล้ว");
+      btn.disabled = false;
     }).catch(function (err) {
       btn.disabled = false;
-      console.error("Create project failed:", err);
-      PM.showToast((err && err.message) || tr("ws.createProjectError"));
+      PM.showToast((err && err.message) || "นำเข้าข้อมูลไม่สำเร็จ");
     });
   });
 

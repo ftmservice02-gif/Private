@@ -5,6 +5,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
+const { execFile } = require("child_process");
 const multer = require("multer");
 const pool = require("./db");
 const { sendProjectInviteEmail } = require("./mailer");
@@ -464,16 +466,36 @@ app.get("/api/all-projects-progress", requireAuth, async (req, res) => {
 // none of the imported data (the two-request create-then-PUT sequence this
 // replaced could do exactly that if the second request failed for any
 // reason: session expiry, network drop, a bad row in the import).
+// Optional intake-form fields (Section 1/3 of the "New project" form) — all
+// optional here too, same reasoning as their ADD COLUMN IF NOT EXISTS in
+// schema.sql: the client enforces which ones are actually required (*).
+function projectDetailFields(body) {
+  body = body || {};
+  return {
+    projectCode: (body.projectCode || "").trim() || null,
+    shortName: (body.shortName || "").trim() || null,
+    fiscalYear: (body.fiscalYear || "").trim() || null,
+    projectType: (body.projectType || "").trim() || null,
+    projectValue: body.projectValue === "" || body.projectValue == null ? null : Number(body.projectValue),
+    systemFunction: (body.systemFunction || "").trim() || null,
+    keyComponents: (body.keyComponents || "").trim() || null,
+    organizationId: body.organizationId || null,
+    ownerId: body.ownerId || null,
+  };
+}
+
 app.post("/api/projects", requireAuth, async (req, res) => {
   const title = (req.body && req.body.title) || "New project";
   const importedGroups = Array.isArray(req.body && req.body.groups) ? req.body.groups : null;
   const importedTasks = Array.isArray(req.body && req.body.tasks) ? req.body.tasks : [];
+  const d = projectDetailFields(req.body);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const created = await client.query(
-      "INSERT INTO projects (title, created_by) VALUES ($1, $2) RETURNING id, title, created_at, updated_at",
-      [title, req.user.id]
+      `INSERT INTO projects (title, created_by, project_code, short_name, fiscal_year, project_type, project_value, system_function, key_components, organization_id, owner_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, title, created_at, updated_at`,
+      [title, req.user.id, d.projectCode, d.shortName, d.fiscalYear, d.projectType, d.projectValue, d.systemFunction, d.keyComponents, d.organizationId, d.ownerId]
     );
     const project = created.rows[0];
 
@@ -618,6 +640,209 @@ app.delete("/api/projects/:id/members/:userId", requireAuth, requireProjectAcces
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to remove project member" });
+  }
+});
+
+// ---------------- project details (New project intake form) ----------------
+// Section 1 (ข้อมูลโครงการ) + Section 3 (ข้อมูลลูกค้า) of the "New project"
+// form: the scalar detail fields on `projects` itself, the two lookup
+// pickers (organizations / project_owners), and Section 3's three
+// project-scoped sub-lists (contacts, product registrations, site
+// locations). Kept separate from the board-state routes above — this is
+// project *metadata*, not the groups/tasks/subitems board tree.
+
+app.get("/api/organizations", requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, name FROM organizations ORDER BY name ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to list organizations" });
+  }
+});
+
+// Upsert-by-name: picking "+ create new" in the form re-posts the typed
+// name, and a second project reusing the same organization name should
+// reuse the same row rather than erroring or duplicating it.
+app.post("/api/organizations", requireAuth, async (req, res) => {
+  const name = (req.body && req.body.name || "").trim();
+  if (!name) return res.status(400).json({ error: "Name is required" });
+  try {
+    const result = await pool.query(
+      `INSERT INTO organizations (name) VALUES ($1)
+       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+       RETURNING id, name`,
+      [name]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create organization" });
+  }
+});
+
+app.get("/api/project-owners", requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, name FROM project_owners ORDER BY name ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to list project owners" });
+  }
+});
+
+app.post("/api/project-owners", requireAuth, async (req, res) => {
+  const name = (req.body && req.body.name || "").trim();
+  if (!name) return res.status(400).json({ error: "Name is required" });
+  try {
+    const result = await pool.query(
+      `INSERT INTO project_owners (name) VALUES ($1)
+       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+       RETURNING id, name`,
+      [name]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create project owner" });
+  }
+});
+
+function toProjectDetailJson(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    projectCode: row.project_code || "",
+    shortName: row.short_name || "",
+    fiscalYear: row.fiscal_year || "",
+    projectType: row.project_type || "",
+    projectValue: row.project_value,
+    systemFunction: row.system_function || "",
+    keyComponents: row.key_components || "",
+    organizationId: row.organization_id,
+    organizationName: row.organization_name || "",
+    ownerId: row.owner_id,
+    ownerName: row.owner_name || "",
+  };
+}
+
+app.get("/api/projects/:id/details", requireAuth, requireProjectAccess, async (req, res) => {
+  try {
+    const project = await pool.query(
+      `SELECT p.*, o.name AS organization_name, po.name AS owner_name
+       FROM projects p
+       LEFT JOIN organizations o ON o.id = p.organization_id
+       LEFT JOIN project_owners po ON po.id = p.owner_id
+       WHERE p.id = $1`,
+      [req.params.id]
+    );
+    if (!project.rows.length) return res.status(404).json({ error: "Project not found" });
+
+    const [contacts, registrations, sites] = await Promise.all([
+      pool.query("SELECT id, name, email FROM project_contacts WHERE project_id = $1 ORDER BY sort_order ASC", [req.params.id]),
+      pool.query("SELECT id, name FROM project_product_registrations WHERE project_id = $1 ORDER BY sort_order ASC", [req.params.id]),
+      pool.query("SELECT id, location FROM project_sites WHERE project_id = $1 ORDER BY sort_order ASC", [req.params.id]),
+    ]);
+
+    res.json({
+      ...toProjectDetailJson(project.rows[0]),
+      contacts: contacts.rows,
+      productRegistrations: registrations.rows,
+      sites: sites.rows,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load project details" });
+  }
+});
+
+app.put("/api/projects/:id/details", requireAuth, requireProjectAccess, async (req, res) => {
+  const title = (req.body && req.body.title || "").trim();
+  if (!title) return res.status(400).json({ error: "Project name is required" });
+  const d = projectDetailFields(req.body);
+  try {
+    const updated = await pool.query(
+      `UPDATE projects SET title = $1, project_code = $2, short_name = $3, fiscal_year = $4, project_type = $5,
+              project_value = $6, system_function = $7, key_components = $8, organization_id = $9, owner_id = $10,
+              updated_at = now()
+       WHERE id = $11
+       RETURNING *`,
+      [title, d.projectCode, d.shortName, d.fiscalYear, d.projectType, d.projectValue, d.systemFunction, d.keyComponents, d.organizationId, d.ownerId, req.params.id]
+    );
+    if (!updated.rows.length) return res.status(404).json({ error: "Project not found" });
+    res.json(toProjectDetailJson(updated.rows[0]));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save project details" });
+  }
+});
+
+// Section 3's three sub-lists (contacts / product registrations / sites)
+// share the same small shape — list, add-one, delete-one — so they're
+// generated from one helper rather than repeating the same five routes
+// three times with only the table/column names different.
+function registerProjectSubList(path, table, column, opts) {
+  const withEmail = !!(opts && opts.withEmail);
+  app.post(`/api/projects/:id/${path}`, requireAuth, requireProjectAccess, async (req, res) => {
+    const value = (req.body && req.body[column] || "").trim();
+    if (!value) return res.status(400).json({ error: `${column} is required` });
+    try {
+      const countRes = await pool.query(`SELECT COUNT(*)::int AS n FROM ${table} WHERE project_id = $1`, [req.params.id]);
+      const sortOrder = countRes.rows[0].n;
+      const cols = withEmail ? `(project_id, ${column}, email, sort_order)` : `(project_id, ${column}, sort_order)`;
+      const vals = withEmail
+        ? [req.params.id, value, (req.body.email || "").trim() || null, sortOrder]
+        : [req.params.id, value, sortOrder];
+      const placeholders = vals.map((_, i) => `$${i + 1}`).join(", ");
+      const inserted = await pool.query(`INSERT INTO ${table} ${cols} VALUES (${placeholders}) RETURNING *`, vals);
+      res.status(201).json(inserted.rows[0]);
+    } catch (err) {
+      if (err.code === "23503") return res.status(400).json({ error: "Project not found" });
+      console.error(err);
+      res.status(500).json({ error: `Failed to add ${path}` });
+    }
+  });
+
+  app.delete(`/api/projects/:id/${path}/:rowId`, requireAuth, requireProjectAccess, async (req, res) => {
+    try {
+      await pool.query(`DELETE FROM ${table} WHERE id = $1 AND project_id = $2`, [req.params.rowId, req.params.id]);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: `Failed to remove ${path} entry` });
+    }
+  });
+}
+registerProjectSubList("contacts", "project_contacts", "name", { withEmail: true });
+registerProjectSubList("product-registrations", "project_product_registrations", "name");
+registerProjectSubList("sites", "project_sites", "location");
+
+// "ส่ง Email แจ้งผู้เกี่ยวข้อง" — notifies every currently-invited project
+// member who has an email on file that the project's details were saved/
+// updated. Best-effort per recipient: one bad address doesn't stop the rest.
+app.post("/api/projects/:id/notify-members", requireAuth, requireProjectAccess, async (req, res) => {
+  try {
+    const project = await pool.query("SELECT title FROM projects WHERE id = $1", [req.params.id]);
+    if (!project.rows.length) return res.status(404).json({ error: "Project not found" });
+    const members = await pool.query(
+      `SELECT u.name, u.email FROM project_members pm JOIN users u ON u.id = pm.user_id
+       WHERE pm.project_id = $1 AND u.email IS NOT NULL AND u.email <> ''`,
+      [req.params.id]
+    );
+    const recipients = members.rows;
+    for (const m of recipients) {
+      sendProjectInviteEmail({
+        to: m.email,
+        recipientName: m.name,
+        projectTitle: project.rows[0].title,
+        projectId: req.params.id,
+        inviterName: req.user.name,
+      });
+    }
+    res.json({ ok: true, notified: recipients.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send notification emails" });
   }
 });
 
@@ -852,6 +1077,70 @@ app.post("/api/uploads", requireAuth, (req, res) => {
 });
 
 app.use("/uploads", express.static(uploadsDir));
+
+// ---------------- .mpp import (Microsoft Project native file) ----------------
+// The browser has no way to parse .mpp — it's a proprietary binary format —
+// so this shells out to MPXJ (a Java library; see server/mpxj/) to convert
+// the upload to MSPDI XML, which is exactly the format
+// shared/project-import.js's MS Project XML import already parses. The
+// client-side import flow is therefore unchanged for every format except
+// this one extra network hop; see PM.ProjectImport.parseFile's ".mpp"
+// branch in project-import.js.
+
+const mppTmpDir = path.join(os.tmpdir(), "pm-board-mpp-import");
+fs.mkdirSync(mppTmpDir, { recursive: true });
+
+const mppUpload = multer({
+  storage: multer.diskStorage({
+    destination: mppTmpDir,
+    filename: (req, file, cb) => cb(null, crypto.randomBytes(16).toString("hex") + ".mpp"),
+  }),
+  limits: { fileSize: 30 * 1024 * 1024 }, // MS Project files can run larger than a typical chat attachment
+});
+
+// Built by server/mpxj/build.sh — gitignored (see the comment in
+// server/mpxj/pom.xml for why it's rebuilt locally rather than committed).
+const MPXJ_JAR = path.join(__dirname, "mpxj", "target", "mpxj-convert-1.0.jar");
+
+app.post("/api/import/mpp", requireAuth, (req, res) => {
+  mppUpload.single("file")(req, res, (err) => {
+    if (err) {
+      const msg = err.code === "LIMIT_FILE_SIZE" ? "File is larger than 30MB" : "Upload failed";
+      return res.status(400).json({ error: msg });
+    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    const inPath = req.file.path;
+    const cleanupIn = () => fs.unlink(inPath, () => {});
+
+    if (!fs.existsSync(MPXJ_JAR)) {
+      cleanupIn();
+      return res.status(501).json({ error: "MPP import isn't set up on this server yet — run server/mpxj/build.sh (needs Java + Maven), then retry" });
+    }
+
+    const outPath = inPath + ".xml";
+    execFile(
+      "java",
+      ["-cp", MPXJ_JAR, "org.mpxj.sample.MpxjConvert", inPath, outPath],
+      { timeout: 30000 },
+      (convErr) => {
+        cleanupIn();
+        if (convErr) {
+          fs.unlink(outPath, () => {});
+          console.error("[mpp-import] MPXJ conversion failed:", convErr.message);
+          return res.status(400).json({ error: "Could not read this .mpp file — it may be corrupt, password-protected, or an unsupported MS Project version" });
+        }
+        fs.readFile(outPath, "utf8", (readErr, xml) => {
+          fs.unlink(outPath, () => {});
+          if (readErr) {
+            console.error("[mpp-import] Failed to read converted XML:", readErr.message);
+            return res.status(500).json({ error: "Conversion succeeded but the result couldn't be read" });
+          }
+          res.json({ xml });
+        });
+      }
+    );
+  });
+});
 
 const PORT = process.env.PORT || 8790;
 app.listen(PORT, () => {

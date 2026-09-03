@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Builds a single "fat" jar bundling MPXJ (github.com/joniles/mpxj) and all
+  its transitive dependencies (Apache POI, etc.), so server.js can invoke it
+  with a plain `java -cp mpxj-convert-1.0.jar org.mpxj.sample.MpxjConvert
+  <in.mpp> <out.xml>` — no classpath wrangling at runtime.
+
+  This directory is NOT part of the Node build — it's a one-time step run
+  by hand (see server/mpxj/build.sh) whenever .mpp import support is set up
+  on a machine. target/ is gitignored: the built jar is ~30MB, comparable in
+  size to shared/vendor/'s Tesseract wasm bundles, so it's rebuilt from this
+  pom rather than committed, same reasoning as not committing node_modules.
+
+  MpxjConvert (from MPXJ's own "samples" jar entry) reads *any* format MPXJ
+  understands — not just .mpp — and writes MSPDI XML, which happens to be
+  exactly the format shared/project-import.js already parses for a regular
+  MS Project XML import. So the server side only needs to run this
+  converter; no new XML parsing logic was needed on the client.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>local</groupId>
+  <artifactId>mpxj-convert</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+  <properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>net.sf.mpxj</groupId>
+      <artifactId>mpxj</artifactId>
+      <version>16.7.0</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
