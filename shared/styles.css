@@ -1399,6 +1399,12 @@
   .ws-table tbody tr:hover .ws-row-delete-btn { opacity: 1; }
   .ws-row-delete-btn:hover { background: color-mix(in srgb, var(--stuck-bg) 14%, transparent); color: var(--stuck-bg); }
   .ws-row-delete-btn:disabled { opacity: .4; cursor: default; }
+  .ws-row-details-btn {
+    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px;
+    border: none; background: none; color: var(--text-faint); cursor: pointer; opacity: 0; transition: opacity .12s, background .12s, color .12s;
+  }
+  .ws-table tbody tr:hover .ws-row-details-btn { opacity: 1; }
+  .ws-row-details-btn:hover { background: var(--surface-2); color: var(--accent); }
 
   /* ================= Dashboard view ================= */
   #dashboardView.active { padding: 26px 30px 50px; max-width: 1100px; margin: 0 auto; }
