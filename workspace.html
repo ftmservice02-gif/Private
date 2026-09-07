@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=68" />
+<link rel="stylesheet" href="shared/styles.css?v=69" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -863,6 +863,50 @@
     e.stopPropagation();
     openProjectFormModal(btn.dataset.project);
   });
+
+  // ---- .ws-row-details-btn hover tag ----
+  // Positioned in JS (fixed + clamped to the viewport) instead of a CSS
+  // ::after, because the button lives inside .ws-table-wrap's
+  // overflow-x:auto box: that clips an absolutely positioned tag the
+  // moment its row is near the wrap's top or right edge.
+  var wsHoverTag = null;
+  function hideWsHoverTag() {
+    if (wsHoverTag) { wsHoverTag.remove(); wsHoverTag = null; }
+  }
+  function showWsHoverTag(btn) {
+    var text = btn.getAttribute("data-tooltip");
+    if (!text) return;
+    hideWsHoverTag();
+    var tag = document.createElement("div");
+    tag.className = "ws-hover-tag";
+    tag.textContent = text;
+    document.body.appendChild(tag);
+    var r = btn.getBoundingClientRect();
+    var tagRect = tag.getBoundingClientRect();
+    var margin = 6;
+    var top = r.top - tagRect.height - 8;
+    var below = top < margin;
+    if (below) top = r.bottom + 8;
+    top = Math.max(margin, Math.min(top, window.innerHeight - tagRect.height - margin));
+    var left = r.left + r.width / 2 - tagRect.width / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - tagRect.width - margin));
+    tag.style.top = top + "px";
+    tag.style.left = left + "px";
+    if (below) tag.classList.add("ws-hover-tag-below");
+    requestAnimationFrame(function () { tag.classList.add("ws-hover-tag-visible"); });
+    wsHoverTag = tag;
+  }
+  document.getElementById("wsTableBody").addEventListener("mouseover", function (e) {
+    var btn = e.target.closest(".ws-row-details-btn[data-tooltip]");
+    if (btn) showWsHoverTag(btn);
+  });
+  document.getElementById("wsTableBody").addEventListener("mouseout", function (e) {
+    var btn = e.target.closest(".ws-row-details-btn[data-tooltip]");
+    if (btn && !btn.contains(e.relatedTarget)) hideWsHoverTag();
+  });
+  // Scrolling (the table's own horizontal scroll, or the page) would leave
+  // a fixed-position tag stranded away from the button, so just drop it.
+  window.addEventListener("scroll", hideWsHoverTag, true);
   document.getElementById("newProjectCloseBtn").addEventListener("click", closeProjectFormModal);
   document.getElementById("newProjectBackdrop").addEventListener("click", closeProjectFormModal);
   document.addEventListener("keydown", function (e) {
