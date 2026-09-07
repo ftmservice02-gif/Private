@@ -58,16 +58,20 @@ async function requireAuthUnlessBootstrap(req, res, next) {
 }
 
 // Gates a project's state/members routes (req.params.id) to admins and
-// invited members. A project with nobody in project_members yet is treated
-// as open to every signed-in user — this is what makes turning on Invite
-// opt-in per project rather than an instant lockout for every project that
-// existed before this table did. Must run after requireAuth (needs req.user).
+// invited members — the creator counts as invited too, since POST
+// /api/projects (below) always adds them to project_members on creation,
+// and schema.sql backfills that same row for every project that predates
+// that insert, so "invited members" already covers "the project's owner"
+// without a separate check here. A project with nobody in project_members
+// is *not* open to everyone else — used to be, deliberately, to avoid an
+// instant lockout the day this table was introduced, but per-project access
+// is meant to actually be private now, not opt-in. Must run after
+// requireAuth (needs req.user).
 async function requireProjectAccess(req, res, next) {
   if (req.user.role === "admin") return next();
   const projectId = req.params.id;
   try {
     const memberRows = await pool.query("SELECT user_id FROM project_members WHERE project_id = $1", [projectId]);
-    if (memberRows.rows.length === 0) return next(); // not curated yet — open to the team
     const isMember = memberRows.rows.some((r) => r.user_id === req.user.id);
     if (isMember) return next();
     return res.status(403).json({ error: "You don't have access to this project" });
@@ -397,9 +401,9 @@ async function saveProjectState(projectId, state) {
 
 app.get("/api/projects", requireAuth, async (req, res) => {
   try {
-    // Non-admins only see projects that are either open to the whole team
-    // (no curated project_members yet) or ones they've been explicitly
-    // added to — mirrors the check in requireProjectAccess.
+    // Non-admins only see projects they've been explicitly added to
+    // (project_members) — mirrors requireProjectAccess. The creator is
+    // always in there too (see the comment above requireProjectAccess).
     const isAdmin = req.user.role === "admin";
     const result = await pool.query(
       `SELECT p.id, p.title, p.created_at, p.updated_at, p.created_by, u.name AS creator_name,
@@ -410,7 +414,6 @@ app.get("/api/projects", requireAuth, async (req, res) => {
        LEFT JOIN tasks t ON t.group_id = g.id
        LEFT JOIN users u ON u.id = p.created_by
        WHERE $1
-          OR NOT EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id)
           OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $2)
        GROUP BY p.id, p.created_by, u.name
        ORDER BY p.created_at ASC`,
@@ -449,7 +452,6 @@ app.get("/api/all-projects-progress", requireAuth, async (req, res) => {
        JOIN groups g ON g.project_id = p.id
        JOIN tasks t ON t.group_id = g.id
        WHERE ($1
-              OR NOT EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id)
               OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $2))`,
       [isAdmin, req.user.id]
     );
@@ -509,8 +511,9 @@ app.post("/api/projects", requireAuth, async (req, res) => {
       );
     }
 
-    // Creator automatically retains access once the project gets curated
-    // membership later (see requireProjectAccess / GET /api/projects filter).
+    // Project access is invite-only (see requireProjectAccess) — this is
+    // what puts the creator on that list from the start, so they're never
+    // locked out of their own project.
     await client.query(
       "INSERT INTO project_members (project_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
       [project.id, req.user.id]

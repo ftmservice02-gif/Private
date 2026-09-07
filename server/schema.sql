@@ -179,6 +179,17 @@ CREATE TABLE IF NOT EXISTS project_members (
   PRIMARY KEY (project_id, user_id)
 );
 
+-- requireProjectAccess (server.js) used to treat a project with zero rows
+-- here as open to every signed-in user — access is invite-only now, no
+-- exceptions, so any project created before this backfill (or before
+-- POST /api/projects started auto-adding the creator) needs its creator
+-- inserted here explicitly, or they'd be locked out of their own project
+-- the moment this deploys. Safe to re-run: ON CONFLICT DO NOTHING makes it
+-- a no-op for every project this has already covered.
+INSERT INTO project_members (project_id, user_id)
+SELECT id, created_by FROM projects WHERE created_by IS NOT NULL
+ON CONFLICT DO NOTHING;
+
 -- @mentions in task updates land here so the tagged person sees it on
 -- their own account (sidebar bell), not just buried in the task's thread.
 CREATE TABLE IF NOT EXISTS notifications (
