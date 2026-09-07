@@ -939,7 +939,9 @@
   .pf-btn-outline { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
   .pf-btn-outline:hover { background: var(--surface-2); }
 
-  .pf-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .pf-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; transition: box-shadow .3s, border-color .3s; }
+  /* Brief pulse when "นำเข้าข้อมูลงาน / Import Tasks" scrolls this card into view */
+  .pf-card-flash { border-color: var(--line-blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--line-blue) 22%, transparent); }
   .pf-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .pf-card-title { font-size: 14.5px; font-weight: 700; color: var(--text); }
   .pf-mini-save {
