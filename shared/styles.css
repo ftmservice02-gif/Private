@@ -534,8 +534,8 @@
   .group.collapsed .table-wrap { display: none; }
 
   .row-grid {
-    display: grid; min-width: 798px; column-gap: 4px; width: 100%;
-    grid-template-columns: 30px 22px minmax(150px,1fr) 36px var(--colw-owner) var(--colw-status) var(--colw-due) var(--colw-timeline) var(--colw-folder);
+    display: grid; min-width: 820px; column-gap: 4px; width: 100%;
+    grid-template-columns: 30px 22px minmax(150px,1fr) 58px var(--colw-owner) var(--colw-status) var(--colw-due) var(--colw-timeline) var(--colw-folder);
     align-items: center;
   }
   .col-headers {
@@ -612,10 +612,10 @@
 
   .update-bubble-btn {
     display: inline-flex; align-items: center; gap: 4px; background: none; border: none; cursor: pointer;
-    color: var(--text-faint); padding: 7px 9px; border-radius: 14px; font-size: 12.5px; font-weight: 700;
+    color: var(--text-faint); padding: 8px; border-radius: 14px; font-size: 13px; font-weight: 700;
     transition: background .12s, color .12s;
   }
-  .update-bubble-btn svg { width: 18px; height: 18px; }
+  .update-bubble-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
   .update-bubble-btn:hover { background: color-mix(in srgb, #00c875 16%, transparent); color: #00c875; }
   .update-bubble-btn.has-updates { color: var(--accent); }
   .update-bubble-btn.has-updates svg { fill: var(--accent-soft); stroke: var(--accent); }
@@ -813,8 +813,8 @@
     opacity: 0.55;
   }
   .sub-row-grid {
-    display: grid; min-width: 816px; column-gap: 4px;
-    grid-template-columns: 26px minmax(200px,2fr) 36px var(--colw-owner) var(--colw-status) var(--colw-due) var(--colw-folder);
+    display: grid; min-width: 838px; column-gap: 4px;
+    grid-template-columns: 26px minmax(200px,2fr) 58px var(--colw-owner) var(--colw-status) var(--colw-due) var(--colw-folder);
   }
   .sub-col-headers {
     font-size: 11px; color: var(--text-faint); font-weight: 700;
