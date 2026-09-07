@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=71" />
+<link rel="stylesheet" href="shared/styles.css?v=72" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -329,7 +329,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=70"></script>
+<script src="shared/shared.js?v=71"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -510,7 +510,7 @@
 
     var timelineActive = t.status === "working";
     var updateCount = (t.updates || []).length;
-    var bubbleHtml = '<button class="update-bubble-btn' + (updateCount ? ' has-updates' : '') + '" data-action="open-panel" data-task="' + t.id + '" title="Updates" aria-label="เปิดอัปเดตงาน">' +
+    var bubbleHtml = '<button class="update-bubble-btn' + (updateCount ? ' has-updates' : '') + '" data-action="open-panel" data-task="' + t.id + '" data-tooltip="Update Progress" aria-label="เปิดอัปเดตงาน">' +
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="' + (updateCount ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-9 8.5A8.4 8.4 0 013 11.5a8.5 8.5 0 0117 0z"/></svg>' +
       (updateCount ? updateCount : '') +
     '</button>';
@@ -593,7 +593,7 @@
       '</button>';
 
     var subUpdateCount = (s.updates || []).length;
-    var subBubbleHtml = '<button class="update-bubble-btn' + (subUpdateCount ? ' has-updates' : '') + '" data-action="open-panel" data-task="' + s.id + '" title="Updates" aria-label="เปิดอัปเดตงานย่อย">' +
+    var subBubbleHtml = '<button class="update-bubble-btn' + (subUpdateCount ? ' has-updates' : '') + '" data-action="open-panel" data-task="' + s.id + '" data-tooltip="Update Progress" aria-label="เปิดอัปเดตงานย่อย">' +
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="' + (subUpdateCount ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-9 8.5A8.4 8.4 0 013 11.5a8.5 8.5 0 0117 0z"/></svg>' +
       (subUpdateCount ? subUpdateCount : '') +
     '</button>';
@@ -1864,6 +1864,19 @@
   });
 
   var board = document.getElementById("board");
+
+  // "Update Progress" hover tag on the chat-bubble button (PM.showHoverTag —
+  // see shared.js). The row it's in sits inside .table-wrap's
+  // overflow-x:auto, so this is fixed-positioned rather than a CSS ::after —
+  // same reasoning as workspace.html's row tooltip.
+  board.addEventListener("mouseover", function (e) {
+    var btn = e.target.closest(".update-bubble-btn[data-tooltip]");
+    if (btn) PM.showHoverTag(btn, "pm-hover-tag-green");
+  });
+  board.addEventListener("mouseout", function (e) {
+    var btn = e.target.closest(".update-bubble-btn[data-tooltip]");
+    if (btn && !btn.contains(e.relatedTarget)) PM.hideHoverTag();
+  });
 
   board.addEventListener("click", function (e) {
     var el = e.target.closest("[data-action]");

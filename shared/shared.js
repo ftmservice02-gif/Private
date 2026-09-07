@@ -931,6 +931,49 @@
       .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
   };
 
+  // ---------------- hover tag (fixed-position, viewport-clamped tooltip) ----------------
+  // A small tag-style tooltip for a button whose row sits inside an
+  // overflow-x:auto ancestor (a table wrap, a modal body) — a plain CSS
+  // ::after tooltip gets clipped by that ancestor the moment the row is
+  // near its edge, so this renders as position:fixed on <body> instead,
+  // clamped inside the viewport on both axes, and flips above/below
+  // depending on which side has room. Reads its text from the button's
+  // data-tooltip attribute. `variantClass` picks the color (see
+  // .pm-hover-tag-blue/.pm-hover-tag-green in styles.css) — pass your own
+  // to add another. Callers wire this to mouseover/mouseout themselves
+  // (delegated or direct) since "when" varies more than "how to position".
+  var pmHoverTagEl = null;
+  PM.showHoverTag = function (btn, variantClass) {
+    var text = btn.getAttribute("data-tooltip");
+    if (!text) return;
+    PM.hideHoverTag();
+    var tag = document.createElement("div");
+    tag.className = "pm-hover-tag" + (variantClass ? " " + variantClass : "");
+    tag.textContent = text;
+    document.body.appendChild(tag);
+    var r = btn.getBoundingClientRect();
+    var tagRect = tag.getBoundingClientRect();
+    var margin = 6;
+    var top = r.top - tagRect.height - 8;
+    var below = top < margin;
+    if (below) top = r.bottom + 8;
+    top = Math.max(margin, Math.min(top, window.innerHeight - tagRect.height - margin));
+    var left = r.left + r.width / 2 - tagRect.width / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - tagRect.width - margin));
+    tag.style.top = top + "px";
+    tag.style.left = left + "px";
+    if (below) tag.classList.add("pm-hover-tag-below");
+    requestAnimationFrame(function () { tag.classList.add("pm-hover-tag-visible"); });
+    pmHoverTagEl = tag;
+  };
+  PM.hideHoverTag = function () {
+    if (pmHoverTagEl) { pmHoverTagEl.remove(); pmHoverTagEl = null; }
+  };
+  // A stale tag stranded away from its button after a scroll is worse than
+  // no tag at all, so drop it on any scroll — every page shares this one
+  // listener rather than each caller adding its own.
+  window.addEventListener("scroll", function () { PM.hideHoverTag(); }, true);
+
   // Resolves the project to show on a board/dashboard page: URL ?id= wins,
   // falling back to the last-open project remembered in localStorage. Sets
   // PM.currentProjectId + PM.state (cached copy first for instant paint,
