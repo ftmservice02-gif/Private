@@ -1404,7 +1404,7 @@
     border: none; background: none; color: var(--text-faint); cursor: pointer; opacity: 0; transition: opacity .12s, background .12s, color .12s;
   }
   .ws-table tbody tr:hover .ws-row-details-btn { opacity: 1; }
-  .ws-row-details-btn:hover { background: var(--surface-2); color: var(--accent); }
+  .ws-row-details-btn:hover { background: color-mix(in srgb, var(--line-blue) 16%, transparent); color: var(--line-blue); }
 
   /* ================= Dashboard view ================= */
   #dashboardView.active { padding: 26px 30px 50px; max-width: 1100px; margin: 0 auto; }
