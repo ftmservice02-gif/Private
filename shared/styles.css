@@ -1400,11 +1400,22 @@
   .ws-row-delete-btn:hover { background: color-mix(in srgb, var(--stuck-bg) 14%, transparent); color: var(--stuck-bg); }
   .ws-row-delete-btn:disabled { opacity: .4; cursor: default; }
   .ws-row-details-btn {
+    position: relative;
     display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px;
     border: none; background: none; color: var(--text-faint); cursor: pointer; opacity: 0; transition: opacity .12s, background .12s, color .12s;
   }
   .ws-table tbody tr:hover .ws-row-details-btn { opacity: 1; }
   .ws-row-details-btn:hover { background: color-mix(in srgb, var(--line-blue) 16%, transparent); color: var(--line-blue); }
+  /* Custom tag-style tooltip (replaces the native title tooltip) so it can
+     carry the same blue accent as the button's own hover state. */
+  .ws-row-details-btn[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%) translateY(2px);
+    background: var(--line-blue); color: #fff; font-size: 11.5px; font-weight: 650; line-height: 1;
+    padding: 5px 9px; border-radius: 6px; white-space: nowrap; box-shadow: var(--shadow);
+    opacity: 0; pointer-events: none; transition: opacity .12s, transform .12s; z-index: 5;
+  }
+  .ws-row-details-btn[data-tooltip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ================= Dashboard view ================= */
   #dashboardView.active { padding: 26px 30px 50px; max-width: 1100px; margin: 0 auto; }
