@@ -136,10 +136,16 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input class="search-input" id="wsSearchInput" placeholder="Search" data-i18n-placeholder="common.search" />
         </label>
-        <button class="tbar-btn" data-toast="ตัวกรองยังไม่เปิดใช้งานในตัวอย่างนี้">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16l-6 8v5l-4 2v-7L4 5z"/></svg>
-          <span data-i18n="ws.filters">Filters</span>
-        </button>
+        <div style="position:relative;">
+          <button class="tbar-btn" id="creatorFilterBtn" aria-haspopup="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16l-6 8v5l-4 2v-7L4 5z"/></svg>
+            <span data-i18n="ws.filters">Filters</span><span id="creatorFilterCountBadge"></span>
+          </button>
+          <div class="group-popover owner-picker-popover" id="creatorFilterPopover" style="display:none; width: 210px;">
+            <div class="group-popover-label" data-i18n="ws.filterByCreator">Creator</div>
+            <div id="creatorFilterList"></div>
+          </div>
+        </div>
         <button class="tbar-btn" id="wsNewProjectBtn" style="border-color:var(--accent);color:var(--accent-soft-text);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
           <span data-i18n="ws.newProject">New project</span>
@@ -399,7 +405,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=71"></script>
+<script src="shared/shared.js?v=72"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -417,6 +423,19 @@
     return name.toLowerCase().indexOf(wsSearchQuery.toLowerCase()) !== -1;
   }
 
+  // "Filters" toolbar filter — restricts the Content table to assets
+  // created by one of the checked people. Same shape as board.html's
+  // Person/Status filters (empty set = no filter); options are whatever
+  // creator names are actually present in the table right now, so the
+  // list only ever offers names that'd actually narrow anything down.
+  var wsCreatorFilterSet = new Set();
+  var wsKnownCreators = []; // refreshed on every renderWorkspaceTable() call
+
+  function assetMatchesCreatorFilter(creator) {
+    if (wsCreatorFilterSet.size === 0) return true;
+    return wsCreatorFilterSet.has(creator || "");
+  }
+
   function renderWorkspaceTable() {
     var body = document.getElementById("wsTableBody");
     if (!body) return;
@@ -432,13 +451,20 @@
           id: PM.currentProjectId, name: PM.state.title || "Untitled project", href: "board.html" + (PM.currentProjectId ? "?id=" + encodeURIComponent(PM.currentProjectId) : ""),
           icon: boardIcon, created: PM.state.createdAt, modified: PM.state.updatedAt, creator: PM.state.creatorName || "", createdBy: null
         }] : []);
+    // The creator filter's own option list — real projects only (not the
+    // synthetic Dashboard row below, which just echoes whichever project's
+    // creator happens to be open and isn't a distinct asset creator-wise).
+    wsKnownCreators = projectRows.reduce(function (names, p) {
+      if (p.creator && names.indexOf(p.creator) === -1) names.push(p.creator);
+      return names;
+    }, []);
     var assets = projectRows.concat([
       {
         name: tr("sb.dashboard"), href: "dashboard.html" + (PM.currentProjectId ? "?id=" + encodeURIComponent(PM.currentProjectId) : ""),
         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>',
         created: PM.state && PM.state.createdAt, modified: PM.state && PM.state.updatedAt, creator: PM.state && PM.state.creatorName || ""
       }
-    ]).filter(function (a) { return assetMatchesSearch(a.name); });
+    ]).filter(function (a) { return assetMatchesSearch(a.name) && assetMatchesCreatorFilter(a.creator); });
 
     if (wsActiveView === "recents") {
       // Most recently updated first — same asset set as Content, just a
@@ -752,6 +778,53 @@
   document.getElementById("wsSearchInput").addEventListener("input", function (e) { wsSearchQuery = e.target.value; renderWorkspaceTable(); });
   document.getElementById("wsSearchBox").addEventListener("focusin", function () { this.classList.add("focused"); });
   document.getElementById("wsSearchBox").addEventListener("focusout", function () { this.classList.remove("focused"); });
+
+  // ---------------- creator filter popover ----------------
+  // Same popover/badge shape as board.html's Person/Status filters — see
+  // those for the pattern this mirrors. Options come from wsKnownCreators
+  // (refreshed on every renderWorkspaceTable() call), not an extra request.
+
+  function updateCreatorFilterBadge() {
+    var el = document.getElementById("creatorFilterCountBadge");
+    if (el) el.textContent = wsCreatorFilterSet.size ? String(wsCreatorFilterSet.size) : "";
+  }
+
+  function renderCreatorFilterList() {
+    var list = document.getElementById("creatorFilterList");
+    if (!wsKnownCreators.length) {
+      list.innerHTML = '<div class="owner-picker-empty">' + esc(tr("ws.noAssetsMatch")) + '</div>';
+      return;
+    }
+    list.innerHTML = wsKnownCreators.map(function (name) {
+      var checked = wsCreatorFilterSet.has(name);
+      return '<label class="hide-col-row">' +
+        '<input type="checkbox" data-creator-name="' + esc(name) + '"' + (checked ? " checked" : "") + ' />' +
+        '<span class="ws-creator-avatar" style="width:20px;height:20px;font-size:9.5px;background:' + PM.avatarColor(name) + ';color:#fff;">' + esc(PM.initials(name)) + '</span>' +
+        '<span>' + esc(name) + '</span>' +
+      '</label>';
+    }).join("");
+    list.querySelectorAll("[data-creator-name]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        if (cb.checked) wsCreatorFilterSet.add(cb.dataset.creatorName); else wsCreatorFilterSet.delete(cb.dataset.creatorName);
+        updateCreatorFilterBadge();
+        renderWorkspaceTable();
+      });
+    });
+  }
+
+  var creatorFilterBtn = document.getElementById("creatorFilterBtn");
+  var creatorFilterPopover = document.getElementById("creatorFilterPopover");
+  creatorFilterBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var opening = creatorFilterPopover.style.display === "none";
+    creatorFilterPopover.style.display = opening ? "block" : "none";
+    if (opening) renderCreatorFilterList();
+  });
+  document.addEventListener("click", function (e) {
+    if (creatorFilterPopover.style.display !== "none" && !e.target.closest("#creatorFilterPopover") && e.target !== creatorFilterBtn && !creatorFilterBtn.contains(e.target)) {
+      creatorFilterPopover.style.display = "none";
+    }
+  });
 
   // ---------------- New project intake form ----------------
   // Section 1 (ข้อมูลโครงการ) + Section 2 (ข้อมูลลูกค้า) save straight to
