@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=70" />
+<link rel="stylesheet" href="shared/styles.css?v=71" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -111,7 +111,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=68"></script>
+<script src="shared/shared.js?v=69"></script>
 <script>
 (function () {
   "use strict";
@@ -288,9 +288,22 @@
   // organized by project too, not lumped into one flat cross-project list.
   var projectsWithDocs = []; // [{project, files, folderSegLists, stuckEntries}], one entry per visible project
   var docsLoaded = false;
+  var docShowAll = new URL(window.location.href).searchParams.get("all") === "1";
 
+  // When a project was opened from Manage workspace (or a board/dashboard
+  // page) before landing here, PM.currentProjectId carries that over — see
+  // PM.resolveProjectId/syncSidebarLinks in shared.js, which is what puts
+  // "?id=..." on the sidebar's Document DATA link in the first place. Scope
+  // the list down to just that project instead of every visible one.
+  // "?all=1" (what the "ดูทุกโปรเจกต์" link in the header sends) opts back
+  // out — PM.currentProjectId itself is the shared last-open-project value
+  // every page reads, so this page can't just clear it without also
+  // affecting where the sidebar's Board/Dashboard links point.
   function loadAllProjectsDocuments() {
     return PM.loadProjectList().then(function (list) {
+      if (PM.currentProjectId && !docShowAll) {
+        list = list.filter(function (p) { return p.id === PM.currentProjectId; });
+      }
       return Promise.all(
         list.map(function (p) {
           return PM.fetchProjectState(p.id).then(function (state) {
@@ -440,7 +453,13 @@
       totalFiles += countFilesInNode(t);
       totalFolders += countFolderNodes(t);
     });
-    document.getElementById("docSub").innerHTML = '<div class="doc-stats">' +
+    var scopedBannerHtml = (PM.currentProjectId && !docShowAll && projectsWithDocs[0])
+      ? '<div class="doc-scoped-banner">' +
+          esc(tr("doc.scopedTo").replace("{title}", projectsWithDocs[0].project.title || "")) +
+          ' · <a href="documents.html?all=1">' + esc(tr("doc.viewAllProjects")) + '</a>' +
+        '</div>'
+      : "";
+    document.getElementById("docSub").innerHTML = scopedBannerHtml + '<div class="doc-stats">' +
       '<div class="doc-stat-chip">' + fileStackIconSvg +
         '<div><div class="doc-stat-num">' + totalFiles + '</div><div class="doc-stat-label">' + esc(tr("doc.statFiles")) + '</div></div>' +
       '</div>' +
