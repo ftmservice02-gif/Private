@@ -10,7 +10,7 @@ const { execFile } = require("child_process");
 const multer = require("multer");
 const pool = require("./db");
 const { sendProjectInviteEmail } = require("./mailer");
-const { runReminderCheck } = require("./reminders");
+const { runReminderCheck, getSettings: getReminderSettings, updateSettings: updateReminderSettings } = require("./reminders");
 
 const app = express();
 app.use(cors());
@@ -1053,6 +1053,28 @@ app.post("/api/reminders/run", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("[reminders] manual run failed:", err);
     res.status(500).json({ error: "Failed to run reminder check" });
+  }
+});
+
+// The on/off switch + the two day thresholds behind it — read by workspace.html's
+// reminder settings modal (admin-only, both directions: nothing here is
+// useful to a non-admin, so GET is gated the same as PUT rather than left open).
+app.get("/api/settings/reminders", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  try {
+    res.json(await getReminderSettings(pool));
+  } catch (err) {
+    console.error("[reminders] failed to load settings:", err);
+    res.status(500).json({ error: "Failed to load reminder settings" });
+  }
+});
+app.put("/api/settings/reminders", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  try {
+    res.json(await updateReminderSettings(pool, req.body || {}));
+  } catch (err) {
+    console.error("[reminders] failed to save settings:", err);
+    res.status(500).json({ error: "Failed to save reminder settings" });
   }
 });
 

@@ -50,6 +50,13 @@
       "sb.progressLabelProject": "This project's progress", "sb.progressLabelAll": "All your projects' progress",
       "sb.progressSub": "{done}/{total} tasks completed",
       "ws.addDescription": "Add workspace description", "ws.feedback": "Feedback", "ws.agents": "Agents",
+      "ws.reminderSettingsBtn": "Reminders", "ws.reminderSettingsTitle": "Reminder settings",
+      "ws.reminderEnabledLabel": "Enable automatic reminders",
+      "ws.reminderStaleLabel": "Notify when no progress update for (days)",
+      "ws.reminderDeadlineLabel": "Notify before the due date (days) — includes overdue",
+      "ws.reminderSaveBtn": "Save settings", "ws.reminderRunNowBtn": "Check now",
+      "ws.reminderRunNowResult": "Notified {notified} — skipped {skipped}",
+      "ws.reminderSaveSuccess": "Reminder settings saved", "ws.reminderLoadError": "Failed to load reminder settings",
       "ws.members": "Members", "ws.recents": "Recents", "ws.content": "Content", "ws.collaborators": "Collaborators",
       "ws.permissions": "Permissions", "ws.permNote": "Roles are managed from Manage users.",
       "ws.permDenied": "Admin access is required to view Permissions.",
@@ -190,6 +197,13 @@
       "sb.progressLabelProject": "ความคืบหน้าโครงการนี้", "sb.progressLabelAll": "ความคืบหน้าทุกโครงการของคุณ",
       "sb.progressSub": "ทำเสร็จแล้ว {done}/{total} งาน",
       "ws.addDescription": "เพิ่มคำอธิบายเวิร์กสเปซ", "ws.feedback": "ข้อเสนอแนะ", "ws.agents": "เอเจนต์",
+      "ws.reminderSettingsBtn": "การแจ้งเตือน", "ws.reminderSettingsTitle": "ตั้งค่าการแจ้งเตือน",
+      "ws.reminderEnabledLabel": "เปิดใช้งานระบบแจ้งเตือนอัตโนมัติ",
+      "ws.reminderStaleLabel": "แจ้งเตือนเมื่อไม่มีความคืบหน้าใหม่เกิน (วัน)",
+      "ws.reminderDeadlineLabel": "แจ้งเตือนก่อนถึงกำหนดส่ง (วัน) — รวม overdue ด้วย",
+      "ws.reminderSaveBtn": "บันทึกการตั้งค่า", "ws.reminderRunNowBtn": "เช็คตอนนี้เลย",
+      "ws.reminderRunNowResult": "แจ้งเตือนแล้ว {notified} รายการ — ข้าม {skipped} รายการ",
+      "ws.reminderSaveSuccess": "บันทึกการตั้งค่าการแจ้งเตือนแล้ว", "ws.reminderLoadError": "โหลดการตั้งค่าไม่สำเร็จ",
       "ws.members": "สมาชิก", "ws.recents": "ล่าสุด", "ws.content": "เนื้อหา", "ws.collaborators": "ผู้ร่วมงาน",
       "ws.permissions": "สิทธิ์การเข้าถึง", "ws.permNote": "จัดการสิทธิ์ผู้ใช้งานได้ที่หน้าจัดการผู้ใช้งาน",
       "ws.permDenied": "ต้องมีสิทธิ์ผู้ดูแลระบบเพื่อดู Permissions",
@@ -899,6 +913,21 @@
   };
   PM.deleteUserApi = function (id) {
     return PM.authFetch(PM.API_BASE + "/users/" + encodeURIComponent(id), { method: "DELETE" })
+      .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
+  };
+
+  // ---------------- reminder settings (admin-only; see server/reminders.js) ----------------
+  PM.getReminderSettings = function () {
+    return PM.authFetch(PM.API_BASE + "/settings/reminders")
+      .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
+  };
+  PM.saveReminderSettings = function (settings) {
+    return PM.authFetch(PM.API_BASE + "/settings/reminders", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings)
+    }).then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
+  };
+  PM.runRemindersNow = function () {
+    return PM.authFetch(PM.API_BASE + "/reminders/run", { method: "POST" })
       .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); });
   };
 

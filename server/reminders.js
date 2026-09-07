@@ -1,9 +1,13 @@
 // Daily reminder job: notifies a task/subitem's owner (in-app + email) when
-// either (a) it hasn't had a new update in STALE_DAYS days, or (b) its due
-// date is within DEADLINE_WARN_DAYS days — including already overdue, since
-// "due_date <= today + DEADLINE_WARN_DAYS" covers that as a subset. Wired up
-// from server.js on a 24h timer; also reachable on demand via
-// POST /api/reminders/run (admin-only) for testing without waiting a day.
+// either (a) it hasn't had a new update in `staleDays` days, or (b) its due
+// date is within `deadlineDays` days — including already overdue, since
+// "due_date <= today + deadlineDays" covers that as a subset. Both
+// thresholds (plus an on/off switch) live in app_settings, editable from
+// workspace.html's reminder settings modal via the /api/settings/reminders
+// routes below — getSettings()'s defaults are what a fresh install runs
+// with until an admin ever opens that modal. Wired up from server.js on a
+// 24h timer; also reachable on demand via POST /api/reminders/run
+// (admin-only) for testing without waiting a day.
 //
 // `owner` on tasks/subitems is free-text (see schema.sql), not a users(id)
 // FK, so a reminder can only be delivered when that text matches a real
@@ -11,12 +15,52 @@
 // match anyone just gets silently skipped rather than guessed at.
 const { sendReminderEmail } = require("./mailer");
 
-const STALE_DAYS = 7;
-const DEADLINE_WARN_DAYS = 3;
+const DEFAULT_SETTINGS = { enabled: true, staleDays: 7, deadlineDays: 3 };
 // How long to hold off re-sending the *same* reminder (same to_user_id +
 // type) once it's already gone out today — comfortably under 24h so a job
 // that's a little early/late from one day to the next still only fires once.
 const DEDUPE_HOURS = 20;
+
+const SETTINGS_KEYS = {
+  enabled: "reminders_enabled",
+  staleDays: "reminders_stale_days",
+  deadlineDays: "reminders_deadline_days",
+};
+
+async function getSettings(pool) {
+  const result = await pool.query("SELECT key, value FROM app_settings WHERE key = ANY($1)", [Object.values(SETTINGS_KEYS)]);
+  const byKey = {};
+  result.rows.forEach((r) => { byKey[r.key] = r.value; });
+  const staleDays = parseInt(byKey[SETTINGS_KEYS.staleDays], 10);
+  const deadlineDays = parseInt(byKey[SETTINGS_KEYS.deadlineDays], 10);
+  return {
+    enabled: SETTINGS_KEYS.enabled in byKey ? byKey[SETTINGS_KEYS.enabled] === "true" : DEFAULT_SETTINGS.enabled,
+    staleDays: Number.isFinite(staleDays) && staleDays > 0 ? staleDays : DEFAULT_SETTINGS.staleDays,
+    deadlineDays: Number.isFinite(deadlineDays) && deadlineDays >= 0 ? deadlineDays : DEFAULT_SETTINGS.deadlineDays,
+  };
+}
+
+// Clamped to a sane range here (not just "> 0") since these numbers go
+// straight into a SQL date-window comparison and an admin fat-fingering
+// "700" shouldn't quietly turn the deadline reminder into a near-permanent
+// one for every task in the workspace.
+async function updateSettings(pool, { enabled, staleDays, deadlineDays }) {
+  const clampedStale = Math.min(90, Math.max(1, parseInt(staleDays, 10) || DEFAULT_SETTINGS.staleDays));
+  const clampedDeadline = Math.min(90, Math.max(0, parseInt(deadlineDays, 10) || DEFAULT_SETTINGS.deadlineDays));
+  const rows = [
+    [SETTINGS_KEYS.enabled, enabled ? "true" : "false"],
+    [SETTINGS_KEYS.staleDays, String(clampedStale)],
+    [SETTINGS_KEYS.deadlineDays, String(clampedDeadline)],
+  ];
+  for (const [key, value] of rows) {
+    await pool.query(
+      `INSERT INTO app_settings (key, value) VALUES ($1, $2)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [key, value]
+    );
+  }
+  return { enabled: !!enabled, staleDays: clampedStale, deadlineDays: clampedDeadline };
+}
 
 function daysAgo(date) {
   if (!date) return null;
@@ -69,6 +113,9 @@ function buildMessage(kind, row) {
 // Runs the check once and returns {notified, skipped} for the caller
 // (server.js logs it; the manual-trigger endpoint returns it to the admin).
 async function runReminderCheck(pool) {
+  const settings = await getSettings(pool);
+  if (!settings.enabled) return { notified: 0, skipped: 0, disabled: true };
+
   const usersResult = await pool.query("SELECT id, name, email FROM users WHERE name IS NOT NULL");
   const userByName = new Map();
   usersResult.rows.forEach((u) => {
@@ -85,8 +132,8 @@ async function runReminderCheck(pool) {
     // no created_at, so there's no way to tell a brand-new item from one
     // that's genuinely gone quiet; only flag staleness once there's at
     // least one real update to measure the gap from.
-    if (row.last_update && daysAgo(row.last_update) >= STALE_DAYS) kinds.push("stale");
-    if (row.due_date && daysUntil(row.due_date) <= DEADLINE_WARN_DAYS) kinds.push("deadline");
+    if (row.last_update && daysAgo(row.last_update) >= settings.staleDays) kinds.push("stale");
+    if (row.due_date && daysUntil(row.due_date) <= settings.deadlineDays) kinds.push("deadline");
     if (!kinds.length) continue;
 
     const owner = row.owner && userByName.get(row.owner.trim().toLowerCase());
@@ -118,4 +165,4 @@ async function runReminderCheck(pool) {
   return { notified, skipped };
 }
 
-module.exports = { runReminderCheck };
+module.exports = { runReminderCheck, getSettings, updateSettings };

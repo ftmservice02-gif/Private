@@ -198,6 +198,16 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- reminder today" before inserting again, instead of re-notifying every run.
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT;
 
+-- Tiny generic key/value store for workspace-wide settings that don't
+-- belong to any one project — currently just the reminder job's on/off
+-- switch and its two day thresholds (see server/reminders.js). One row per
+-- setting rather than a dedicated reminders_settings table with fixed
+-- columns, so a future unrelated setting doesn't need its own migration.
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 -- The "New project" intake form's Section 3 (ข้อมูลลูกค้า) sub-lists. Each is
 -- a simple named list scoped to one project — kept as their own tables
 -- (rather than JSONB on `projects`) since the form adds/removes rows one at
