@@ -57,4 +57,47 @@ async function sendProjectInviteEmail({ to, recipientName, projectTitle, project
   }
 }
 
-module.exports = { sendProjectInviteEmail };
+// Sends one daily reminder email (stale task / approaching or overdue
+// deadline) — see server/reminders.js for when this is called. Same
+// silent-skip-if-no-SMTP behavior as sendProjectInviteEmail above, since
+// the in-app notification (sidebar bell) already exists regardless of email.
+async function sendReminderEmail({ to, recipientName, message, projectId, taskId }) {
+  const t = getTransporter();
+  if (!t) {
+    console.warn("[mailer] SMTP_USER/SMTP_PASS not configured — skipping reminder email to", to);
+    return;
+  }
+  const baseUrl = (process.env.APP_BASE_URL || "http://localhost:8743").replace(/\/$/, "");
+  const link = taskId
+    ? baseUrl + "/board.html?id=" + encodeURIComponent(projectId || "") + "&task=" + encodeURIComponent(taskId)
+    : baseUrl + "/board.html?id=" + encodeURIComponent(projectId || "");
+  const name = escapeHtml(recipientName || "");
+  const msg = escapeHtml(message || "");
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 480px; margin: 0 auto; color: #1f2329;">
+      <h2 style="color:#2f6fed; margin-bottom: 4px;">แจ้งเตือนความคืบหน้าโครงการ</h2>
+      <p>${name ? "สวัสดีคุณ " + name + "," : "สวัสดีครับ/ค่ะ,"}</p>
+      <p>${msg}</p>
+      <p style="margin: 20px 0;">
+        <a href="${link}" style="display:inline-block;background:#2f6fed;color:#fff;padding:10px 22px;border-radius:7px;text-decoration:none;font-weight:600;">
+          เปิดงานนี้
+        </a>
+      </p>
+      <p style="color:#8b909a;font-size:12px;">หากปุ่มด้านบนใช้งานไม่ได้ ให้เปิดลิงก์นี้แทน:<br>${link}</p>
+    </div>
+  `;
+
+  try {
+    await t.sendMail({
+      from: `"IT Project Board" <${process.env.SMTP_USER}>`,
+      to,
+      subject: "แจ้งเตือนความคืบหน้าโครงการ — IT Project Board",
+      html,
+    });
+  } catch (err) {
+    console.error("[mailer] Failed to send reminder email to", to, "-", err.message);
+  }
+}
+
+module.exports = { sendProjectInviteEmail, sendReminderEmail };

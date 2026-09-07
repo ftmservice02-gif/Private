@@ -192,6 +192,12 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Set only for the daily reminder job's own rows (server/reminders.js), e.g.
+-- "reminder:stale:task:<id>" / "reminder:deadline:sub:<id>" — NULL for an
+-- @mention (unchanged). Lets the job check "did I already send this exact
+-- reminder today" before inserting again, instead of re-notifying every run.
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT;
+
 -- The "New project" intake form's Section 3 (ข้อมูลลูกค้า) sub-lists. Each is
 -- a simple named list scoped to one project — kept as their own tables
 -- (rather than JSONB on `projects`) since the form adds/removes rows one at

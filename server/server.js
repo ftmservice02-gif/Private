@@ -10,6 +10,7 @@ const { execFile } = require("child_process");
 const multer = require("multer");
 const pool = require("./db");
 const { sendProjectInviteEmail } = require("./mailer");
+const { runReminderCheck } = require("./reminders");
 
 const app = express();
 app.use(cors());
@@ -1039,6 +1040,22 @@ app.post("/api/notifications/read-all", requireAuth, async (req, res) => {
   }
 });
 
+// ---------------- reminders (stale tasks / approaching deadlines) ----------------
+// The actual check runs on a 24h timer (see scheduleDailyReminders below,
+// called at the bottom of this file) — this route exists so an admin can
+// fire it on demand (testing, or "I don't want to wait until tomorrow
+// morning") without waiting for the timer.
+app.post("/api/reminders/run", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  try {
+    const result = await runReminderCheck(pool);
+    res.json(result);
+  } catch (err) {
+    console.error("[reminders] manual run failed:", err);
+    res.status(500).json({ error: "Failed to run reminder check" });
+  }
+});
+
 // ---------------- file uploads (task update attachments) ----------------
 // Files are named with a random token, not the original filename, so the
 // URL itself is the access control (same tradeoff plain <a href> downloads
@@ -1141,6 +1158,27 @@ app.post("/api/import/mpp", requireAuth, (req, res) => {
     );
   });
 });
+
+// Runs runReminderCheck once a day at 08:00 server time, forever, for as
+// long as this process stays up — no separate cron/scheduler needed. Only
+// scheduled here (not run immediately on boot) so a `pm2 restart` doesn't
+// itself trigger a fresh batch of reminder emails.
+function scheduleDailyReminders() {
+  function msUntilNext8am() {
+    const next = new Date();
+    next.setHours(8, 0, 0, 0);
+    if (next <= new Date()) next.setDate(next.getDate() + 1);
+    return next - new Date();
+  }
+  function runAndReschedule() {
+    runReminderCheck(pool)
+      .then((r) => console.log(`[reminders] daily check: notified ${r.notified}, skipped ${r.skipped}`))
+      .catch((err) => console.error("[reminders] daily check failed:", err));
+    setTimeout(runAndReschedule, 24 * 60 * 60 * 1000);
+  }
+  setTimeout(runAndReschedule, msUntilNext8am());
+}
+scheduleDailyReminders();
 
 const PORT = process.env.PORT || 8790;
 app.listen(PORT, () => {
