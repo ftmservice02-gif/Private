@@ -551,8 +551,25 @@
       .then(function (data) { return parseMspXml(data.xml); });
   }
 
+  // Flattens a parseFile() result into a single list of subitem-shaped rows
+  // ({name, owner, status, date}) — used when importing into one existing
+  // task rather than creating a whole new board, so the group/task/subitem
+  // hierarchy buildHierarchy() inferred from the file doesn't matter: every
+  // top-level row and every nested row alike just becomes one subitem.
+  function flattenToSubitemRows(built) {
+    var out = [];
+    (built.tasks || []).forEach(function (t) {
+      out.push({ name: t.name, owner: t.owner, status: t.status, date: t.due || t.start || "" });
+      (t.subitems || []).forEach(function (s) {
+        out.push({ name: s.name, owner: s.owner, status: s.status, date: s.date || "" });
+      });
+    });
+    return out;
+  }
+
   PM.ProjectImport = {
     SUPPORTED_EXTENSIONS: [".xlsx", ".xls", ".xml", ".mpp", ".pdf"],
+    flattenToSubitemRows: flattenToSubitemRows,
     // Resolves to { groups, tasks } — the same shape PM.state carries —
     // ready to be merged into a fresh project's state and saved.
     parseFile: function (file, opts) {

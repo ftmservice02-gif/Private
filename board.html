@@ -295,13 +295,47 @@
   <div class="panel-body" id="inviteBody"></div>
 </div>
 
+<!-- ============ Import subitems modal (per-task, from Excel/MSP/mpp/PDF) ============ -->
+<div class="panel-backdrop" id="subImportBackdrop"></div>
+<div class="sub-import-modal" id="subImportModal" role="dialog" aria-label="Import subitems">
+  <div class="pf-header">
+    <div class="pf-title" data-i18n="board.importSubitemsTitle">Import subitems</div>
+    <div class="pf-header-actions">
+      <button class="panel-close" id="subImportCloseBtn" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="pf-body">
+    <div class="np-dropzone" id="siDropzone">
+      <input type="file" id="siFileInput" accept=".xlsx,.xls,.xml,.mpp,.pdf" style="display:none;" />
+      <div class="np-dropzone-idle" id="siDropzoneIdle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+        <span data-i18n="ws.importHint">Click to choose a .xlsx, .xls, .mpp, MS Project XML (.xml), or text-based .pdf file</span>
+      </div>
+      <div class="np-dropzone-file" id="siDropzoneFile" style="display:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+        <span class="np-file-name" id="siFileName"></span>
+        <button type="button" class="np-file-remove" id="siFileRemoveBtn" aria-label="Remove file">&times;</button>
+      </div>
+    </div>
+    <div class="np-import-status" id="siImportStatus"></div>
+    <button type="button" class="pf-btn pf-btn-primary" id="siApplyBtn" style="margin-top:10px;width:100%;justify-content:center;" disabled data-i18n="board.importSubitemsApply">Add to this task</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=67"></script>
+<script src="shared/vendor/xlsx.full.min.js"></script>
+<script src="shared/vendor/pdf.min.js"></script>
+<script src="shared/vendor/tesseract.min.js"></script>
+<script src="shared/shared.js?v=68"></script>
+<script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
   "use strict";
   var PM = window.PM;
+  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = "shared/vendor/pdf.worker.min.js";
 
   // ---------------- board-local UI state (mirrors the original SPA's module vars) ----------------
   var searchQuery = "";
@@ -527,6 +561,8 @@
         subRows +
         '<div class="add-link-row" data-action="add-sub" data-task="' + t.id + '">' +
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>' + tr("board.addSubitem") + '</div>' +
+        '<div class="add-link-row" data-action="import-sub" data-task="' + t.id + '">' +
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>' + tr("board.importSubitems") + '</div>' +
       '</div>';
     }
 
@@ -1621,6 +1657,97 @@
     var el = document.querySelector('.subitem-row:last-child input[data-field="sub-name"][data-task="' + taskId + '"]');
     if (el) el.focus();
   }
+
+  // ---- "นำเข้าไฟล์ / Import" per task — reads an Excel/MS Project/.mpp/PDF
+  // file with PM.ProjectImport (same parser workspace.html's project intake
+  // uses) and appends every row it finds as a subitem of one existing task,
+  // instead of requiring each row to be typed in by hand. ----
+  var siTaskId = null;
+  var siResult = null; // flat subitem rows once a file's been parsed, else null
+  var siParsing = false;
+
+  function siReset() {
+    siResult = null;
+    siParsing = false;
+    document.getElementById("siFileInput").value = "";
+    document.getElementById("siDropzoneIdle").style.display = "";
+    document.getElementById("siDropzoneFile").style.display = "none";
+    var statusEl = document.getElementById("siImportStatus");
+    statusEl.className = "np-import-status";
+    statusEl.textContent = "";
+    document.getElementById("siApplyBtn").disabled = true;
+  }
+  function openSubImportModal(taskId) {
+    siTaskId = taskId;
+    siReset();
+    document.getElementById("subImportModal").classList.add("open");
+    document.getElementById("subImportBackdrop").classList.add("open");
+  }
+  function closeSubImportModal() {
+    document.getElementById("subImportModal").classList.remove("open");
+    document.getElementById("subImportBackdrop").classList.remove("open");
+    siTaskId = null;
+  }
+
+  document.getElementById("siDropzoneIdle").addEventListener("click", function () {
+    document.getElementById("siFileInput").click();
+  });
+  document.getElementById("siFileRemoveBtn").addEventListener("click", function (e) {
+    e.stopPropagation();
+    siReset();
+  });
+  document.getElementById("siFileInput").addEventListener("change", function () {
+    var file = this.files[0];
+    if (!file) return;
+    document.getElementById("siDropzoneIdle").style.display = "none";
+    document.getElementById("siDropzoneFile").style.display = "flex";
+    document.getElementById("siFileName").textContent = file.name;
+    var statusEl = document.getElementById("siImportStatus");
+    statusEl.className = "np-import-status";
+    statusEl.textContent = tr("ws.importParsing");
+    siParsing = true;
+    PM.ProjectImport.parseFile(file, {
+      fallbackGroupName: tr("ws.importedGroupName"),
+      fallbackTaskName: tr("ws.importedTaskName"),
+      onOcrProgress: function (page, total) {
+        statusEl.className = "np-import-status";
+        statusEl.textContent = tr("ws.importOcrProgress").replace("{page}", page).replace("{total}", total);
+      }
+    }).then(function (result) {
+      siParsing = false;
+      var rows = PM.ProjectImport.flattenToSubitemRows(result);
+      siResult = rows;
+      statusEl.className = "np-import-status ok";
+      statusEl.textContent = tr("board.importSubitemsSummary").replace("{count}", rows.length) +
+        (result.usedOcr ? tr("ws.importSummaryOcr") : "") +
+        (result.skippedPages ? tr("ws.importSkippedPages").replace("{skipped}", result.skippedPages).replace("{total}", result.totalPages) : "");
+      document.getElementById("siApplyBtn").disabled = rows.length === 0;
+    }).catch(function (err) {
+      siParsing = false;
+      siResult = null;
+      statusEl.className = "np-import-status error";
+      statusEl.textContent = (err && err.message) || tr("ws.importError");
+      document.getElementById("siApplyBtn").disabled = true;
+    });
+  });
+  document.getElementById("siApplyBtn").addEventListener("click", function () {
+    if (!siResult || !siTaskId || siParsing) return;
+    var t = findTask(siTaskId);
+    if (!t) { closeSubImportModal(); return; }
+    t.subitemsOpen = true;
+    siResult.forEach(function (row) {
+      t.subitems.push({
+        id: uid(), name: row.name, owner: row.owner || "", status: row.status || "not_started",
+        date: row.date || "", folder: "", updates: [], stuckReason: "", stuckAttachments: []
+      });
+    });
+    var count = siResult.length;
+    persist(); render();
+    showToast(tr("board.importSubitemsDone").replace("{count}", count));
+    closeSubImportModal();
+  });
+  document.getElementById("subImportCloseBtn").addEventListener("click", closeSubImportModal);
+  document.getElementById("subImportBackdrop").addEventListener("click", closeSubImportModal);
   function deleteSelected() {
     var n = selected.size;
     if (!n) return;
@@ -1745,6 +1872,7 @@
 
     if (action === "add-task") addTask(el.dataset.group);
     if (action === "add-sub") addSubitem(el.dataset.task);
+    if (action === "import-sub") openSubImportModal(el.dataset.task);
     if (action === "open-panel") openPanel(el.dataset.task);
 
     if (action === "toggle-collapse") {
@@ -2837,6 +2965,7 @@
   document.getElementById("inviteBackdrop").addEventListener("click", closeInvitePanel);
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && document.getElementById("invitePanel").classList.contains("open")) closeInvitePanel();
+    if (e.key === "Escape" && document.getElementById("subImportModal").classList.contains("open")) closeSubImportModal();
   });
 
   // Load the project's member count on page load too, so the "Invite · N"

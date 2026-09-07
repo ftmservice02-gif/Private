@@ -922,6 +922,17 @@
     opacity: 0; pointer-events: none; transition: opacity .16s ease, transform .16s ease;
   }
   .pf-modal.open { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+
+  /* Compact variant of the above: importing a file's rows as subitems into
+     one already-existing task (board.html), not the whole project-intake
+     form — same header/body building blocks, just much smaller and centered. */
+  .sub-import-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.97);
+    width: min(420px, 92vw); background: var(--canvas); border-radius: 14px;
+    box-shadow: var(--shadow); z-index: 91; overflow: hidden;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease, transform .15s ease;
+  }
+  .sub-import-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
   .pf-header {
     display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: var(--surface);
     border-bottom: 1px solid var(--border); flex-shrink: 0;
