@@ -156,10 +156,16 @@
         <div id="personFilterList"></div>
       </div>
     </div>
-    <button class="tbar-btn" data-toast="ตัวกรองยังไม่เปิดใช้งานในตัวอย่างนี้">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16l-6 8v5l-4 2v-7L4 5z"/></svg>
-      <span data-i18n="toolbar.filter">Filter</span>
-    </button>
+    <div style="position:relative;">
+      <button class="tbar-btn" id="statusFilterBtn" aria-haspopup="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16l-6 8v5l-4 2v-7L4 5z"/></svg>
+        <span data-i18n="toolbar.filter">Filter</span><span id="statusFilterCountBadge"></span>
+      </button>
+      <div class="group-popover owner-picker-popover" id="statusFilterPopover" style="display:none; width: 190px;">
+        <div class="group-popover-label" data-i18n="toolbar.filter">Filter</div>
+        <div id="statusFilterList"></div>
+      </div>
+    </div>
     <button class="tbar-btn" data-toast="การเรียงลำดับยังไม่เปิดใช้งานในตัวอย่างนี้">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg>
       <span data-i18n="toolbar.sort">Sort</span>
@@ -412,7 +418,19 @@
     return t.subitems.some(function (s) { return personFilterSet.has(s.owner); });
   }
 
-  function taskVisible(t) { return taskMatchesSearch(t) && taskMatchesPersonFilter(t); }
+  // "Filter" toolbar filter — restricts the board to tasks (or subitems)
+  // whose status is one of the checked ones, same shape as the Person
+  // filter right next to it (empty set = no filter, task stays visible if
+  // *either* it or one of its subitems matches).
+  var statusFilterSet = new Set();
+
+  function taskMatchesStatusFilter(t) {
+    if (statusFilterSet.size === 0) return true;
+    if (statusFilterSet.has(t.status)) return true;
+    return t.subitems.some(function (s) { return statusFilterSet.has(s.status); });
+  }
+
+  function taskVisible(t) { return taskMatchesSearch(t) && taskMatchesPersonFilter(t) && taskMatchesStatusFilter(t); }
 
   // ---------------- render ----------------
 
@@ -446,7 +464,7 @@
   function renderGroup(g) {
     var allTasks = PM.state.tasks.filter(function (t) { return t.groupId === g.id; });
     var tasks = allTasks.filter(taskVisible);
-    if ((searchQuery || personFilterSet.size) && tasks.length === 0) return "";
+    if ((searchQuery || personFilterSet.size || statusFilterSet.size) && tasks.length === 0) return "";
 
     var swatches = PM.GROUP_COLORS.map(function (c) {
       return '<button class="color-dot' + (c === g.color ? ' active' : '') + '" style="background:' + c + '" ' +
@@ -2194,6 +2212,52 @@
   document.addEventListener("click", function (e) {
     if (personFilterPopover.style.display !== "none" && !e.target.closest("#personFilterPopover") && e.target !== personFilterBtn && !personFilterBtn.contains(e.target)) {
       personFilterPopover.style.display = "none";
+    }
+  });
+
+  // ---------------- status filter popover ----------------
+  // Same shape as the person filter right next to it, just fixed options
+  // (PM.STATUS_ORDER) instead of an async-loaded member list — no network
+  // request needed to open it.
+  var STATUS_DOT_VAR = {
+    not_started: "--notstarted-bg", working: "--working-bg", stuck: "--stuck-bg", done: "--done-bg"
+  };
+
+  function updateStatusFilterBadge() {
+    var el = document.getElementById("statusFilterCountBadge");
+    if (el) el.textContent = statusFilterSet.size ? String(statusFilterSet.size) : "";
+  }
+
+  function renderStatusFilterList() {
+    var list = document.getElementById("statusFilterList");
+    list.innerHTML = PM.STATUS_ORDER.map(function (k) {
+      var checked = statusFilterSet.has(k);
+      return '<label class="hide-col-row">' +
+        '<input type="checkbox" data-status-key="' + esc(k) + '"' + (checked ? " checked" : "") + ' />' +
+        '<span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(' + STATUS_DOT_VAR[k] + ');"></span>' +
+        '<span>' + esc(PM.statusLabel(k)) + '</span>' +
+      '</label>';
+    }).join("");
+    list.querySelectorAll("[data-status-key]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        if (cb.checked) statusFilterSet.add(cb.dataset.statusKey); else statusFilterSet.delete(cb.dataset.statusKey);
+        updateStatusFilterBadge();
+        renderBoard();
+      });
+    });
+  }
+
+  var statusFilterBtn = document.getElementById("statusFilterBtn");
+  var statusFilterPopover = document.getElementById("statusFilterPopover");
+  statusFilterBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var opening = statusFilterPopover.style.display === "none";
+    statusFilterPopover.style.display = opening ? "block" : "none";
+    if (opening) renderStatusFilterList();
+  });
+  document.addEventListener("click", function (e) {
+    if (statusFilterPopover.style.display !== "none" && !e.target.closest("#statusFilterPopover") && e.target !== statusFilterBtn && !statusFilterBtn.contains(e.target)) {
+      statusFilterPopover.style.display = "none";
     }
   });
 
