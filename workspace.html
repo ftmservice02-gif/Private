@@ -195,7 +195,7 @@
 </div>
 
 <!-- ============ New project intake form (Section 1: Project Information, -->
-<!-- Section 2: Import, Section 3: Customer Information) ============ -->
+<!-- Section 2: Customer Information, Section 3: Import) ============ -->
 <div class="panel-backdrop" id="newProjectBackdrop"></div>
 <div class="pf-modal" id="projectFormModal" role="dialog" aria-label="New project">
   <div class="pf-header">
@@ -263,34 +263,10 @@
       </div>
     </div>
 
-    <!-- ---- Section 2: Import (unlocked once the project is saved) ---- -->
-    <div class="pf-card" id="pfImportCard">
-      <div class="pf-card-head">
-        <div class="pf-card-title">2. นำเข้าข้อมูลงาน / Import Tasks</div>
-      </div>
-      <div id="pfImportLocked" class="pf-locked-note">บันทึกข้อมูลโครงการ (ส่วนที่ 1) ก่อน จึงจะนำเข้าไฟล์ได้</div>
-      <div id="pfImportUnlocked" style="display:none;">
-        <div class="np-dropzone" id="npDropzone">
-          <input type="file" id="npFileInput" accept=".xlsx,.xls,.xml,.mpp,.pdf" style="display:none;" />
-          <div class="np-dropzone-idle" id="npDropzoneIdle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
-            <span>คลิกเพื่อเลือกไฟล์ .xlsx, .xls, .mpp, MS Project XML (.xml), หรือ PDF</span>
-          </div>
-          <div class="np-dropzone-file" id="npDropzoneFile" style="display:none;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
-            <span class="np-file-name" id="npFileName"></span>
-            <button type="button" class="np-file-remove" id="npFileRemoveBtn" aria-label="Remove file">&times;</button>
-          </div>
-        </div>
-        <div class="np-import-status" id="npImportStatus"></div>
-        <button type="button" class="pf-btn pf-btn-primary" id="pfImportApplyBtn" style="margin-top:10px;" disabled>นำเข้าข้อมูลนี้เข้าโครงการ</button>
-      </div>
-    </div>
-
-    <!-- ---- Section 3: Customer Information ---- -->
+    <!-- ---- Section 2: Customer Information ---- -->
     <div class="pf-card">
       <div class="pf-card-head">
-        <div class="pf-card-title">3. ข้อมูลลูกค้า / Customer Information</div>
+        <div class="pf-card-title">2. ข้อมูลลูกค้า / Customer Information</div>
         <button type="button" class="pf-mini-save" id="pfSaveSection3Btn">บันทึก</button>
       </div>
       <div class="pf-grid">
@@ -344,6 +320,30 @@
             <button type="button" class="pf-btn pf-btn-outline" id="pfSiteAddBtn">+ เพิ่มสถานที่ติดตั้ง</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ---- Section 3: Import (unlocked once the project is saved) ---- -->
+    <div class="pf-card" id="pfImportCard">
+      <div class="pf-card-head">
+        <div class="pf-card-title">3. นำเข้าข้อมูลงาน / Import Tasks</div>
+      </div>
+      <div id="pfImportLocked" class="pf-locked-note">บันทึกข้อมูลโครงการ (ส่วนที่ 1) ก่อน จึงจะนำเข้าไฟล์ได้</div>
+      <div id="pfImportUnlocked" style="display:none;">
+        <div class="np-dropzone" id="npDropzone">
+          <input type="file" id="npFileInput" accept=".xlsx,.xls,.xml,.mpp,.pdf" style="display:none;" />
+          <div class="np-dropzone-idle" id="npDropzoneIdle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+            <span>คลิกเพื่อเลือกไฟล์ .xlsx, .xls, .mpp, MS Project XML (.xml), หรือ PDF</span>
+          </div>
+          <div class="np-dropzone-file" id="npDropzoneFile" style="display:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+            <span class="np-file-name" id="npFileName"></span>
+            <button type="button" class="np-file-remove" id="npFileRemoveBtn" aria-label="Remove file">&times;</button>
+          </div>
+        </div>
+        <div class="np-import-status" id="npImportStatus"></div>
+        <button type="button" class="pf-btn pf-btn-primary" id="pfImportApplyBtn" style="margin-top:10px;" disabled>นำเข้าข้อมูลนี้เข้าโครงการ</button>
       </div>
     </div>
   </div>
@@ -718,9 +718,9 @@
   document.getElementById("wsSearchBox").addEventListener("focusout", function () { this.classList.remove("focused"); });
 
   // ---------------- New project intake form ----------------
-  // Section 1 (ข้อมูลโครงการ) + Section 3 (ข้อมูลลูกค้า) save straight to
+  // Section 1 (ข้อมูลโครงการ) + Section 2 (ข้อมูลลูกค้า) save straight to
   // `projects` via POST (first save, creates the project) or PUT .../details
-  // (every save after). Section 2 (import) and Section 3's three sub-lists
+  // (every save after). Section 3 (import) and Section 2's three sub-lists
   // only unlock once the project actually has an id — see pfUnlockAfterCreate.
 
   var pfProjectId = null;
@@ -966,7 +966,7 @@
     pfSelectedOrgId = this.value || null;
   });
 
-  // ---- "นำเข้าข้อมูลงาน / Import Tasks" — jumps straight to Section 2 below
+  // ---- "นำเข้าข้อมูลงาน / Import Tasks" — jumps straight to Section 3 below
   // instead of making the user scroll the modal body to find it ----
   document.getElementById("pfGoImportBtn").addEventListener("click", function () {
     if (!pfProjectId) { PM.showToast("บันทึกข้อมูลโครงการ (ส่วนที่ 1) ก่อน จึงจะนำเข้าไฟล์ได้"); return; }
@@ -1050,7 +1050,7 @@
     pfClosePicker();
   });
 
-  // ---- Section 3 sub-lists: contacts / product registrations / sites ----
+  // ---- Section 2 sub-lists: contacts / product registrations / sites ----
   // Each only exists once the project has an id, so add/remove hit the API
   // directly (no local-draft-then-save step, unlike Section 1/3's fields).
 
@@ -1119,7 +1119,7 @@
     });
   });
 
-  // ---- Section 2: import (unlocked once the project has an id) ----
+  // ---- Section 3: import (unlocked once the project has an id) ----
 
   document.getElementById("npDropzoneIdle").addEventListener("click", function () {
     document.getElementById("npFileInput").click();
