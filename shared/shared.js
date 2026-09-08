@@ -431,6 +431,17 @@
     if (isNaN(d)) return null;
     return iso;
   };
+  // "YYYY-MM-DD" + N days -> "YYYY-MM-DD". Used to project a budget's end
+  // date (dashboard's Project duration tile: start + totalDaysBudget - 1,
+  // since daysBetweenInclusive counts both ends) without pulling in a date
+  // library for one line of math.
+  PM.addDaysIso = function (iso, days) {
+    if (!iso) return "";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return "";
+    d.setDate(d.getDate() + Math.round(days));
+    return d.getFullYear() + "-" + PM.pad2(d.getMonth() + 1) + "-" + PM.pad2(d.getDate());
+  };
   PM.daysBetweenInclusive = function (a, b) {
     if (!a || !b) return 0;
     var d1 = new Date(a + "T00:00:00"), d2 = new Date(b + "T00:00:00");

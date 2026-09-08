@@ -114,7 +114,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=77"></script>
+<script src="shared/shared.js?v=78"></script>
 <script>
 (function () {
   "use strict";
@@ -136,6 +136,13 @@
 
   // Prefers the manually-set Total project days budget (from the Board toolbar) as the
   // headline number, falling back to the calendar span of task dates when no budget is set.
+  // When a budget IS set, the displayed end date is projected from it (start
+  // + budget - 1 days) rather than the latest task's own due date — a
+  // budget of 180 days starting Aug 25 should read as ending in February,
+  // not stop wherever the tasks entered so far happen to end (which could
+  // be well short of the budget, and previously showed both numbers at
+  // once with no visible connection between them: "180 days" next to a
+  // date range that was actually only 168 days apart).
   function renderProjectDuration() {
     var el = document.getElementById("dbDuration");
     var bounds = projectDateBounds();
@@ -145,6 +152,7 @@
       return;
     }
     var totalDays = budget || daysBetweenInclusive(bounds.start, bounds.end);
+    var displayEnd = (budget && bounds) ? PM.addDaysIso(bounds.start, budget - 1) : (bounds ? bounds.end : null);
     var elapsed = 0;
     if (bounds) {
       var today = todayIso();
@@ -152,7 +160,7 @@
       elapsed = Math.max(0, daysBetweenInclusive(bounds.start, clampedToday));
     }
     var pct = totalDays ? Math.min(100, Math.round((elapsed / totalDays) * 100)) : 0;
-    var headLabel = tr("db.projectDuration") + (bounds ? " · " + fmtDate(bounds.start) + " – " + fmtDate(bounds.end) : "");
+    var headLabel = tr("db.projectDuration") + (bounds ? " · " + fmtDate(bounds.start) + " – " + fmtDate(displayEnd) : "");
     var subLabel = PM.lang === "th"
       ? ("วันที่ " + elapsed + " จาก " + totalDays + " วัน · ผ่านไปแล้ว " + pct + "%")
       : ("Day " + elapsed + " of " + totalDays + " · " + pct + "% elapsed");
