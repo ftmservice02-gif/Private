@@ -113,12 +113,11 @@
     font-size: 21px; font-weight: 700; color: var(--text); padding: 3px 4px; border-radius: 6px;
   }
   .project-title-input {
-    font-size: 27px; font-weight: 800; border: none; background: transparent; color: var(--working-bg);
-    padding: 4px 6px; border-radius: 8px; width: clamp(180px, 34vw, 420px); text-wrap: balance;
-    letter-spacing: -0.01em; transition: background .12s;
+    font-size: 21px; font-weight: 700; border: none; background: transparent; color: var(--text);
+    padding: 3px 4px; border-radius: 6px; width: clamp(160px, 32vw, 380px); text-wrap: balance;
   }
-  .project-title-input:hover { background: color-mix(in srgb, var(--working-bg) 10%, transparent); }
-  .project-title-input:focus { outline: 2px solid var(--working-bg); outline-offset: 1px; background: var(--surface); }
+  .project-title-input:hover { background: var(--surface-2); }
+  .project-title-input:focus { outline: 2px solid var(--focus); outline-offset: 1px; background: var(--surface); }
   .chev-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: 5px; }
   .chev-btn:hover { background: var(--surface-2); }
 
