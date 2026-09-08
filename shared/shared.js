@@ -474,9 +474,14 @@
   // ---------------- duration & Gantt math (used by board's budget bar and
   // dashboard's duration card + Gantt chart) ----------------
 
-  PM.projectDateBounds = function () {
+  // Earliest start to latest due date, inclusive, across a given list of
+  // tasks — the shared piece behind both PM.projectDateBounds (all of
+  // PM.state.tasks) and a group's own day-count badge on board.html (just
+  // that group's tasks), so a group's badge and the project-wide budget bar
+  // above it are computed the exact same way, just over a different set.
+  PM.dateBoundsOfTasks = function (tasks) {
     var starts = [], ends = [];
-    PM.state.tasks.forEach(function (t) {
+    (tasks || []).forEach(function (t) {
       if (t.start) starts.push(t.start);
       if (t.due) ends.push(t.due);
     });
@@ -486,6 +491,7 @@
     var maxE = all.reduce(function (a, b) { return a > b ? a : b; });
     return { start: minS, end: maxE };
   };
+  PM.projectDateBounds = function () { return PM.dateBoundsOfTasks(PM.state.tasks); };
   PM.taskDurationDays = function (t) { return PM.daysBetweenInclusive(t.start, t.due); };
   PM.taskDurationPct = function (t, totalDays) {
     if (!totalDays || !t.start || !t.due) return 0;

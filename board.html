@@ -335,7 +335,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=76"></script>
+<script src="shared/shared.js?v=77"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -466,6 +466,14 @@
     var tasks = allTasks.filter(taskVisible);
     if ((searchQuery || personFilterSet.size || statusFilterSet.size) && tasks.length === 0) return "";
 
+    // Calendar span of just this group's own tasks — earliest start to
+    // latest due date, inclusive — same calculation as the project-wide
+    // budget bar above (PM.allocatedDaysTotal), just scoped down to one
+    // group instead of the whole board. "–" when nothing here has dates set
+    // yet, same convention as an empty due-date cell elsewhere on the row.
+    var groupBounds = PM.dateBoundsOfTasks(allTasks);
+    var groupDaysLabel = groupBounds ? PM.fmtDuration(groupBounds.start, groupBounds.end) : "–";
+
     var swatches = PM.GROUP_COLORS.map(function (c) {
       return '<button class="color-dot' + (c === g.color ? ' active' : '') + '" style="background:' + c + '" ' +
         'data-action="set-color" data-group="' + g.id + '" data-color="' + c + '" aria-label="เปลี่ยนสีกลุ่ม"></button>';
@@ -488,7 +496,7 @@
           '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>' +
         '</button>' +
         '<input class="group-name" style="color:' + g.color + '" data-field="rename-group" data-group="' + g.id + '" value="' + esc(g.name) + '" />' +
-        '<span class="group-count">' + allTasks.length + '</span>' +
+        '<span class="group-count" title="' + esc(allTasks.length + (PM.lang === "th" ? " งาน" : " task" + (allTasks.length === 1 ? "" : "s"))) + '">' + esc(groupDaysLabel) + '</span>' +
         '<div class="group-kebab-wrap' + (popoverOpen ? ' open' : '') + '">' +
           '<button class="group-kebab" data-action="toggle-popover" data-group="' + g.id + '" aria-label="ตัวเลือกกลุ่ม">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>' +
