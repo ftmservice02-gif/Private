@@ -813,6 +813,16 @@
     document.getElementById("bulkCount").textContent = count + " " + (count === 1 ? tr("bulk.itemSelected") : tr("bulk.itemsSelected"));
   }
 
+  // Long project titles get truncated by the input's own width (see
+  // .project-title-input's max-width in styles.css) — title= gives the
+  // native browser tooltip on hover so the full name is still readable
+  // without widening the header.
+  function syncBoardTitleInput() {
+    var el = document.getElementById("boardTitle");
+    el.value = PM.state.title || "";
+    el.title = PM.state.title || "";
+  }
+
   // ---------------- project day budget ----------------
 
   function syncBudgetInput() {
@@ -1809,7 +1819,7 @@
 
   // ---------------- events ----------------
 
-  document.getElementById("boardTitle").addEventListener("input", function (e) { PM.state.title = e.target.value; persist(); PM.syncSidebarLinks(); });
+  document.getElementById("boardTitle").addEventListener("input", function (e) { PM.state.title = e.target.value; e.target.title = e.target.value; persist(); PM.syncSidebarLinks(); });
 
   // ---------------- save status ----------------
   // Reflects PM.persist()'s debounced auto-save (idle/dirty/saving/saved/
@@ -2294,7 +2304,7 @@
   document.getElementById("loadSampleBtn").addEventListener("click", function () {
     PM.state = PM.seedState();
     activePanelTaskId = null; selected.clear();
-    document.getElementById("boardTitle").value = PM.state.title || ""; syncBudgetInput();
+    syncBoardTitleInput(); syncBudgetInput();
     topMenuPopover.style.display = "none";
     persist(); render();
     showToast("Loaded sample project");
@@ -2303,7 +2313,7 @@
     if (!confirm("Clear all board data and start fresh? This cannot be undone.")) return;
     PM.state = PM.emptyState();
     activePanelTaskId = null; selected.clear();
-    document.getElementById("boardTitle").value = PM.state.title || ""; syncBudgetInput();
+    syncBoardTitleInput(); syncBudgetInput();
     topMenuPopover.style.display = "none";
     persist(); render();
     showToast("Board cleared");
@@ -3062,7 +3072,7 @@
   PM.requireAuth().then(function () {
     PM.resolveProjectId();
     PM.state = PM.loadCachedState() || PM.seedState();
-    document.getElementById("boardTitle").value = PM.state.title || ""; syncBudgetInput();
+    syncBoardTitleInput(); syncBudgetInput();
     applyColumnVisibility();
     PM.initSidebar("board", render);
     render();
@@ -3071,7 +3081,7 @@
       loadInviteCountOnly();
       PM.fetchProjectState(PM.currentProjectId).then(function (data) {
         PM.state = data;
-        document.getElementById("boardTitle").value = PM.state.title || ""; syncBudgetInput();
+        syncBoardTitleInput(); syncBudgetInput();
         render();
         PM.loadProjectList();
         openTaskFromUrlIfPresent();
@@ -3087,7 +3097,7 @@
           PM.currentProjectId = data.id;
           try { localStorage.setItem(PM.CURRENT_PROJECT_KEY, data.id); } catch (e) {}
         }
-        document.getElementById("boardTitle").value = PM.state.title || ""; syncBudgetInput();
+        syncBoardTitleInput(); syncBudgetInput();
         render();
         PM.loadProjectList();
         loadInviteCountOnly();
