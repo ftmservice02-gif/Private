@@ -57,6 +57,17 @@ async function requireAuthUnlessBootstrap(req, res, next) {
   return requireAuth(req, res, next);
 }
 
+// Blocks the "viewer" role from any write route — viewer is meant to be
+// read-only everywhere in the app (board/dashboard/documents still fully
+// viewable, nothing here touches GET routes), while "member" keeps every
+// edit right it already had. Checked before requireProjectAccess on
+// project routes since there's no reason to also look up membership for a
+// request that's getting rejected regardless. Must run after requireAuth.
+function requireEditor(req, res, next) {
+  if (req.user.role === "viewer") return res.status(403).json({ error: "Viewers have read-only access" });
+  next();
+}
+
 // Gates a project's state/members routes (req.params.id) to admins and
 // invited members — the creator counts as invited too, since POST
 // /api/projects (below) always adds them to project_members on creation,
@@ -487,7 +498,7 @@ function projectDetailFields(body) {
   };
 }
 
-app.post("/api/projects", requireAuth, async (req, res) => {
+app.post("/api/projects", requireAuth, requireEditor, async (req, res) => {
   const title = (req.body && req.body.title) || "New project";
   const importedGroups = Array.isArray(req.body && req.body.groups) ? req.body.groups : null;
   const importedTasks = Array.isArray(req.body && req.body.tasks) ? req.body.tasks : [];
@@ -567,7 +578,7 @@ app.get("/api/projects/:id/state", requireAuth, requireProjectAccess, async (req
   }
 });
 
-app.put("/api/projects/:id/state", requireAuth, requireProjectAccess, async (req, res) => {
+app.put("/api/projects/:id/state", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   const state = req.body;
   if (!state || !Array.isArray(state.groups) || !Array.isArray(state.tasks)) {
     return res.status(400).json({ error: "Invalid state payload" });
@@ -599,7 +610,7 @@ app.get("/api/projects/:id/members", requireAuth, requireProjectAccess, async (r
   }
 });
 
-app.post("/api/projects/:id/members", requireAuth, requireProjectAccess, async (req, res) => {
+app.post("/api/projects/:id/members", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   const userId = req.body && req.body.userId;
   if (!userId) return res.status(400).json({ error: "userId is required" });
   try {
@@ -637,7 +648,7 @@ app.post("/api/projects/:id/members", requireAuth, requireProjectAccess, async (
   }
 });
 
-app.delete("/api/projects/:id/members/:userId", requireAuth, requireProjectAccess, async (req, res) => {
+app.delete("/api/projects/:id/members/:userId", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   try {
     await pool.query("DELETE FROM project_members WHERE project_id = $1 AND user_id = $2", [req.params.id, req.params.userId]);
     res.json({ ok: true });
@@ -668,7 +679,7 @@ app.get("/api/organizations", requireAuth, async (req, res) => {
 // Upsert-by-name: picking "+ create new" in the form re-posts the typed
 // name, and a second project reusing the same organization name should
 // reuse the same row rather than erroring or duplicating it.
-app.post("/api/organizations", requireAuth, async (req, res) => {
+app.post("/api/organizations", requireAuth, requireEditor, async (req, res) => {
   const name = (req.body && req.body.name || "").trim();
   if (!name) return res.status(400).json({ error: "Name is required" });
   try {
@@ -695,7 +706,7 @@ app.get("/api/project-owners", requireAuth, async (req, res) => {
   }
 });
 
-app.post("/api/project-owners", requireAuth, async (req, res) => {
+app.post("/api/project-owners", requireAuth, requireEditor, async (req, res) => {
   const name = (req.body && req.body.name || "").trim();
   if (!name) return res.status(400).json({ error: "Name is required" });
   try {
@@ -760,7 +771,7 @@ app.get("/api/projects/:id/details", requireAuth, requireProjectAccess, async (r
   }
 });
 
-app.put("/api/projects/:id/details", requireAuth, requireProjectAccess, async (req, res) => {
+app.put("/api/projects/:id/details", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   const title = (req.body && req.body.title || "").trim();
   if (!title) return res.status(400).json({ error: "Project name is required" });
   const d = projectDetailFields(req.body);
@@ -787,7 +798,7 @@ app.put("/api/projects/:id/details", requireAuth, requireProjectAccess, async (r
 // three times with only the table/column names different.
 function registerProjectSubList(path, table, column, opts) {
   const withEmail = !!(opts && opts.withEmail);
-  app.post(`/api/projects/:id/${path}`, requireAuth, requireProjectAccess, async (req, res) => {
+  app.post(`/api/projects/:id/${path}`, requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
     const value = (req.body && req.body[column] || "").trim();
     if (!value) return res.status(400).json({ error: `${column} is required` });
     try {
@@ -807,7 +818,7 @@ function registerProjectSubList(path, table, column, opts) {
     }
   });
 
-  app.delete(`/api/projects/:id/${path}/:rowId`, requireAuth, requireProjectAccess, async (req, res) => {
+  app.delete(`/api/projects/:id/${path}/:rowId`, requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
     try {
       await pool.query(`DELETE FROM ${table} WHERE id = $1 AND project_id = $2`, [req.params.rowId, req.params.id]);
       res.json({ ok: true });
@@ -863,7 +874,7 @@ app.get("/api/state", requireAuth, async (req, res) => {
   }
 });
 
-app.put("/api/state", requireAuth, async (req, res) => {
+app.put("/api/state", requireAuth, requireEditor, async (req, res) => {
   const state = req.body;
   if (!state || !Array.isArray(state.groups) || !Array.isArray(state.tasks)) {
     return res.status(400).json({ error: "Invalid state payload" });
@@ -1102,7 +1113,7 @@ const upload = multer({
   limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
 });
 
-app.post("/api/uploads", requireAuth, (req, res) => {
+app.post("/api/uploads", requireAuth, requireEditor, (req, res) => {
   upload.single("file")(req, res, (err) => {
     if (err) {
       const msg = err.code === "LIMIT_FILE_SIZE" ? "File is larger than 15MB" : "Upload failed";
@@ -1144,7 +1155,7 @@ const mppUpload = multer({
 // server/mpxj/pom.xml for why it's rebuilt locally rather than committed).
 const MPXJ_JAR = path.join(__dirname, "mpxj", "target", "mpxj-convert-1.0.jar");
 
-app.post("/api/import/mpp", requireAuth, (req, res) => {
+app.post("/api/import/mpp", requireAuth, requireEditor, (req, res) => {
   mppUpload.single("file")(req, res, (err) => {
     if (err) {
       const msg = err.code === "LIMIT_FILE_SIZE" ? "File is larger than 30MB" : "Upload failed";

@@ -1600,3 +1600,38 @@
     font-weight: 700; padding: 3px 7px; border-radius: 6px; flex-shrink: 0;
   }
   .sb-logout-btn:hover { background: var(--sb-bg-2); color: var(--sb-text); }
+
+  /* ---- Viewer role: read-only UI (see PM.applyViewerMode in shared.js) ----
+     server.js's requireEditor is the real enforcement (every write route
+     403s); this just keeps a viewer from clicking an add/edit/delete
+     control only to hit that error. Inline-editable fields are made inert
+     with pointer-events rather than the `disabled` attribute so their text
+     still renders at full opacity/legibility — this is "can't edit",
+     not "this field doesn't apply to you". */
+  body.pm-viewer-mode #inviteBtn,
+  body.pm-viewer-mode #newTaskBtn,
+  body.pm-viewer-mode .add-link-row,
+  body.pm-viewer-mode .add-task-row,
+  body.pm-viewer-mode .row-checkbox,
+  body.pm-viewer-mode .bulk-bar,
+  body.pm-viewer-mode .reply-bar,
+  body.pm-viewer-mode .group-kebab,
+  body.pm-viewer-mode #wsNewProjectBtn,
+  body.pm-viewer-mode .ws-row-delete-btn,
+  body.pm-viewer-mode .np-file-remove {
+    display: none !important;
+  }
+  body.pm-viewer-mode .task-name-input,
+  body.pm-viewer-mode .group-name,
+  body.pm-viewer-mode input[data-field],
+  body.pm-viewer-mode select[data-field],
+  body.pm-viewer-mode .owner-avatar,
+  body.pm-viewer-mode .folder-chip:not(.readonly),
+  body.pm-viewer-mode .stuck-reason-btn,
+  body.pm-viewer-mode .timeline-pill,
+  body.pm-viewer-mode .pf-btn,
+  body.pm-viewer-mode .pf-mini-save,
+  body.pm-viewer-mode .pf-sublist-remove,
+  body.pm-viewer-mode .owner-picker-btn {
+    pointer-events: none; cursor: default;
+  }

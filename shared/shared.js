@@ -720,6 +720,19 @@
     } catch (e) { return null; }
   })();
 
+  // Read-only everywhere — server.js's requireEditor is the actual
+  // enforcement (every write route 403s for this role); this just drives
+  // the UI side (add/edit/delete controls hidden or inert — see
+  // applyViewerMode) so a viewer never clicks something only to hit that
+  // error.
+  PM.isViewer = function () { return !!(PM.currentUser && PM.currentUser.role === "viewer"); };
+  // Adds body.pm-viewer-mode (see the .pm-viewer-mode rules in styles.css)
+  // when the signed-in user is a viewer. Call once during a page's init,
+  // after PM.currentUser is populated (i.e. after requireAuth resolves).
+  PM.applyViewerMode = function () {
+    if (PM.isViewer()) document.body.classList.add("pm-viewer-mode");
+  };
+
   PM.goToLogin = function () {
     var next = encodeURIComponent(window.location.pathname + window.location.search);
     window.location.href = "login.html?next=" + next;
