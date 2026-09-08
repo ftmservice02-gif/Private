@@ -491,12 +491,18 @@
     if (!totalDays || !t.start || !t.due) return 0;
     return Math.round((PM.taskDurationDays(t) / totalDays) * 1000) / 10;
   };
+  // The project's actual calendar span — earliest task start to latest task
+  // due date, inclusive — compared against the Total project days budget on
+  // board.html. Used to just sum every task's own duration independently,
+  // which double(triple, quadruple...)-counts any days multiple tasks
+  // happen to run in parallel on: a project with 10 tasks each running the
+  // same 2 overlapping weeks would "use" 140 days that way, blowing past
+  // any realistic calendar-day budget even though the project itself only
+  // spans 14 days. Calendar span is what "days allocated" actually means
+  // next to a budget that's meant to cap how long the project runs.
   PM.allocatedDaysTotal = function () {
-    var sum = 0;
-    PM.state.tasks.forEach(function (t) {
-      if (t.start && t.due) sum += PM.taskDurationDays(t);
-    });
-    return sum;
+    var bounds = PM.projectDateBounds();
+    return bounds ? PM.daysBetweenInclusive(bounds.start, bounds.end) : 0;
   };
   PM.pctFromStart = function (dateIso, bounds, totalDays) {
     if (!dateIso || !totalDays || dateIso < bounds.start || dateIso > bounds.end) return null;
