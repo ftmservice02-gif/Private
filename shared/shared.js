@@ -60,6 +60,7 @@
       "ws.members": "Members", "ws.recents": "Recents", "ws.content": "Content", "ws.collaborators": "Collaborators",
       "ws.permissions": "Permissions", "ws.permNote": "Roles are managed from Manage users.",
       "ws.permDenied": "Admin access is required to view Permissions.",
+      "ws.adminOnlyPage": "Admin access is required — redirected to Manage workspace.",
       "ws.aiCredits": "AI credits won't be charged", "ws.filters": "Filters",
       "ws.filterByCreator": "Creator",
       "ws.newProject": "New project", "ws.newProjectPrompt": "Project name",
@@ -208,6 +209,7 @@
       "ws.members": "สมาชิก", "ws.recents": "ล่าสุด", "ws.content": "เนื้อหา", "ws.collaborators": "ผู้ร่วมงาน",
       "ws.permissions": "สิทธิ์การเข้าถึง", "ws.permNote": "จัดการสิทธิ์ผู้ใช้งานได้ที่หน้าจัดการผู้ใช้งาน",
       "ws.permDenied": "ต้องมีสิทธิ์ผู้ดูแลระบบเพื่อดู Permissions",
+      "ws.adminOnlyPage": "ต้องมีสิทธิ์ผู้ดูแลระบบ — พาไปที่ Manage workspace แทน",
       "ws.aiCredits": "จะไม่มีการเรียกเก็บเครดิต AI", "ws.filters": "ตัวกรอง",
       "ws.filterByCreator": "ผู้สร้าง",
       "ws.newProject": "โปรเจกต์ใหม่", "ws.newProjectPrompt": "ชื่อโปรเจกต์",
@@ -1073,6 +1075,12 @@
   // calling page re-render its own dynamic text after a language switch.
   PM.initSidebar = function (activeView, onLangChange) {
     PM._sidebarActiveView = activeView;
+    // Manage Users is an admin-only page (server-side too — see
+    // requireAdmin on its write routes) — member/viewer never see the link.
+    if (!PM.currentUser || PM.currentUser.role !== "admin") {
+      var usersNavItem = document.querySelector('.sb-nav-item[data-view="users"]');
+      if (usersNavItem) usersNavItem.style.display = "none";
+    }
     var authNameEl = document.getElementById("sbAuthName");
     if (authNameEl) authNameEl.textContent = PM.currentUser ? PM.currentUser.name : "";
     var logoutBtn = document.getElementById("sbLogoutBtn");

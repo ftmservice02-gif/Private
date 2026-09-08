@@ -405,7 +405,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=73"></script>
+<script src="shared/shared.js?v=74"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -1348,6 +1348,13 @@
     PM.state = PM.loadCachedState() || PM.seedState();
     PM.initSidebar("workspace", render);
     render();
+
+    // Bounced here from users.html (Manage Users is admin-only) — see the
+    // redirect there for why.
+    if (new URL(window.location.href).searchParams.get("denied") === "1") {
+      PM.showToast(tr("ws.adminOnlyPage"));
+      window.history.replaceState(null, "", "workspace.html");
+    }
 
     // Settings API is admin-gated server-side too — this just keeps the
     // button itself off-screen for anyone who'd only get a 403 from it.

@@ -68,6 +68,14 @@ function requireEditor(req, res, next) {
   next();
 }
 
+// Manage Users' actual write routes (create/edit/delete an account, which
+// includes handing out roles) — admin-only, no exceptions. Must run after
+// requireAuth.
+function requireAdmin(req, res, next) {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  next();
+}
+
 // Gates a project's state/members routes (req.params.id) to admins and
 // invited members — the creator counts as invited too, since POST
 // /api/projects (below) always adds them to project_members on creation,
@@ -916,8 +924,15 @@ app.get("/api/users", requireAuth, async (req, res) => {
 });
 
 // requireAuthUnlessBootstrap: the very first user (empty workspace) can be
-// created with no session yet, so there's a way to log in at all.
+// created with no session yet, so there's a way to log in at all — req.user
+// is never set on that path, so the admin check right below only ever
+// applies once someone actually exists to be an admin (or not) in the
+// first place. Every other case (member/viewer creating a user, including
+// trying to hand themselves "admin") is rejected here — Manage Users
+// (GET is fine for any signed-in user, since board.html/workspace.html's
+// Invite pickers need the workspace roster) is otherwise an admin-only page.
 app.post("/api/users", requireAuthUnlessBootstrap, async (req, res) => {
+  if (req.user && req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
   const name = (req.body && req.body.name || "").trim();
   const email = (req.body && req.body.email || "").trim();
   const role = VALID_ROLES.includes(req.body && req.body.role) ? req.body.role : "member";
@@ -942,7 +957,7 @@ app.post("/api/users", requireAuthUnlessBootstrap, async (req, res) => {
   }
 });
 
-app.put("/api/users/:id", requireAuth, async (req, res) => {
+app.put("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
   const name = (req.body && req.body.name || "").trim();
   const email = (req.body && req.body.email || "").trim();
   const role = VALID_ROLES.includes(req.body && req.body.role) ? req.body.role : "member";
@@ -972,7 +987,7 @@ app.put("/api/users/:id", requireAuth, async (req, res) => {
   }
 });
 
-app.delete("/api/users/:id", requireAuth, async (req, res) => {
+app.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const deleted = await pool.query("DELETE FROM users WHERE id = $1 RETURNING id", [req.params.id]);
     if (!deleted.rows.length) return res.status(404).json({ error: "User not found" });
