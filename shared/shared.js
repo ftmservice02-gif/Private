@@ -629,6 +629,13 @@
 
   try { PM.currentProjectId = localStorage.getItem(PM.CURRENT_PROJECT_KEY) || null; } catch (e) { PM.currentProjectId = null; }
   PM.projectList = [];
+  // True only once loadProjectList() has actually heard back from the
+  // server — lets a caller tell "empty because nothing's loaded yet" apart
+  // from "loaded, and it's genuinely empty" (e.g. a member/viewer with no
+  // project invites at all — see workspace.html's renderWorkspaceTable,
+  // which used to fall back to a cached PM.state project row in exactly
+  // that case, showing a project access had since been revoked from).
+  PM.projectListLoaded = false;
   PM.state = null; // each page sets this during its own init (see initProjectState below)
 
   // ---------------- save status ----------------
@@ -813,9 +820,10 @@
       .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); })
       .then(function (list) {
         PM.projectList = Array.isArray(list) ? list : [];
+        PM.projectListLoaded = true;
         return PM.projectList;
       })
-      .catch(function () { return PM.projectList; });
+      .catch(function () { return PM.projectList; }); // leaves projectListLoaded false — a real fetch failure, not "confirmed empty"
   };
 
   // Sidebar "Progress" card's default data source — every task across
