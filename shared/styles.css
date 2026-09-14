@@ -1135,6 +1135,14 @@
   }
   .update-action-btn:hover { color: var(--accent-soft-text); }
   .update-action-btn.liked { color: var(--accent); }
+  .update-action-btn.update-action-danger:hover { color: #e63946; }
+
+  .update-edit-form { margin-top: 5px; }
+  .update-edit-textarea {
+    width: 100%; min-height: 60px; resize: vertical; font: inherit; font-size: 13.5px;
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: inherit;
+  }
+  .update-edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
   .no-updates { text-align: center; color: var(--text-faint); font-size: 13px; padding: 20px 0; }
 

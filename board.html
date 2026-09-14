@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=76" />
+<link rel="stylesheet" href="shared/styles.css?v=77" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -335,7 +335,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=79"></script>
+<script src="shared/shared.js?v=80"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -356,6 +356,7 @@
   var stuckFileInputEl = null;
   var activePanelTaskId = null;
   var replyTargetUpdateId = null; // which top-level update the reply bar is threading under, or null for none
+  var editingUpdateId = null; // which update/reply is showing its inline edit textarea, or null for none
 
   function findTask(id) { return PM.findTask(id); }
   function findGroup(id) { return PM.findGroup(id); }
@@ -1522,43 +1523,133 @@
     return renderChecklistMarkers(bodyHtml, taskId, u.id);
   }
 
+  // Edit/delete are only offered to the update's own author (matched by
+  // free-text name, same as `owner` elsewhere — there's no users(id) FK on
+  // an update's author) or an admin — same "author or admin" rule a normal
+  // comment section uses, not the project's general edit permission.
+  function canModifyUpdate(u) {
+    if (!PM.currentUser) return false;
+    if (PM.currentUser.role === "admin") return true;
+    var me = (PM.currentUser.name || "").trim().toLowerCase();
+    return !!me && me === (u.author || "").trim().toLowerCase();
+  }
+  // Best-effort plain text for the inline editor — a rich-HTML update
+  // (compose-box formatting, @mentions) flattens to its visible text.
+  function plainTextOfUpdate(u) {
+    if (!u.isHtml) return u.text || "";
+    var div = document.createElement("div");
+    div.innerHTML = u.text || "";
+    return div.textContent || "";
+  }
+  // An update's attachment is an <a href="/uploads/...">/<img> living
+  // inside its own HTML (see documents.html's collectAttachmentsFromUpdates
+  // for the same fact) — editing it down through the plain-text box below
+  // would silently turn a working file link into dead text, so Edit isn't
+  // offered for one of these at all; Delete still is.
+  function updateHasAttachment(u) {
+    return !!(u.isHtml && u.text && u.text.indexOf("/uploads/") !== -1);
+  }
+
+  function renderUpdateEditForm(u) {
+    return '<div class="update-edit-form">' +
+        '<textarea class="update-edit-textarea" data-update="' + u.id + '">' + esc(plainTextOfUpdate(u)) + '</textarea>' +
+        '<div class="update-edit-actions">' +
+          '<button type="button" class="pf-btn pf-btn-outline" data-action="cancel-edit-update">' + tr("bulk.cancel") + '</button>' +
+          '<button type="button" class="pf-btn pf-btn-primary" data-action="save-edit-update" data-update="' + u.id + '">' + tr("board.save") + '</button>' +
+        '</div>' +
+      '</div>';
+  }
+  function renderUpdateActions(taskId, u, replyTargetId) {
+    var canModify = canModifyUpdate(u);
+    var editBtn = (canModify && !updateHasAttachment(u))
+      ? '<button class="update-action-btn" data-action="edit-update" data-update="' + u.id + '">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>' + tr("panel.edit") + '</button>'
+      : "";
+    var deleteBtn = canModify
+      ? '<button class="update-action-btn update-action-danger" data-action="delete-update" data-task="' + taskId + '" data-update="' + u.id + '">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7"/></svg>' + tr("bulk.delete") + '</button>'
+      : "";
+    return '<div class="update-actions">' +
+        '<button class="update-action-btn' + (u.liked ? ' liked' : '') + '" data-action="toggle-like" data-task="' + taskId + '" data-update="' + u.id + '">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (u.liked ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M7 22V11M2 13v7a2 2 0 002 2h12.6a2 2 0 002-1.7l1.3-8a2 2 0 00-2-2.3H14V5a2 2 0 00-2-2l-2 7H2z"/></svg>' +
+          (u.likes ? u.likes + " " : "") + tr("panel.like") + '</button>' +
+        '<button class="update-action-btn" data-action="focus-reply" data-update="' + replyTargetId + '" data-author="' + esc(u.author || "You") + '">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17l-5-5 5-5M4 12h11a5 5 0 015 5v1"/></svg>' + tr("panel.reply") + '</button>' +
+        editBtn + deleteBtn +
+      '</div>';
+  }
+
   function renderUpdateItem(taskId, u, replies) {
     replies = replies || [];
     var repliesHtml = replies.length
       ? '<div class="update-replies">' + replies.map(function (r) { return renderReplyItem(taskId, r); }).join("") + '</div>'
       : "";
+    var isEditing = editingUpdateId === u.id;
     return '<div class="update-item">' +
       '<div class="update-avatar" style="background:' + avatarColor(u.author) + '">' + esc(initials(u.author)) + '</div>' +
       '<div class="update-main">' +
         '<div class="update-head"><span class="update-author">' + esc(u.author || "You") + '</span><span class="update-time">' + PM.timeAgo(u.time) + '</span></div>' +
-        '<div class="update-text">' + renderUpdateBody(taskId, u) + '</div>' +
-        '<div class="update-actions">' +
-          '<button class="update-action-btn' + (u.liked ? ' liked' : '') + '" data-action="toggle-like" data-task="' + taskId + '" data-update="' + u.id + '">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (u.liked ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M7 22V11M2 13v7a2 2 0 002 2h12.6a2 2 0 002-1.7l1.3-8a2 2 0 00-2-2.3H14V5a2 2 0 00-2-2l-2 7H2z"/></svg>' +
-            (u.likes ? u.likes + " " : "") + tr("panel.like") + '</button>' +
-          '<button class="update-action-btn" data-action="focus-reply" data-update="' + u.id + '" data-author="' + esc(u.author || "You") + '">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17l-5-5 5-5M4 12h11a5 5 0 015 5v1"/></svg>' + tr("panel.reply") + '</button>' +
-        '</div>' +
+        (isEditing ? renderUpdateEditForm(u) : ('<div class="update-text">' + renderUpdateBody(taskId, u) + '</div>' + renderUpdateActions(taskId, u, u.id))) +
         repliesHtml +
       '</div>' +
     '</div>';
   }
 
   function renderReplyItem(taskId, u) {
+    var isEditing = editingUpdateId === u.id;
     return '<div class="update-item update-reply-item">' +
       '<div class="update-avatar" style="background:' + avatarColor(u.author) + '">' + esc(initials(u.author)) + '</div>' +
       '<div class="update-main">' +
         '<div class="update-head"><span class="update-author">' + esc(u.author || "You") + '</span><span class="update-time">' + PM.timeAgo(u.time) + '</span></div>' +
-        '<div class="update-text">' + renderUpdateBody(taskId, u) + '</div>' +
-        '<div class="update-actions">' +
-          '<button class="update-action-btn' + (u.liked ? ' liked' : '') + '" data-action="toggle-like" data-task="' + taskId + '" data-update="' + u.id + '">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (u.liked ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M7 22V11M2 13v7a2 2 0 002 2h12.6a2 2 0 002-1.7l1.3-8a2 2 0 00-2-2.3H14V5a2 2 0 00-2-2l-2 7H2z"/></svg>' +
-            (u.likes ? u.likes + " " : "") + tr("panel.like") + '</button>' +
-          '<button class="update-action-btn" data-action="focus-reply" data-update="' + (u.parentId || u.id) + '" data-author="' + esc(u.author || "You") + '">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17l-5-5 5-5M4 12h11a5 5 0 015 5v1"/></svg>' + tr("panel.reply") + '</button>' +
-        '</div>' +
+        (isEditing ? renderUpdateEditForm(u) : ('<div class="update-text">' + renderUpdateBody(taskId, u) + '</div>' + renderUpdateActions(taskId, u, u.parentId || u.id))) +
       '</div>' +
     '</div>';
+  }
+
+  function findUpdateById(updates, id) {
+    var u = updates.find(function (x) { return x.id === id; });
+    return u || null;
+  }
+  function startEditUpdate(id) {
+    editingUpdateId = id;
+    renderPanel();
+    var ta = document.querySelector('.update-edit-textarea[data-update="' + id + '"]');
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }
+  function cancelEditUpdate() {
+    editingUpdateId = null;
+    renderPanel();
+  }
+  function saveEditUpdate(id) {
+    var ctx = activePanelTaskId ? findUpdatable(activePanelTaskId) : null;
+    if (!ctx) return;
+    var updates = ctx.item.updates || [];
+    var u = findUpdateById(updates, id);
+    if (!u || !canModifyUpdate(u)) return;
+    var ta = document.querySelector('.update-edit-textarea[data-update="' + id + '"]');
+    var newText = ta ? ta.value.trim() : "";
+    if (!newText) { PM.showToast(tr("panel.composePlaceholder")); return; }
+    u.text = newText;
+    u.isHtml = false;
+    editingUpdateId = null;
+    persist();
+    renderPanel();
+    PM.showToast(tr("panel.updateEdited"));
+  }
+  // A top-level update takes its replies with it (per request); a reply
+  // (u.parentId set) only ever removes itself.
+  function deleteUpdate(taskId, id) {
+    var ctx = activePanelTaskId ? findUpdatable(activePanelTaskId) : null;
+    if (!ctx) return;
+    var updates = ctx.item.updates || [];
+    var u = findUpdateById(updates, id);
+    if (!u || !canModifyUpdate(u)) return;
+    if (!confirm(u.parentId ? tr("panel.deleteReplyConfirm") : tr("panel.deleteUpdateConfirm"))) return;
+    ctx.item.updates = updates.filter(function (x) { return x.id !== id && x.parentId !== id; });
+    if (editingUpdateId === id) editingUpdateId = null;
+    persist();
+    renderPanel();
+    PM.showToast(tr("panel.updateDeleted"));
   }
   function postUpdate(taskId, content, source, parentId) {
     var isHtml = source === "compose";
@@ -2354,7 +2445,16 @@
       setReplyTarget(replyBtn.dataset.update, replyBtn.dataset.author);
       var reply = document.getElementById("replyInput");
       if (reply) reply.focus();
+      return;
     }
+    var editBtn = e.target.closest('[data-action="edit-update"]');
+    if (editBtn) { startEditUpdate(editBtn.dataset.update); return; }
+    var cancelEditBtn = e.target.closest('[data-action="cancel-edit-update"]');
+    if (cancelEditBtn) { cancelEditUpdate(); return; }
+    var saveEditBtn = e.target.closest('[data-action="save-edit-update"]');
+    if (saveEditBtn) { saveEditUpdate(saveEditBtn.dataset.update); return; }
+    var deleteBtn = e.target.closest('[data-action="delete-update"]');
+    if (deleteBtn) { deleteUpdate(deleteBtn.dataset.task, deleteBtn.dataset.update); return; }
   });
 
   // Threads a reply under a specific top-level update instead of always
