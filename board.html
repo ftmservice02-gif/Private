@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=78" />
+<link rel="stylesheet" href="shared/styles.css?v=79" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -548,7 +548,7 @@
       '<div class="cell"><button class="expand-toggle' + (open ? ' open' : '') + (hasSub ? '' : ' no-sub') + '" data-action="toggle-sub" data-task="' + t.id + '" aria-label="ขยายงานย่อย">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></button></div>' +
       '<div class="cell task-name-cell">' +
-        '<input type="text" class="task-name-input" data-field="name" data-task="' + t.id + '" value="' + esc(t.name) + '" placeholder="' + tr("board.taskPlaceholder") + '" />' +
+        '<div class="task-name-input" contenteditable="true" data-field="name" data-task="' + t.id + '" data-placeholder="' + tr("board.taskPlaceholder") + '">' + esc(t.name) + '</div>' +
         (hasSub ? '<span class="sub-badge" data-action="toggle-sub" data-task="' + t.id + '">' +
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>' +
           t.subitems.length + '</span>' : '') +
@@ -628,7 +628,7 @@
 
     return '<div class="sub-row-grid subitem-row' + (activePanelTaskId === s.id ? ' panel-open' : '') + '" data-sub="' + s.id + '">' +
       '<div class="cell row-checkbox"><input type="checkbox" data-action="select" data-key="sub:' + taskId + ':' + s.id + '"' + (checked ? ' checked' : '') + ' aria-label="เลือกงานย่อย" /></div>' +
-      '<div class="cell"><input type="text" class="task-name-input" data-field="sub-name" data-task="' + taskId + '" data-sub="' + s.id + '" value="' + esc(s.name) + '" placeholder="' + tr("board.subitemPlaceholder") + '" /></div>' +
+      '<div class="cell"><div class="task-name-input" contenteditable="true" data-field="sub-name" data-task="' + taskId + '" data-sub="' + s.id + '" data-placeholder="' + tr("board.subitemPlaceholder") + '">' + esc(s.name) + '</div></div>' +
       '<div class="cell">' + subBubbleHtml + '</div>' +
       '<div class="cell col-owner">' + ownerHtml + '</div>' +
       '<div class="cell col-status"><span class="status-wrap">' +
@@ -1778,7 +1778,7 @@
     t.subitemsOpen = true;
     t.subitems.push({ id: uid(), name: "", owner: "", status: "not_started", date: "", folder: "", updates: [], stuckReason: "", stuckAttachments: [] });
     persist(); render();
-    var el = document.querySelector('.subitem-row:last-child input[data-field="sub-name"][data-task="' + taskId + '"]');
+    var el = document.querySelector('.subitem-row:last-child [data-field="sub-name"][data-task="' + taskId + '"]');
     if (el) el.focus();
   }
 
@@ -2168,7 +2168,7 @@
     if (field === "sub-name" || field === "sub-status" || field === "sub-date") {
       var s = findSub(taskId, el.dataset.sub);
       if (!s) return;
-      if (field === "sub-name") s.name = el.value;
+      if (field === "sub-name") s.name = el.textContent;
       if (field === "sub-status") {
         s.status = el.value;
         el.className = "pill status-" + el.value;
@@ -2184,7 +2184,7 @@
       return;
     }
 
-    if (field === "name") t.name = el.value;
+    if (field === "name") t.name = el.textContent;
     if (field === "due") {
       t.due = el.value;
       var dueDisp = el.nextElementSibling;
@@ -2198,6 +2198,26 @@
       return;
     }
     persist();
+  });
+
+  // Task/subitem names are plain text, not rich content — block Enter from
+  // inserting a line break (contenteditable's default) and commit/blur
+  // instead, and force pasted content down to plain text, same as the
+  // board title's own contenteditable handling.
+  board.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var el = e.target;
+    if (!el.classList || !el.classList.contains("task-name-input")) return;
+    e.preventDefault();
+    el.blur();
+  });
+  board.addEventListener("paste", function (e) {
+    var el = e.target;
+    if (!el.classList || !el.classList.contains("task-name-input")) return;
+    e.preventDefault();
+    var cd = e.clipboardData || window.clipboardData;
+    var text = (cd && cd.getData("text/plain")) || "";
+    document.execCommand("insertText", false, text);
   });
 
   board.addEventListener("change", function (e) {

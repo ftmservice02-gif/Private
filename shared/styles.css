@@ -574,10 +574,11 @@
   .task-name-cell { display: flex; align-items: center; gap: 6px; }
   .task-name-input {
     border: 1px solid transparent; background: transparent; padding: 6px 6px; border-radius: 6px; font-size: 13.5px;
-    width: 100%; font-weight: 500;
+    width: 100%; font-weight: 500; white-space: normal; word-break: break-word; overflow-wrap: anywhere;
   }
   .task-name-input:hover { border-color: var(--border-strong); }
   .task-name-input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+  .task-name-input:empty:before { content: attr(data-placeholder); color: var(--text-faint); font-weight: 400; }
   .sub-badge {
     display: inline-flex; align-items: center; gap: 3px; color: var(--text-faint); font-size: 11.5px;
     flex-shrink: 0; cursor: pointer; padding: 2px 5px; border-radius: 10px; background: var(--surface-2);
@@ -828,7 +829,7 @@
   .subitem-row { border-radius: 8px; }
   .subitem-row:hover { background: var(--surface-2); }
   .subitem-row .cell { padding: 6px 8px; }
-  .subitem-row input[type="text"] { font-weight: 400; font-size: 13px; }
+  .subitem-row input[type="text"], .subitem-row .task-name-input { font-weight: 400; font-size: 13px; }
   .subitem-row .owner-avatar { width: 24px; height: 24px; font-size: 11px; }
   .subitem-row .pill { padding: 5px 4px; font-size: 12px; }
 
