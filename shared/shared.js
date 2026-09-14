@@ -120,9 +120,9 @@
       "board.setDates": "Set dates", "board.daysSelected": "days selected",
       "board.overdueBy": "{n} day{s} overdue",
       "board.totalDaysLabel": "Total project days",
-      "board.allocatedDays": "{used} / {total} days allocated",
+      "board.allocatedDays": "{used} / {total} days elapsed",
       "board.allocatedOverBy": "over by {n} day{s}",
-      "board.budgetWarnToast": "Activities now total {used} days — {n} day{s} over your {total}-day budget",
+      "board.budgetWarnToast": "{used} days have elapsed — {n} day{s} over your {total}-day budget",
       "board.save": "Save", "board.budgetSaved": "Project day budget saved",
       "save.idle": "All changes saved", "save.dirty": "Unsaved changes", "save.saving": "Saving…",
       "save.saved": "All changes saved", "save.error": "Couldn't save — click to retry",
@@ -274,9 +274,9 @@
       "board.setDates": "ตั้งค่าวันที่", "board.daysSelected": "วันที่เลือก",
       "board.overdueBy": "เกินกำหนด {n} วัน",
       "board.totalDaysLabel": "จำนวนวันทั้งหมดของโครงการ",
-      "board.allocatedDays": "จัดสรรแล้ว {used} / {total} วัน",
+      "board.allocatedDays": "ผ่านไปแล้ว {used} / {total} วัน",
       "board.allocatedOverBy": "เกิน {n} วัน",
-      "board.budgetWarnToast": "กิจกรรมรวมแล้ว {used} วัน — เกินงบ {total} วัน อยู่ {n} วัน",
+      "board.budgetWarnToast": "ผ่านไปแล้ว {used} วัน — เกินงบ {total} วัน อยู่ {n} วัน",
       "board.save": "บันทึก", "board.budgetSaved": "บันทึกจำนวนวันโครงการแล้ว",
       "save.idle": "บันทึกล่าสุดแล้ว", "save.dirty": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก", "save.saving": "กำลังบันทึก…",
       "save.saved": "บันทึกล่าสุดแล้ว", "save.error": "บันทึกไม่สำเร็จ — คลิกเพื่อลองใหม่",
@@ -518,18 +518,21 @@
     if (!totalDays || !t.start || !t.due) return 0;
     return Math.round((PM.taskDurationDays(t) / totalDays) * 1000) / 10;
   };
-  // The project's actual calendar span — earliest task start to latest task
-  // due date, inclusive — compared against the Total project days budget on
-  // board.html. Used to just sum every task's own duration independently,
-  // which double(triple, quadruple...)-counts any days multiple tasks
-  // happen to run in parallel on: a project with 10 tasks each running the
-  // same 2 overlapping weeks would "use" 140 days that way, blowing past
-  // any realistic calendar-day budget even though the project itself only
-  // spans 14 days. Calendar span is what "days allocated" actually means
-  // next to a budget that's meant to cap how long the project runs.
+  // Calendar days elapsed so far — from the earliest task's start date to
+  // today, inclusive — compared against the Total project days budget on
+  // board.html. This used to be the *planned* span (earliest start to
+  // latest due date across every task), but that number stays fixed the
+  // moment the last task gets a due date and never reflects how far into
+  // the project "today" actually is, which reads as wrong the instant a
+  // project 3 weeks in already shows a span nearly maxing out its budget.
+  // Elapsed-since-start is what a budget meant to cap how long the project
+  // runs actually needs to warn against, day by day, as it happens.
   PM.allocatedDaysTotal = function () {
     var bounds = PM.projectDateBounds();
-    return bounds ? PM.daysBetweenInclusive(bounds.start, bounds.end) : 0;
+    if (!bounds) return 0;
+    var today = PM.todayIso();
+    if (today < bounds.start) return 0;
+    return PM.daysBetweenInclusive(bounds.start, today);
   };
   PM.pctFromStart = function (dateIso, bounds, totalDays) {
     if (!dateIso || !totalDays || dateIso < bounds.start || dateIso > bounds.end) return null;

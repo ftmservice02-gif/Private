@@ -335,7 +335,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=80"></script>
+<script src="shared/shared.js?v=81"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -468,10 +468,11 @@
     if ((searchQuery || personFilterSet.size || statusFilterSet.size) && tasks.length === 0) return "";
 
     // Calendar span of just this group's own tasks — earliest start to
-    // latest due date, inclusive — same calculation as the project-wide
-    // budget bar above (PM.allocatedDaysTotal), just scoped down to one
-    // group instead of the whole board. "–" when nothing here has dates set
-    // yet, same convention as an empty due-date cell elsewhere on the row.
+    // latest due date, inclusive. This is the group's *planned* span, unlike
+    // the project-wide budget bar above (PM.allocatedDaysTotal), which
+    // tracks calendar days elapsed since the project started. "–" when
+    // nothing here has dates set yet, same convention as an empty due-date
+    // cell elsewhere on the row.
     var groupBounds = PM.dateBoundsOfTasks(allTasks);
     var groupDaysLabel = groupBounds ? PM.fmtDuration(groupBounds.start, groupBounds.end) : "–";
 
