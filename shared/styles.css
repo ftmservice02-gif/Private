@@ -481,11 +481,15 @@
   .doc-file-list { padding-left: 29px; position: relative; }
   .doc-file-list::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 8px; width: 1px; background: var(--border); }
   .doc-file-row {
-    display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; text-decoration: none; color: inherit;
+    display: flex; align-items: center; gap: 6px; padding: 7px 8px; border-radius: 10px;
     transition: background .12s;
   }
   .doc-file-row:hover { background: var(--surface-2); }
   .doc-file-row:hover .doc-file-name { color: var(--accent-soft-text); }
+  /* The clickable "open this file" part of the row — everything except the
+     delete button, which needs to sit outside any <a> so clicking it
+     doesn't also navigate (see documents.html's admin-only delete button). */
+  .doc-file-open { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
   .doc-file-icon {
     width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     font-size: 8.5px; font-weight: 800; letter-spacing: 0.01em;

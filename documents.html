@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=75" />
+<link rel="stylesheet" href="shared/styles.css?v=76" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -111,7 +111,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=78"></script>
+<script src="shared/shared.js?v=79"></script>
 <script>
 (function () {
   "use strict";
@@ -164,7 +164,7 @@
   // that back apart would shred a name like that into fake nested folders,
   // so each segment stays exactly the literal string it came from all the
   // way through rendering.
-  function collectAttachmentsFromUpdates(updates, folderSegs, results) {
+  function collectAttachmentsFromUpdates(updates, folderSegs, results, taskId, subitemId) {
     (updates || []).forEach(function (u) {
       if (!u.isHtml || !u.text) return;
       var div = document.createElement("div");
@@ -181,7 +181,13 @@
           isImage: !!img,
           folderSegs: folderSegs,
           author: u.author || "",
-          time: u.time || ""
+          time: u.time || "",
+          // Where this attachment actually lives, so deleteDocAttachment can
+          // find its way back to the exact update it's embedded in and cut
+          // just this one <a> out of that update's HTML — see that function.
+          taskId: taskId,
+          subitemId: subitemId || null,
+          updateId: u.id
         });
       });
     });
@@ -221,9 +227,9 @@
     var groupById = groupNameLookup(state);
     (state.tasks || []).forEach(function (t) {
       var taskSegs = taskRootSegs(groupById, t);
-      collectAttachmentsFromUpdates(t.updates, taskSegs, results);
+      collectAttachmentsFromUpdates(t.updates, taskSegs, results, t.id, null);
       (t.subitems || []).forEach(function (s) {
-        collectAttachmentsFromUpdates(s.updates, subitemSegs(taskSegs, s), results);
+        collectAttachmentsFromUpdates(s.updates, subitemSegs(taskSegs, s), results, t.id, s.id);
       });
     });
     results.sort(function (a, b) { return (b.time || "").localeCompare(a.time || ""); });
@@ -385,13 +391,27 @@
     // it here.
     var childKeys = Object.keys(node.children);
 
+    // Delete is admin-only (see deleteDocAttachment) and only offered for a
+    // file actually embedded in an update's text (f.updateId set) — the
+    // separate stuck-reason attachments (stuckAttachments JSONB, not update
+    // HTML) aren't wired up for this yet, so they just don't get the button.
+    var canDeleteDocs = PM.currentUser && PM.currentUser.role === "admin";
     var fileRowsHtml = node.files.map(function (f) {
       var badge = fileTypeBadge(f);
-      return '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="doc-file-row">' +
-          '<div class="doc-file-icon" style="background:' + badge.color + '22; color:' + badge.color + ';">' + badge.inner + '</div>' +
-          '<span class="doc-file-name">' + esc(f.name) + '</span>' +
-          '<span class="doc-file-meta">' + esc(f.author) + (f.time ? " · " + esc(fmtDate(f.time.slice(0, 10))) : "") + '</span>' +
-        '</a>';
+      var deleteBtnHtml = (canDeleteDocs && f.updateId) ?
+        '<button type="button" class="np-file-remove" data-action="delete-doc-file" ' +
+          'data-project="' + esc(projectId) + '" data-task="' + esc(f.taskId || "") + '" data-subitem="' + esc(f.subitemId || "") + '" ' +
+          'data-update="' + esc(f.updateId) + '" data-url="' + esc(f.url) + '" data-name="' + esc(f.name) + '" ' +
+          'title="' + esc(tr("doc.deleteFile")) + '" aria-label="' + esc(tr("doc.deleteFile")) + '">&times;</button>'
+        : '';
+      return '<div class="doc-file-row">' +
+          '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="doc-file-open">' +
+            '<div class="doc-file-icon" style="background:' + badge.color + '22; color:' + badge.color + ';">' + badge.inner + '</div>' +
+            '<span class="doc-file-name">' + esc(f.name) + '</span>' +
+            '<span class="doc-file-meta">' + esc(f.author) + (f.time ? " · " + esc(fmtDate(f.time.slice(0, 10))) : "") + '</span>' +
+          '</a>' +
+          deleteBtnHtml +
+        '</div>';
     }).join("");
     // Each level's own .doc-file-list already carries the standard indent +
     // connector line (see CSS), so nesting child folder divs straight
@@ -488,6 +508,52 @@
         if (collapsedDocFolders.has(key)) collapsedDocFolders.delete(key); else collapsedDocFolders.add(key);
         render();
       });
+    });
+    wrap.querySelectorAll('[data-action="delete-doc-file"]').forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteDocAttachment(el.dataset);
+      });
+    });
+  }
+
+  // Admin-only "delete this one file" from Document DATA — see the comment
+  // above collectAttachmentsFromUpdates for why a file isn't its own row
+  // anywhere: it's cut out of the specific update's stored HTML (the same
+  // whole-project-state save every board edit already goes through — see
+  // CLAUDE.md, there's no per-field PATCH endpoint), leaving the rest of
+  // that update's text untouched, then the file list is reloaded fresh so
+  // the deleted row (and any now-empty folder) disappears immediately.
+  function deleteDocAttachment(ds) {
+    if (!confirm(tr("doc.deleteFileConfirm").replace("{name}", ds.name))) return;
+    PM.fetchProjectState(ds.project).then(function (state) {
+      var task = (state.tasks || []).find(function (t) { return t.id === ds.task; });
+      if (!task) throw new Error("task not found");
+      var owner = ds.subitem ? (task.subitems || []).find(function (s) { return s.id === ds.subitem; }) : task;
+      if (!owner) throw new Error("subitem not found");
+      var update = (owner.updates || []).find(function (u) { return u.id === ds.update; });
+      if (!update || !update.text) throw new Error("update not found");
+      var div = document.createElement("div");
+      div.innerHTML = update.text;
+      // Compare the resolved .href property, not the raw attribute — the
+      // stored markup usually has a relative "/uploads/..." href, while
+      // ds.url (captured the same way when the list was built) is the
+      // browser-resolved absolute URL, so an attribute-value selector
+      // wouldn't match.
+      var anchor = Array.prototype.filter.call(div.querySelectorAll("a"), function (a) { return a.href === ds.url; })[0];
+      if (!anchor) throw new Error("attachment not found in update — it may have already been removed");
+      anchor.remove();
+      update.text = div.innerHTML;
+      return PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(ds.project) + "/state", {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state)
+      }).then(function (r) { if (!r.ok) throw new Error("save failed"); });
+    }).then(function () {
+      PM.showToast(tr("doc.deleteFileSuccess"));
+      return loadAllProjectsDocuments();
+    }).then(render).catch(function (err) {
+      console.error(err);
+      PM.showToast((err && err.message) || tr("doc.deleteFileError"));
     });
   }
 
