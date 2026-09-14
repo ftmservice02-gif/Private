@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=79" />
+<link rel="stylesheet" href="shared/styles.css?v=80" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -114,7 +114,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=81"></script>
+<script src="shared/shared.js?v=82"></script>
 <script>
 (function () {
   "use strict";
@@ -183,7 +183,10 @@
     }
     var totalDays = daysBetweenInclusive(bounds.start, bounds.end);
     var todayPct = PM.pctFromStart(todayIso(), bounds, totalDays);
-    var todayLine = todayPct !== null ? '<div class="db-gantt-today-line" style="left:' + todayPct + '%;"></div>' : "";
+    var todayLabel = tr("db.todayLine").replace("{date}", PM.fmtLongDate(todayIso()));
+    var todayLine = todayPct !== null
+      ? '<div class="db-gantt-today-line" style="left:' + todayPct + '%;" title="' + esc(todayLabel) + '"></div>'
+      : "";
 
     var scaleHtml = '<div class="db-gantt-scale"><div class="db-gantt-scale-label"></div>' +
       '<div class="db-gantt-scale-track">' +
@@ -206,7 +209,7 @@
               (pos.width > 10 ? '<span class="db-gantt-bar-pct">' + durPct + '%</span>' : '') +
             '</div>'
           : "";
-        return '<div class="db-gantt-row"><div class="db-gantt-row-label" title="' + esc(t.name) + '">' + esc(t.name) + '</div>' +
+        return '<div class="db-gantt-row"><div class="db-gantt-row-label">' + esc(t.name) + '</div>' +
           '<div class="db-gantt-track">' + todayLine + bar + '</div></div>';
       }).join("");
       return '<div class="db-gantt-group-head" style="color:' + g.color + ';">' + esc(g.name) + '</div>' + rows;
