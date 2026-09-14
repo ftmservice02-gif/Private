@@ -114,7 +114,8 @@
   }
   .project-title-input {
     font-size: 21px; font-weight: 700; border: none; background: transparent; color: var(--text);
-    padding: 3px 4px; border-radius: 6px; width: clamp(160px, 32vw, 380px); text-wrap: balance;
+    padding: 3px 4px; border-radius: 6px; max-width: min(60vw, 640px); min-width: 40px;
+    white-space: normal; word-break: break-word; overflow-wrap: anywhere;
   }
   .project-title-input:hover { background: var(--surface-2); }
   .project-title-input:focus { outline: 2px solid var(--focus); outline-offset: 1px; background: var(--surface); }

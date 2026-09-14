@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=77" />
+<link rel="stylesheet" href="shared/styles.css?v=78" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -92,7 +92,7 @@
   <!-- ============ Top bar ============ -->
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:6px;">
-      <input id="boardTitle" class="project-title-input" value="IT Project" />
+      <div id="boardTitle" class="project-title-input" contenteditable="true" role="textbox" aria-label="Project name">IT Project</div>
       <button class="chev-btn" data-toast="เมนูโปรเจกต์ยังไม่เปิดใช้งานในตัวอย่างนี้" aria-label="เมนูโปรเจกต์">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M6 9l6 6 6-6"/></svg>
       </button>
@@ -823,13 +823,9 @@
     document.getElementById("bulkCount").textContent = count + " " + (count === 1 ? tr("bulk.itemSelected") : tr("bulk.itemsSelected"));
   }
 
-  // Long project titles get truncated by the input's own width (see
-  // .project-title-input's max-width in styles.css) — title= gives the
-  // native browser tooltip on hover so the full name is still readable
-  // without widening the header.
   function syncBoardTitleInput() {
     var el = document.getElementById("boardTitle");
-    el.value = PM.state.title || "";
+    el.textContent = PM.state.title || "";
     el.title = PM.state.title || "";
   }
 
@@ -1919,7 +1915,27 @@
 
   // ---------------- events ----------------
 
-  document.getElementById("boardTitle").addEventListener("input", function (e) { PM.state.title = e.target.value; e.target.title = e.target.value; persist(); PM.syncSidebarLinks(); });
+  (function () {
+    var titleEl = document.getElementById("boardTitle");
+    titleEl.addEventListener("input", function (e) {
+      PM.state.title = e.target.textContent;
+      e.target.title = e.target.textContent;
+      persist();
+      PM.syncSidebarLinks();
+    });
+    // The title is plain text, not rich content — block Enter from
+    // inserting a line break (contenteditable's default) and commit/blur
+    // instead, and force pasted content down to plain text.
+    titleEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); titleEl.blur(); }
+    });
+    titleEl.addEventListener("paste", function (e) {
+      e.preventDefault();
+      var cd = e.clipboardData || window.clipboardData;
+      var text = (cd && cd.getData("text/plain")) || "";
+      document.execCommand("insertText", false, text);
+    });
+  })();
 
   // ---------------- save status ----------------
   // Reflects PM.persist()'s debounced auto-save (idle/dirty/saving/saved/
