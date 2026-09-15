@@ -1707,7 +1707,7 @@
      letterhead, fields, items, notes and the sign block are each boxed
      with 1px borders and sit flush against each other, not floating with
      gaps between them the way ordinary page content would. */
-  .do-copy { padding: 8mm 14mm; font-size: 14pt; page-break-after: always; }
+  .do-copy { padding: 8mm 8mm; font-size: 14pt; page-break-after: always; }
   .do-copy:last-child { page-break-after: auto; }
   /* Each bordered box (letterhead, fields, notes, sign block) must land
      entirely on one page — otherwise the print pagination can slice
@@ -1733,7 +1733,7 @@
   .do-print-field-row-2 b { font-weight: 700; }
   .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13pt; table-layout: fixed; page-break-inside: avoid; break-inside: avoid; }
   .do-print-items-table thead { display: table-header-group; }
-  .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 2px 6px; text-align: left; overflow-wrap: anywhere; }
+  .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 2px 6px; text-align: left; overflow-wrap: normal; word-break: normal; }
   .do-print-items-table th { background: #BDD6EE; font-weight: 700; text-align: center; white-space: nowrap; }
   .do-print-items-table .do-print-col-no, .do-print-items-table .do-print-col-qty { text-align: center; }
   .do-print-notes-box { border: 1px solid #000; border-top: none; margin-top: -1px; padding: 2px 10px 6px; font-size: 14pt; }
