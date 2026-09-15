@@ -1699,23 +1699,35 @@
      original only occupies the top portion of each page and leaves the
      rest blank, so the sign block follows the notes directly rather than
      being pushed down to the bottom of the sheet. */
-  .do-copy { padding: 12mm 14mm; font-size: 14px; page-break-after: always; }
+  /* Sizes/weights below are taken directly from the source .docx (opened
+     as a zip and read its document.xml — see the commit that added this)
+     rather than guessed: 12pt company block, 14pt fields/labels, 13pt item
+     table, 16pt "ต้นฉบับ/สำเนา" + the sign block's dotted fill-in lines,
+     22pt bold title. The original is also one continuous bordered grid —
+     letterhead, fields, items, notes and the sign block are each boxed
+     with 1px borders and sit flush against each other, not floating with
+     gaps between them the way ordinary page content would. */
+  .do-copy { padding: 12mm 14mm; font-size: 14pt; page-break-after: always; }
   .do-copy:last-child { page-break-after: auto; }
   .do-print-letterhead { border: 1px solid #000; background: #BDD6EE; }
-  .do-copy-label { text-align: right; font-weight: 700; font-size: 16px; padding: 3px 8px; border-bottom: 1px solid #000; }
-  .do-print-header { display: flex; justify-content: space-between; gap: 16px; padding: 6px 10px; }
-  .do-print-company-name { font-weight: 700; font-size: 14px; }
-  .do-print-company-line { font-size: 13px; margin-top: 1px; }
-  .do-print-company-contact { font-size: 13px; text-align: left; white-space: nowrap; }
-  .do-print-form-title { font-size: 22px; font-weight: 700; text-align: center; margin: 8px 0; }
-  .do-print-field-row { display: flex; gap: 28px; font-size: 14px; margin-bottom: 4px; }
-  .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; table-layout: fixed; }
-  .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 3px 6px; text-align: left; overflow-wrap: anywhere; }
+  .do-copy-label { text-align: right; font-weight: 700; font-size: 16pt; padding: 2px 8px; border-bottom: 1px solid #000; }
+  .do-print-header { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; }
+  .do-print-company-name, .do-print-company-line, .do-print-company-contact div { font-size: 12pt; }
+  .do-print-company-contact { text-align: left; white-space: nowrap; }
+  .do-print-form-title { font-size: 22pt; font-weight: 700; text-align: center; margin: 6px 0; }
+  .do-print-fields-box { border: 1px solid #000; padding: 3px 10px; }
+  .do-print-field-row { display: flex; gap: 28px; font-size: 14pt; font-weight: 700; }
+  .do-print-field-row-2 { font-weight: 400; }
+  .do-print-field-row-2 b { font-weight: 700; }
+  .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13pt; table-layout: fixed; }
+  .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 2px 6px; text-align: left; overflow-wrap: anywhere; }
   .do-print-items-table th { background: #BDD6EE; font-weight: 700; text-align: center; }
   .do-print-col-no, .do-print-col-qty { text-align: center; }
-  .do-print-notes-line { font-size: 13px; border-bottom: 1px dotted #000; padding: 2px 0 8px; }
-  .do-print-onbehalf { font-size: 14px; font-weight: 600; margin: 8px 0; }
-  .do-print-sign-cols { display: flex; gap: 24px; font-size: 14px; margin-top: 16px; }
-  .do-print-sign-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-  .do-print-sign-note { font-weight: 600; margin-bottom: 2px; }
-  .do-print-footer { text-align: center; font-size: 10px; color: #666; margin-top: 10px; }
+  .do-print-notes-box { border: 1px solid #000; border-top: none; margin-top: -1px; padding: 2px 10px 6px; font-size: 14pt; }
+  .do-print-sign-cols { display: flex; font-size: 14pt; border: 1px solid #000; border-top: none; margin-top: -1px; padding: 6px 10px; }
+  .do-print-sign-col { flex: 1; display: flex; flex-direction: column; gap: 3px; padding-right: 16px; }
+  .do-print-sign-col-right { padding-right: 0; padding-left: 16px; }
+  .do-print-sign-note { font-weight: 700; font-size: 12pt; margin-bottom: 3px; }
+  .do-print-sign-label { font-weight: 700; margin-bottom: 3px; }
+  .do-print-dots { font-size: 16pt; }
+  .do-print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 10px; }

@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=84" />
+<link rel="stylesheet" href="shared/styles.css?v=85" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -434,6 +434,7 @@
       .map(function (it, i) { return (it.item || ("#" + (i + 1))) + ": " + it.remark; }).join(" · ");
     var notesLine1 = [order.notes, itemRemarks].filter(Boolean).join(" — ");
 
+    var dots = '.....................';
     return '<div class="do-copy">' +
       '<div class="do-print-letterhead">' +
         '<div class="do-copy-label">' + esc(copyLabel) + '</div>' +
@@ -452,32 +453,36 @@
         '</div>' +
       '</div>' +
       '<div class="do-print-form-title">ใบส่งสินค้า</div>' +
-      '<div class="do-print-field-row"><b>โครงการ</b> : ' + esc(projectTitle || "") + '</div>' +
-      '<div class="do-print-field-row">' +
-        '<span><b>สัญญาเลขที่</b> : ' + esc(order.contractNo || "") + '</span>' +
-        '<span><b>หน่วยงาน</b> : ' + esc(order.department || "") + '</span>' +
+      '<div class="do-print-fields-box">' +
+        '<div class="do-print-field-row"><b>โครงการ</b> : ' + esc(projectTitle || "") + '</div>' +
+        '<div class="do-print-field-row do-print-field-row-2">' +
+          '<span><b>สัญญาเลขที่</b> : ' + esc(order.contractNo || "") + '</span>' +
+          '<span><b>หน่วยงาน</b> : ' + esc(order.department || "") + '</span>' +
+        '</div>' +
       '</div>' +
       '<table class="do-print-items-table">' +
         '<colgroup><col style="width:6.5%"><col style="width:24.6%"><col style="width:15.6%"><col style="width:18.2%"><col style="width:26%"><col style="width:9.1%"></colgroup>' +
         '<thead><tr><th>ลำดับ</th><th>รายการอุปกรณ์</th><th>ยี่ห้อ</th><th>รุ่น</th><th>Serial Number</th><th>จำนวน</th></tr></thead>' +
         '<tbody>' + rowsHtml + '</tbody>' +
       '</table>' +
-      '<div class="do-print-notes-line">หมายเหตุ ' + esc(notesLine1) + '</div>' +
-      '<div class="do-print-notes-line">&nbsp;</div>' +
-      '<div class="do-print-onbehalf">จัดส่งสินค้าในนาม บริษัท ฟาติมา อาร์.บี.ดี.เอส.อินเตอร์เนชั่นแนล จำกัด</div>' +
+      '<div class="do-print-notes-box">' +
+        '<div><b>หมายเหตุ</b> ' + esc(notesLine1) + '</div>' +
+        '<div>&nbsp;</div>' +
+      '</div>' +
       '<div class="do-print-sign-cols">' +
         '<div class="do-print-sign-col">' +
-          '<div>ชื่อผู้ส่งสินค้า</div>' +
-          '<div>ลงชื่อ ..................................... ( ' + esc(order.senderName || "") + ' )</div>' +
-          '<div>หมายเลขโทรศัพท์ ' + (order.senderPhone ? esc(order.senderPhone) : '.....................') + '</div>' +
-          '<div>วันที่ส่ง ' + (order.sentDate ? fmtThaiDate(order.sentDate) : '.....................') + '</div>' +
+          '<div class="do-print-sign-note">จัดส่งสินค้าในนาม บริษัท ฟาติมา อาร์.บี.ดี.เอส.อินเตอร์เนชั่นแนล จำกัด</div>' +
+          '<div class="do-print-sign-label">ชื่อผู้ส่งสินค้า</div>' +
+          '<div>ลงชื่อ <span class="do-print-dots">' + dots + '</span> ( ' + esc(order.senderName || "") + ' )</div>' +
+          '<div>หมายเลขโทรศัพท์ <span class="do-print-dots">' + (order.senderPhone ? esc(order.senderPhone) : dots) + '</span></div>' +
+          '<div>วันที่ส่ง <span class="do-print-dots">' + (order.sentDate ? fmtThaiDate(order.sentDate) : dots) + '</span></div>' +
         '</div>' +
-        '<div class="do-print-sign-col">' +
+        '<div class="do-print-sign-col do-print-sign-col-right">' +
           '<div class="do-print-sign-note">ได้รับสินค้าและบริการตามรายการข้างต้นครบถ้วนและอยู่ในสภาพสมบูรณ์ทุกรายการ</div>' +
-          '<div>ชื่อผู้รับสินค้า</div>' +
-          '<div>ลงชื่อ ..................................... ( ' + esc(order.receiverName || "") + ' )</div>' +
-          '<div>หมายเลขโทรศัพท์ ' + (order.receiverPhone ? esc(order.receiverPhone) : '.....................') + '</div>' +
-          '<div>วันที่รับ ' + (order.receivedDate ? fmtThaiDate(order.receivedDate) : '.....................') + '</div>' +
+          '<div class="do-print-sign-label">ชื่อผู้รับสินค้า</div>' +
+          '<div>ลงชื่อ <span class="do-print-dots">' + dots + '</span> ( ' + esc(order.receiverName || "") + ' )</div>' +
+          '<div>หมายเลขโทรศัพท์ <span class="do-print-dots">' + (order.receiverPhone ? esc(order.receiverPhone) : dots) + '</span></div>' +
+          '<div>วันที่รับ <span class="do-print-dots">' + (order.receivedDate ? fmtThaiDate(order.receivedDate) : dots) + '</span></div>' +
         '</div>' +
       '</div>' +
       '<div class="do-print-footer">FM-PM-01 Rev.00 (Effective Date: 01/08/2568)</div>' +
