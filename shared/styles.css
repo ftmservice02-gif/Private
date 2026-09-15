@@ -1731,10 +1731,14 @@
   .do-print-field-row { display: flex; gap: 28px; font-size: 14pt; font-weight: 700; }
   .do-print-field-row-2 { font-weight: 400; }
   .do-print-field-row-2 b { font-weight: 700; }
-  .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13pt; table-layout: fixed; page-break-inside: avoid; break-inside: avoid; }
+  /* table-layout: auto (not fixed) so each column sizes itself to its
+     widest actual content — combined with white-space: nowrap below, a
+     cell's text drives its column's width instead of being wrapped or
+     truncated down to a pre-guessed percentage. */
+  .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13pt; table-layout: auto; page-break-inside: avoid; break-inside: avoid; }
   .do-print-items-table thead { display: table-header-group; }
-  .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 2px 6px; text-align: left; overflow-wrap: normal; word-break: normal; }
-  .do-print-items-table th { background: #BDD6EE; font-weight: 700; text-align: center; white-space: nowrap; }
+  .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 2px 6px; text-align: left; white-space: nowrap; }
+  .do-print-items-table th { background: #BDD6EE; font-weight: 700; text-align: center; }
   .do-print-items-table .do-print-col-no, .do-print-items-table .do-print-col-qty { text-align: center; }
   .do-print-notes-box { border: 1px solid #000; border-top: none; margin-top: -1px; padding: 2px 10px 6px; font-size: 14pt; }
   .do-print-sign-cols {
