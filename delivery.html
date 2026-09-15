@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=82" />
+<link rel="stylesheet" href="shared/styles.css?v=83" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -413,37 +413,57 @@
       '<td>' + esc(it.model) + '</td>' +
       '<td>' + esc(it.serial) + '</td>' +
       '<td class="do-print-col-qty">' + esc(it.qty) + '</td>' +
-      '<td>' + esc(it.remark) + '</td>' +
     '</tr>';
   }
 
+  // Matches the real FM-PM-01 layout, row for row: a shaded "ต้นฉบับ/สำเนา"
+  // + company letterhead box, the centered form title, โครงการ on its own
+  // line then สัญญาเลขที่/หน่วยงาน together on the next, a 6-column item
+  // table (no per-row remark column in the original — any per-item remark
+  // the app collects folds into the general notes line below instead so
+  // nothing entered gets silently dropped), then the sender/receiver
+  // signature block.
   function renderPrintCopy(order, projectTitle, copyLabel) {
     var items = (order.items && order.items.length) ? order.items : [];
-    var minRows = 5;
+    var minRows = 10;
     var blankRows = Math.max(0, minRows - items.length);
     var rowsHtml = items.map(function (it, i) { return renderPrintRow(i + 1, it); }).join("")
       + Array.from({ length: blankRows }).map(function (_, i) { return renderPrintRow(items.length + i + 1, emptyItemRow()); }).join("");
 
+    var itemRemarks = items.filter(function (it) { return it.remark; })
+      .map(function (it, i) { return (it.item || ("#" + (i + 1))) + ": " + it.remark; }).join(" · ");
+    var notesLine1 = [order.notes, itemRemarks].filter(Boolean).join(" — ");
+
     return '<div class="do-copy">' +
-      '<div class="do-copy-label">' + esc(copyLabel) + '</div>' +
-      '<div class="do-print-header">' +
-        '<div class="do-print-company">' +
-          '<div class="do-print-company-name">บริษัท ฟาติมา อาร์.บี.ดี.เอส. อินเตอร์เนชั่นแนล จำกัด (สำนักงานใหญ่)</div>' +
-          '<div class="do-print-company-line">111 ซอยอารีย์สัมพันธ์ 1 ถนนพหลโยธิน แขวงพญาไท เขตพญาไท กรุงเทพฯ 10400</div>' +
-          '<div class="do-print-company-line">โทรศัพท์: 02-619-7777&nbsp;&nbsp;&nbsp;โทรสาร: 02-619-7741&nbsp;&nbsp;&nbsp;อีเมล: callcenter@fatima.co.th&nbsp;&nbsp;&nbsp;เลขที่ผู้เสียภาษี 0305530000336</div>' +
+      '<div class="do-print-letterhead">' +
+        '<div class="do-copy-label">' + esc(copyLabel) + '</div>' +
+        '<div class="do-print-header">' +
+          '<div class="do-print-company">' +
+            '<div class="do-print-company-name">บริษัท ฟาติมา อาร์.บี.ดี.เอส. อินเตอร์เนชั่นแนล จำกัด (สำนักงานใหญ่)</div>' +
+            '<div class="do-print-company-line">111 ซอยอารีย์สัมพันธ์ 1 ถนนพหลโยธิน</div>' +
+            '<div class="do-print-company-line">แขวงพญาไท เขตพญาไท กรุงเทพฯ 10400</div>' +
+          '</div>' +
+          '<div class="do-print-company-contact">' +
+            '<div>โทรศัพท์: 02-619-7777</div>' +
+            '<div>โทรสาร: 02-619-7741</div>' +
+            '<div>อีเมล: callcenter@fatima.co.th</div>' +
+            '<div>เลขที่ผู้เสียภาษี 0305530000336</div>' +
+          '</div>' +
         '</div>' +
-        '<div class="do-print-form-title">ใบส่งสินค้า</div>' +
       '</div>' +
-      '<div class="do-print-fields">' +
-        '<div><b>โครงการ</b> : ' + esc(projectTitle || "") + '</div>' +
-        '<div><b>สัญญาเลขที่</b> : ' + esc(order.contractNo || "") + '</div>' +
-        '<div><b>หน่วยงาน</b> : ' + esc(order.department || "") + '</div>' +
+      '<div class="do-print-form-title">ใบส่งสินค้า</div>' +
+      '<div class="do-print-field-row"><b>โครงการ</b> : ' + esc(projectTitle || "") + '</div>' +
+      '<div class="do-print-field-row">' +
+        '<span><b>สัญญาเลขที่</b> : ' + esc(order.contractNo || "") + '</span>' +
+        '<span><b>หน่วยงาน</b> : ' + esc(order.department || "") + '</span>' +
       '</div>' +
       '<table class="do-print-items-table">' +
-        '<thead><tr><th>ลำดับ</th><th>รายการอุปกรณ์</th><th>ยี่ห้อ</th><th>รุ่น</th><th>Serial Number</th><th>จำนวน</th><th>หมายเหตุ</th></tr></thead>' +
+        '<colgroup><col style="width:6.5%"><col style="width:24.6%"><col style="width:15.6%"><col style="width:18.2%"><col style="width:26%"><col style="width:9.1%"></colgroup>' +
+        '<thead><tr><th>ลำดับ</th><th>รายการอุปกรณ์</th><th>ยี่ห้อ</th><th>รุ่น</th><th>Serial Number</th><th>จำนวน</th></tr></thead>' +
         '<tbody>' + rowsHtml + '</tbody>' +
       '</table>' +
-      (order.notes ? '<div class="do-print-notes">' + esc(order.notes) + '</div>' : '') +
+      '<div class="do-print-notes-line">หมายเหตุ ' + esc(notesLine1) + '</div>' +
+      '<div class="do-print-notes-line">&nbsp;</div>' +
       '<div class="do-print-onbehalf">จัดส่งสินค้าในนาม บริษัท ฟาติมา อาร์.บี.ดี.เอส.อินเตอร์เนชั่นแนล จำกัด</div>' +
       '<div class="do-print-sign-cols">' +
         '<div class="do-print-sign-col">' +
@@ -460,13 +480,13 @@
           '<div>วันที่รับ ' + (order.receivedDate ? fmtThaiDate(order.receivedDate) : '.....................') + '</div>' +
         '</div>' +
       '</div>' +
+      '<div class="do-print-footer">FM-PM-01 Rev.00 (Effective Date: 01/08/2568)</div>' +
     '</div>';
   }
 
   function printOrder(order) {
     var projectTitle = (PM.state && PM.state.title) || "";
-    var html = renderPrintCopy(order, projectTitle, "ต้นฉบับ") + renderPrintCopy(order, projectTitle, "สำเนา") +
-      '<div class="do-print-footer">FM-PM-01 Rev.00 (Effective Date: 01/08/2568)</div>';
+    var html = renderPrintCopy(order, projectTitle, "ต้นฉบับ") + renderPrintCopy(order, projectTitle, "สำเนา");
     document.getElementById("doPrintArea").innerHTML = html;
     window.print();
   }
