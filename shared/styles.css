@@ -1741,7 +1741,7 @@
     display: flex; font-size: 14pt; border: 1px solid #000; border-top: none; margin-top: -1px;
     padding: 8px 12px 12px; background: #BDD6EE;
   }
-  .do-print-sign-col { flex: 0 0 46.7%; display: flex; flex-direction: column; gap: 6px; padding-right: 16px; }
+  .do-print-sign-col { flex: 0 0 46.7%; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding-right: 16px; }
   .do-print-sign-col-right { flex-basis: 53.3%; padding-right: 0; padding-left: 16px; }
   .do-print-sign-note { font-weight: 700; font-size: 12pt; }
   .do-print-sign-label { font-weight: 700; }
@@ -1749,9 +1749,13 @@
      a fixed width, then a long fixed run of dots is clipped by
      overflow:hidden to whatever room is actually left in the row, so it
      always reaches the row's right edge regardless of column width. */
-  .do-print-dot-line { display: flex; align-items: flex-end; gap: 6px; }
+  .do-print-dot-line { display: flex; align-items: flex-end; gap: 6px; min-width: 0; }
   .do-print-dot-line > span:first-child { flex-shrink: 0; }
-  .do-print-dots-fill { flex: 1 1 auto; overflow: hidden; white-space: nowrap; font-size: 16pt; letter-spacing: 1px; }
+  /* min-width: 0 overrides a flex item's default min-width: auto, which
+     would otherwise refuse to shrink this below its full (very long,
+     nowrap) dot string and spill it out past the column's right edge
+     instead of letting overflow: hidden clip it. */
+  .do-print-dots-fill { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 16pt; letter-spacing: 1px; }
   .do-print-sign-paren { display: flex; padding-left: 3.5em; }
   .do-print-paren-fill { flex: 1 1 auto; min-width: 10em; text-align: center; }
   .do-print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 10px; }
