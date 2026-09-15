@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=92" />
+<link rel="stylesheet" href="shared/styles.css?v=93" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -415,6 +415,12 @@
     return '<div class="do-print-dot-line"><span>' + esc(label) + '</span>' +
       '<span class="do-print-dots-fill">' + (value ? esc(value) : LEADER_DOTS) + '</span></div>';
   }
+  // "(        name        )" — the printed name under the signature line,
+  // with a wide fixed gap between the parentheses (per the source form)
+  // rather than shrinking to hug whatever name is actually filled in.
+  function printParenLine(name) {
+    return '<div class="do-print-sign-paren">(<span class="do-print-paren-fill">' + esc(name || "") + '</span>)</div>';
+  }
 
   function renderPrintRow(n, it) {
     return '<tr>' +
@@ -487,7 +493,7 @@
           '<div class="do-print-sign-note">จัดส่งสินค้าในนาม บริษัท ฟาติมา อาร์.บี.ดี.เอส.อินเตอร์เนชั่นแนล จำกัด</div>' +
           '<div class="do-print-sign-label">ชื่อผู้ส่งสินค้า</div>' +
           printDotLine("ลงชื่อ", "") +
-          '<div class="do-print-sign-paren">( ' + esc(order.senderName || "") + ' )</div>' +
+          printParenLine(order.senderName) +
           printDotLine("หมายเลขโทรศัพท์", order.senderPhone) +
           printDotLine("วันที่ส่ง", order.sentDate ? fmtThaiDate(order.sentDate) : "") +
         '</div>' +
@@ -495,7 +501,7 @@
           '<div class="do-print-sign-note">ได้รับสินค้าและบริการตามรายการข้างต้นครบถ้วนและอยู่ในสภาพสมบูรณ์ทุกรายการ</div>' +
           '<div class="do-print-sign-label">ชื่อผู้รับสินค้า</div>' +
           printDotLine("ลงชื่อ", "") +
-          '<div class="do-print-sign-paren">( ' + esc(order.receiverName || "") + ' )</div>' +
+          printParenLine(order.receiverName) +
           printDotLine("หมายเลขโทรศัพท์", order.receiverPhone) +
           printDotLine("วันที่รับ", order.receivedDate ? fmtThaiDate(order.receivedDate) : "") +
         '</div>' +

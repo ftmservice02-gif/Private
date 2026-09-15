@@ -1742,5 +1742,6 @@
   .do-print-dot-line { display: flex; align-items: flex-end; gap: 6px; }
   .do-print-dot-line > span:first-child { flex-shrink: 0; }
   .do-print-dots-fill { flex: 1 1 auto; overflow: hidden; white-space: nowrap; font-size: 16pt; letter-spacing: 1px; }
-  .do-print-sign-paren { padding-left: 3.5em; }
+  .do-print-sign-paren { display: flex; padding-left: 3.5em; }
+  .do-print-paren-fill { flex: 1 1 auto; min-width: 10em; text-align: center; }
   .do-print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 10px; }
