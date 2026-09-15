@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=90" />
+<link rel="stylesheet" href="shared/styles.css?v=91" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -476,14 +476,16 @@
         '<div class="do-print-sign-col">' +
           '<div class="do-print-sign-note">จัดส่งสินค้าในนาม บริษัท ฟาติมา อาร์.บี.ดี.เอส.อินเตอร์เนชั่นแนล จำกัด</div>' +
           '<div class="do-print-sign-label">ชื่อผู้ส่งสินค้า</div>' +
-          '<div>ลงชื่อ <span class="do-print-dots">' + dots + '</span> ( ' + esc(order.senderName || "") + ' )</div>' +
+          '<div>ลงชื่อ <span class="do-print-dots do-print-dots-sig">' + dots + dots + '</span></div>' +
+          '<div class="do-print-sign-paren">( ' + esc(order.senderName || "") + ' )</div>' +
           '<div>หมายเลขโทรศัพท์ <span class="do-print-dots">' + (order.senderPhone ? esc(order.senderPhone) : dots) + '</span></div>' +
           '<div>วันที่ส่ง <span class="do-print-dots">' + (order.sentDate ? fmtThaiDate(order.sentDate) : dots) + '</span></div>' +
         '</div>' +
         '<div class="do-print-sign-col do-print-sign-col-right">' +
           '<div class="do-print-sign-note">ได้รับสินค้าและบริการตามรายการข้างต้นครบถ้วนและอยู่ในสภาพสมบูรณ์ทุกรายการ</div>' +
           '<div class="do-print-sign-label">ชื่อผู้รับสินค้า</div>' +
-          '<div>ลงชื่อ <span class="do-print-dots">' + dots + '</span> ( ' + esc(order.receiverName || "") + ' )</div>' +
+          '<div>ลงชื่อ <span class="do-print-dots do-print-dots-sig">' + dots + dots + '</span></div>' +
+          '<div class="do-print-sign-paren">( ' + esc(order.receiverName || "") + ' )</div>' +
           '<div>หมายเลขโทรศัพท์ <span class="do-print-dots">' + (order.receiverPhone ? esc(order.receiverPhone) : dots) + '</span></div>' +
           '<div>วันที่รับ <span class="do-print-dots">' + (order.receivedDate ? fmtThaiDate(order.receivedDate) : dots) + '</span></div>' +
         '</div>' +
