@@ -1707,7 +1707,7 @@
      letterhead, fields, items, notes and the sign block are each boxed
      with 1px borders and sit flush against each other, not floating with
      gaps between them the way ordinary page content would. */
-  .do-copy { padding: 8mm 8mm; font-size: 14pt; page-break-after: always; }
+  .do-copy { padding: 8mm 5mm; font-size: 14pt; page-break-after: always; }
   .do-copy:last-child { page-break-after: auto; }
   /* Each bordered box (letterhead, fields, notes, sign block) must land
      entirely on one page — otherwise the print pagination can slice
