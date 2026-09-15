@@ -869,6 +869,155 @@ app.post("/api/projects/:id/notify-members", requireAuth, requireProjectAccess, 
   }
 });
 
+// ---------------- delivery orders ("ใบส่งสินค้า", form FM-PM-01) ----------------
+// Printable equipment hand-over record, scoped to a project. Line items
+// travel as a plain array on the record (see schema.sql's comment on
+// delivery_orders.items) rather than their own table/routes.
+
+function sanitizeDeliveryItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((it) => ({
+      item: String((it && it.item) || "").slice(0, 500).trim(),
+      brand: String((it && it.brand) || "").slice(0, 200).trim(),
+      model: String((it && it.model) || "").slice(0, 200).trim(),
+      serial: String((it && it.serial) || "").slice(0, 200).trim(),
+      qty: String((it && it.qty) || "").slice(0, 50).trim(),
+      remark: String((it && it.remark) || "").slice(0, 500).trim(),
+    }))
+    .filter((it) => it.item || it.brand || it.model || it.serial || it.qty || it.remark);
+}
+
+function toDeliveryOrderJson(row) {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    docNo: row.doc_no || "",
+    contractNo: row.contract_no || "",
+    department: row.department || "",
+    items: row.items || [],
+    notes: row.notes || "",
+    senderName: row.sender_name || "",
+    senderPhone: row.sender_phone || "",
+    sentDate: row.sent_date,
+    receiverName: row.receiver_name || "",
+    receiverPhone: row.receiver_phone || "",
+    receivedDate: row.received_date,
+    createdByName: row.created_by_name || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+app.get("/api/projects/:id/delivery-orders", requireAuth, requireProjectAccess, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT d.*, u.name AS created_by_name FROM delivery_orders d
+       LEFT JOIN users u ON u.id = d.created_by
+       WHERE d.project_id = $1 ORDER BY d.created_at DESC`,
+      [req.params.id]
+    );
+    res.json(result.rows.map(toDeliveryOrderJson));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load delivery orders" });
+  }
+});
+
+app.get("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireProjectAccess, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT d.*, u.name AS created_by_name FROM delivery_orders d
+       LEFT JOIN users u ON u.id = d.created_by
+       WHERE d.id = $1 AND d.project_id = $2`,
+      [req.params.orderId, req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "Delivery order not found" });
+    res.json(toDeliveryOrderJson(result.rows[0]));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load delivery order" });
+  }
+});
+
+app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
+  const b = req.body || {};
+  try {
+    const inserted = await pool.query(
+      `INSERT INTO delivery_orders
+         (project_id, doc_no, contract_no, department, items, notes,
+          sender_name, sender_phone, sent_date, receiver_name, receiver_phone, received_date, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING *`,
+      [
+        req.params.id,
+        (b.docNo || "").trim(),
+        (b.contractNo || "").trim(),
+        (b.department || "").trim(),
+        JSON.stringify(sanitizeDeliveryItems(b.items)),
+        (b.notes || "").trim(),
+        (b.senderName || "").trim(),
+        (b.senderPhone || "").trim(),
+        b.sentDate || null,
+        (b.receiverName || "").trim(),
+        (b.receiverPhone || "").trim(),
+        b.receivedDate || null,
+        req.user.id,
+      ]
+    );
+    res.status(201).json(toDeliveryOrderJson({ ...inserted.rows[0], created_by_name: req.user.name }));
+  } catch (err) {
+    if (err.code === "23503") return res.status(400).json({ error: "Project not found" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to create delivery order" });
+  }
+});
+
+app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
+  const b = req.body || {};
+  try {
+    const updated = await pool.query(
+      `UPDATE delivery_orders SET
+         doc_no = $1, contract_no = $2, department = $3, items = $4, notes = $5,
+         sender_name = $6, sender_phone = $7, sent_date = $8,
+         receiver_name = $9, receiver_phone = $10, received_date = $11, updated_at = now()
+       WHERE id = $12 AND project_id = $13
+       RETURNING *`,
+      [
+        (b.docNo || "").trim(),
+        (b.contractNo || "").trim(),
+        (b.department || "").trim(),
+        JSON.stringify(sanitizeDeliveryItems(b.items)),
+        (b.notes || "").trim(),
+        (b.senderName || "").trim(),
+        (b.senderPhone || "").trim(),
+        b.sentDate || null,
+        (b.receiverName || "").trim(),
+        (b.receiverPhone || "").trim(),
+        b.receivedDate || null,
+        req.params.orderId,
+        req.params.id,
+      ]
+    );
+    if (!updated.rows.length) return res.status(404).json({ error: "Delivery order not found" });
+    const creator = await pool.query("SELECT name FROM users WHERE id = (SELECT created_by FROM delivery_orders WHERE id = $1)", [req.params.orderId]);
+    res.json(toDeliveryOrderJson({ ...updated.rows[0], created_by_name: creator.rows[0] && creator.rows[0].name }));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save delivery order" });
+  }
+});
+
+app.delete("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM delivery_orders WHERE id = $1 AND project_id = $2", [req.params.orderId, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete delivery order" });
+  }
+});
+
 // ---------------- legacy single-project routes (default project) ----------------
 
 app.get("/api/state", requireAuth, async (req, res) => {

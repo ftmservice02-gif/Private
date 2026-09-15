@@ -247,3 +247,30 @@ CREATE TABLE IF NOT EXISTS project_sites (
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Delivery orders ("ใบส่งสินค้า", form FM-PM-01) — a printable record of
+-- equipment physically handed over on a project, matching the company's
+-- paper form (project/contract/department header, an equipment table, then
+-- a sender/receiver signature block). Line items are stored as JSONB rather
+-- than their own table: they're only ever read or written as a whole with
+-- their parent document (never queried independently), same reasoning as
+-- tasks.stuck_attachments.
+CREATE TABLE IF NOT EXISTS delivery_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  doc_no TEXT,
+  contract_no TEXT,
+  department TEXT,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  notes TEXT,
+  sender_name TEXT,
+  sender_phone TEXT,
+  sent_date DATE,
+  receiver_name TEXT,
+  receiver_phone TEXT,
+  received_date DATE,
+  created_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_delivery_orders_project ON delivery_orders(project_id);

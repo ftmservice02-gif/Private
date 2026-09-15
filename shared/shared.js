@@ -39,6 +39,7 @@
       "sb.mentionMessage": "{name} mentioned you in \"{task}\": {excerpt}",
       "sb.content": "Content", "sb.manageWorkspace": "Manage workspace", "sb.dashboard": "Dashboard and reporting",
       "sb.manageUsers": "Manage users", "sb.documentData": "Document DATA",
+      "sb.deliveryOrders": "Delivery orders",
       "doc.fileName": "File name", "doc.fromTask": "From task", "doc.postedBy": "Posted by",
       "doc.empty": "No files attached to any update in this project yet.",
       "doc.noTask": "Unfiled",
@@ -48,6 +49,22 @@
       "doc.deleteFile": "Delete file", "doc.deleteFileConfirm": "Delete \"{name}\"? This removes the file from the update it was attached to — the update's other text stays. This can't be undone.",
       "doc.deleteFileSuccess": "File deleted", "doc.deleteFileError": "Could not delete this file",
       "doc.viewAllProjects": "View all projects",
+      "do.title": "Delivery orders", "do.new": "+ New delivery order", "do.items": "Items",
+      "do.docNo": "Doc. No.", "do.contractNo": "Contract No.", "do.department": "Department / Site",
+      "do.itemCol": "Equipment", "do.brandCol": "Brand", "do.modelCol": "Model", "do.serialCol": "Serial Number",
+      "do.qtyCol": "Qty", "do.remarkCol": "Remark", "do.addItemRow": "+ Add row",
+      "do.notes": "Notes", "do.senderSection": "Sender", "do.receiverSection": "Receiver",
+      "do.name": "Name", "do.phone": "Phone number", "do.sentDate": "Date sent", "do.receivedDate": "Date received",
+      "do.save": "Save", "do.view": "View / Print", "do.edit": "Edit", "do.delete": "Delete", "do.print": "Print",
+      "do.back": "Back to list", "do.empty": "No delivery orders yet",
+      "do.deleteConfirm": "Delete this delivery order? This can't be undone.",
+      "do.saved": "Delivery order saved", "do.saveError": "Could not save this delivery order",
+      "do.deleted": "Delivery order deleted", "do.deleteError": "Could not delete this delivery order",
+      "do.loadError": "Could not load delivery orders (API unreachable)",
+      "do.createdBy": "Created by {name} · {date}",
+      "do.itemCount": "{n} item{s}",
+      "do.colDocNo": "Doc. No.", "do.colContract": "Contract No.", "do.colDept": "Department", "do.colItems": "Items", "do.colCreated": "Created",
+      "do.newTitle": "New delivery order", "do.editTitle": "Edit delivery order",
       "sb.caption": "Project management", "sb.progressLabel": "Your progress", "sb.progressBtn": "View details",
       "sb.progressLabelProject": "This project's progress", "sb.progressLabelAll": "All your projects' progress",
       "sb.progressSub": "{done}/{total} tasks completed",
@@ -194,6 +211,7 @@
       "sb.mentionMessage": "{name} แท็กคุณใน \"{task}\": {excerpt}",
       "sb.content": "เนื้อหา", "sb.manageWorkspace": "จัดการเวิร์กสเปซ", "sb.dashboard": "แดชบอร์ดและรายงาน",
       "sb.manageUsers": "จัดการผู้ใช้งาน", "sb.documentData": "Document DATA",
+      "sb.deliveryOrders": "ใบส่งสินค้า",
       "doc.fileName": "ชื่อไฟล์", "doc.fromTask": "จากงาน", "doc.postedBy": "โพสต์โดย",
       "doc.empty": "ยังไม่มีไฟล์แนบใน Update ของโปรเจกต์นี้",
       "doc.noTask": "ไม่มีงานที่สังกัด",
@@ -203,6 +221,22 @@
       "doc.deleteFile": "ลบไฟล์", "doc.deleteFileConfirm": "ลบไฟล์ \"{name}\" ใช่ไหม? จะลบเฉพาะไฟล์นี้ออกจาก update ที่แนบไว้ ข้อความอื่นใน update จะยังอยู่เหมือนเดิม — ย้อนกลับไม่ได้",
       "doc.deleteFileSuccess": "ลบไฟล์แล้ว", "doc.deleteFileError": "ลบไฟล์ไม่สำเร็จ",
       "doc.viewAllProjects": "ดูทุกโปรเจกต์",
+      "do.title": "ใบส่งสินค้า", "do.new": "+ สร้างใบส่งสินค้าใหม่", "do.items": "รายการ",
+      "do.docNo": "เลขที่เอกสาร", "do.contractNo": "สัญญาเลขที่", "do.department": "หน่วยงาน / สถานที่",
+      "do.itemCol": "รายการอุปกรณ์", "do.brandCol": "ยี่ห้อ", "do.modelCol": "รุ่น", "do.serialCol": "Serial Number",
+      "do.qtyCol": "จำนวน", "do.remarkCol": "หมายเหตุ", "do.addItemRow": "+ เพิ่มแถว",
+      "do.notes": "หมายเหตุเพิ่มเติม", "do.senderSection": "ผู้ส่งสินค้า", "do.receiverSection": "ผู้รับสินค้า",
+      "do.name": "ชื่อ", "do.phone": "หมายเลขโทรศัพท์", "do.sentDate": "วันที่ส่ง", "do.receivedDate": "วันที่รับ",
+      "do.save": "บันทึก", "do.view": "ดู / พิมพ์", "do.edit": "แก้ไข", "do.delete": "ลบ", "do.print": "พิมพ์",
+      "do.back": "กลับไปที่รายการ", "do.empty": "ยังไม่มีใบส่งสินค้า",
+      "do.deleteConfirm": "ลบใบส่งสินค้านี้ใช่ไหม? ย้อนกลับไม่ได้",
+      "do.saved": "บันทึกใบส่งสินค้าแล้ว", "do.saveError": "บันทึกใบส่งสินค้าไม่สำเร็จ",
+      "do.deleted": "ลบใบส่งสินค้าแล้ว", "do.deleteError": "ลบใบส่งสินค้าไม่สำเร็จ",
+      "do.loadError": "โหลดใบส่งสินค้าไม่ได้ (เชื่อมต่อ API ไม่ได้)",
+      "do.createdBy": "สร้างโดย {name} · {date}",
+      "do.itemCount": "{n} รายการ",
+      "do.colDocNo": "เลขที่เอกสาร", "do.colContract": "สัญญาเลขที่", "do.colDept": "หน่วยงาน", "do.colItems": "รายการ", "do.colCreated": "สร้างเมื่อ",
+      "do.newTitle": "สร้างใบส่งสินค้าใหม่", "do.editTitle": "แก้ไขใบส่งสินค้า",
       "sb.caption": "ระบบจัดการโปรเจกต์", "sb.progressLabel": "ความคืบหน้าของคุณ", "sb.progressBtn": "ดูรายละเอียด",
       "sb.progressLabelProject": "ความคืบหน้าโครงการนี้", "sb.progressLabelAll": "ความคืบหน้าทุกโครงการของคุณ",
       "sb.progressSub": "ทำเสร็จแล้ว {done}/{total} งาน",
@@ -1108,10 +1142,12 @@
     var boardLink = document.getElementById("sbBoardLink");
     var dashLink = document.getElementById("sbDashboardLink");
     var docsLink = document.getElementById("sbDocumentsLink");
+    var deliveryLink = document.getElementById("sbDeliveryLink");
     var progressBtn = document.getElementById("sbProgressBtn");
     if (boardLink) boardLink.href = "board.html" + idParam;
     if (dashLink) dashLink.href = "dashboard.html" + idParam;
     if (docsLink) docsLink.href = "documents.html" + idParam;
+    if (deliveryLink) deliveryLink.href = "delivery.html" + idParam;
     if (progressBtn) progressBtn.href = "dashboard.html" + idParam;
   };
 
