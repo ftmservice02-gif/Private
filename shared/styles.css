@@ -1717,7 +1717,7 @@
   .do-print-header { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; }
   .do-print-company-name, .do-print-company-line, .do-print-company-contact div { font-size: 12pt; }
   .do-print-company-contact { text-align: left; white-space: nowrap; }
-  .do-print-form-title { font-size: 22pt; font-weight: 700; text-align: center; margin: 6px 0; }
+  .do-print-form-title { font-size: 22pt; font-weight: 700; text-align: center; margin: 6px 0 2px; }
   .do-print-fields-box { border: 1px solid #000; padding: 3px 10px; }
   .do-print-field-row { display: flex; gap: 28px; font-size: 14pt; font-weight: 700; }
   .do-print-field-row-2 { font-weight: 400; }
