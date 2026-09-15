@@ -1710,7 +1710,10 @@
   .do-copy { padding: 12mm 14mm; font-size: 14pt; page-break-after: always; }
   .do-copy:last-child { page-break-after: auto; }
   .do-print-letterhead { border: 1px solid #000; background: #BDD6EE; }
-  .do-copy-label { text-align: right; font-weight: 700; font-size: 16pt; padding: 2px 8px; border-bottom: 1px solid #000; }
+  .do-copy-label-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px; border-bottom: 1px solid #000; }
+  .do-print-logo { height: 18pt; width: auto; display: block; }
+  /* Red in the source .docx, not black. */
+  .do-copy-label { font-weight: 700; font-size: 16pt; color: #FF0000; }
   .do-print-header { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; }
   .do-print-company-name, .do-print-company-line, .do-print-company-contact div { font-size: 12pt; }
   .do-print-company-contact { text-align: left; white-space: nowrap; }
