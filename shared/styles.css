@@ -1735,7 +1735,12 @@
   .do-print-sign-col-right { flex-basis: 53.3%; padding-right: 0; padding-left: 16px; }
   .do-print-sign-note { font-weight: 700; font-size: 12pt; }
   .do-print-sign-label { font-weight: 700; }
-  .do-print-dots { font-size: 16pt; }
-  .do-print-dots-sig { display: inline-block; overflow: hidden; max-width: calc(100% - 3.5em); vertical-align: bottom; }
-  .do-print-sign-paren { padding-left: 3em; }
+  /* "ลงชื่อ/หมายเลขโทรศัพท์/วันที่ .................." — the label sits at
+     a fixed width, then a long fixed run of dots is clipped by
+     overflow:hidden to whatever room is actually left in the row, so it
+     always reaches the row's right edge regardless of column width. */
+  .do-print-dot-line { display: flex; align-items: flex-end; gap: 6px; }
+  .do-print-dot-line > span:first-child { flex-shrink: 0; }
+  .do-print-dots-fill { flex: 1 1 auto; overflow: hidden; white-space: nowrap; font-size: 16pt; letter-spacing: 1px; }
+  .do-print-sign-paren { padding-left: 3.5em; }
   .do-print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 10px; }

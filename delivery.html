@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=91" />
+<link rel="stylesheet" href="shared/styles.css?v=92" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -405,6 +405,17 @@
     return d.getDate() + " " + THAI_MONTHS[d.getMonth()] + " " + (d.getFullYear() + 543);
   }
 
+  // "ลงชื่อ .................." — a label followed by a dotted line that
+  // fills whatever's left of the row, however wide that row happens to be
+  // (a long fixed run of dots inside a flex:1, overflow:hidden, nowrap
+  // span just gets clipped to fit) rather than a fixed character count
+  // that's too short in a wide column and wraps in a narrow one.
+  var LEADER_DOTS = new Array(80).join('.');
+  function printDotLine(label, value) {
+    return '<div class="do-print-dot-line"><span>' + esc(label) + '</span>' +
+      '<span class="do-print-dots-fill">' + (value ? esc(value) : LEADER_DOTS) + '</span></div>';
+  }
+
   function renderPrintRow(n, it) {
     return '<tr>' +
       '<td class="do-print-col-no">' + n + '</td>' +
@@ -434,7 +445,6 @@
       .map(function (it, i) { return (it.item || ("#" + (i + 1))) + ": " + it.remark; }).join(" · ");
     var notesLine1 = [order.notes, itemRemarks].filter(Boolean).join(" — ");
 
-    var dots = '.....................';
     return '<div class="do-copy">' +
       '<div class="do-print-form-title">ใบส่งสินค้า</div>' +
       '<div class="do-print-letterhead">' +
@@ -476,18 +486,18 @@
         '<div class="do-print-sign-col">' +
           '<div class="do-print-sign-note">จัดส่งสินค้าในนาม บริษัท ฟาติมา อาร์.บี.ดี.เอส.อินเตอร์เนชั่นแนล จำกัด</div>' +
           '<div class="do-print-sign-label">ชื่อผู้ส่งสินค้า</div>' +
-          '<div>ลงชื่อ <span class="do-print-dots do-print-dots-sig">' + dots + dots + '</span></div>' +
+          printDotLine("ลงชื่อ", "") +
           '<div class="do-print-sign-paren">( ' + esc(order.senderName || "") + ' )</div>' +
-          '<div>หมายเลขโทรศัพท์ <span class="do-print-dots">' + (order.senderPhone ? esc(order.senderPhone) : dots) + '</span></div>' +
-          '<div>วันที่ส่ง <span class="do-print-dots">' + (order.sentDate ? fmtThaiDate(order.sentDate) : dots) + '</span></div>' +
+          printDotLine("หมายเลขโทรศัพท์", order.senderPhone) +
+          printDotLine("วันที่ส่ง", order.sentDate ? fmtThaiDate(order.sentDate) : "") +
         '</div>' +
         '<div class="do-print-sign-col do-print-sign-col-right">' +
           '<div class="do-print-sign-note">ได้รับสินค้าและบริการตามรายการข้างต้นครบถ้วนและอยู่ในสภาพสมบูรณ์ทุกรายการ</div>' +
           '<div class="do-print-sign-label">ชื่อผู้รับสินค้า</div>' +
-          '<div>ลงชื่อ <span class="do-print-dots do-print-dots-sig">' + dots + dots + '</span></div>' +
+          printDotLine("ลงชื่อ", "") +
           '<div class="do-print-sign-paren">( ' + esc(order.receiverName || "") + ' )</div>' +
-          '<div>หมายเลขโทรศัพท์ <span class="do-print-dots">' + (order.receiverPhone ? esc(order.receiverPhone) : dots) + '</span></div>' +
-          '<div>วันที่รับ <span class="do-print-dots">' + (order.receivedDate ? fmtThaiDate(order.receivedDate) : dots) + '</span></div>' +
+          printDotLine("หมายเลขโทรศัพท์", order.receiverPhone) +
+          printDotLine("วันที่รับ", order.receivedDate ? fmtThaiDate(order.receivedDate) : "") +
         '</div>' +
       '</div>' +
       '<div class="do-print-footer">FM-PM-01 Rev.00 (Effective Date: 01/08/2568)</div>' +
