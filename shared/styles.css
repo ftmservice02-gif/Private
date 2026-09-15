@@ -1709,6 +1709,15 @@
      gaps between them the way ordinary page content would. */
   .do-copy { padding: 8mm 14mm; font-size: 14pt; page-break-after: always; }
   .do-copy:last-child { page-break-after: auto; }
+  /* Each bordered box (letterhead, fields, notes, sign block) must land
+     entirely on one page — otherwise the print pagination can slice
+     straight through one, leaving its border (and background) missing on
+     whichever side of the cut it doesn't start on. The whole point of
+     the page-fit trim above is to give these enough headroom that this
+     never actually triggers, but keep the guard regardless. */
+  .do-print-letterhead, .do-print-fields-box, .do-print-notes-box, .do-print-sign-cols {
+    page-break-inside: avoid; break-inside: avoid;
+  }
   .do-print-letterhead { border: 1px solid #000; background: #BDD6EE; margin-bottom: 8px; }
   .do-copy-label-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px; border-bottom: 1px solid #000; }
   .do-print-logo { height: 18pt; width: auto; display: block; }
@@ -1722,7 +1731,8 @@
   .do-print-field-row { display: flex; gap: 28px; font-size: 14pt; font-weight: 700; }
   .do-print-field-row-2 { font-weight: 400; }
   .do-print-field-row-2 b { font-weight: 700; }
-  .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13pt; table-layout: fixed; }
+  .do-print-items-table { width: 100%; border-collapse: collapse; font-size: 13pt; table-layout: fixed; page-break-inside: avoid; break-inside: avoid; }
+  .do-print-items-table thead { display: table-header-group; }
   .do-print-items-table th, .do-print-items-table td { border: 1px solid #000; padding: 2px 6px; text-align: left; overflow-wrap: anywhere; }
   .do-print-items-table th { background: #BDD6EE; font-weight: 700; text-align: center; white-space: nowrap; }
   .do-print-items-table .do-print-col-no, .do-print-items-table .do-print-col-qty { text-align: center; }
