@@ -1661,6 +1661,12 @@
 
   /* ================= Delivery orders (delivery.html) ================= */
 
+  .do-sub-project { color: var(--text-muted); font-size: 13.5px; margin-bottom: 10px; }
+  .do-item-count-pill {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 8px;
+    border-radius: 999px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 12px; font-weight: 700;
+  }
+
   .do-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 18px 0 30px; }
 
   .do-items-io-actions { display: flex; gap: 8px; flex-wrap: wrap; }

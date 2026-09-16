@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=105" />
+<link rel="stylesheet" href="shared/styles.css?v=106" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -235,7 +235,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="shared/vendor/xlsx.full.min.js"></script>
-<script src="shared/shared.js?v=91"></script>
+<script src="shared/shared.js?v=92"></script>
 <script>
 (function () {
   "use strict";
@@ -244,6 +244,10 @@
   function esc(s) { return PM.esc(s); }
   function tr(key) { return PM.tr(key); }
   function fmtLongDate(s) { return PM.fmtLongDate(s); }
+
+  var truckIconSvg = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="7" width="15" height="11" rx="1.5"/><path d="M16 10h3.5a1.5 1.5 0 011.3.75L23 15v3h-2"/><circle cx="6" cy="18.5" r="1.6"/><circle cx="18" cy="18.5" r="1.6"/></svg>';
+  var boxesIconSvg = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>';
+  var docIconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
 
   var deliveryOrders = [];
   var doListLoaded = false;
@@ -295,16 +299,24 @@
   }
 
   function renderList() {
-    document.getElementById("doSub").textContent = PM.state && PM.state.title
-      ? tr("do.itemCount").replace("{n}", deliveryOrders.length).replace("{s}", deliveryOrders.length === 1 ? "" : "s") + " · " + PM.state.title
-      : "";
+    var totalItems = deliveryOrders.reduce(function (sum, o) { return sum + (o.items ? o.items.length : 0); }, 0);
+    document.getElementById("doSub").innerHTML =
+      (PM.state && PM.state.title ? '<div class="do-sub-project">' + esc(PM.state.title) + '</div>' : "") +
+      '<div class="doc-stats">' +
+        '<div class="doc-stat-chip">' + truckIconSvg +
+          '<div><div class="doc-stat-num">' + deliveryOrders.length + '</div><div class="doc-stat-label">' + esc(tr("do.statOrders")) + '</div></div>' +
+        '</div>' +
+        '<div class="doc-stat-chip">' + boxesIconSvg +
+          '<div><div class="doc-stat-num">' + totalItems + '</div><div class="doc-stat-label">' + esc(tr("do.statItems")) + '</div></div>' +
+        '</div>' +
+      '</div>';
     var body = document.getElementById("doListBody");
     if (!doListLoaded) {
-      body.innerHTML = '<tr><td colspan="6" class="no-updates">' + esc(tr("do.loadError")) + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="6"><div class="doc-empty-state">' + boxesIconSvg + '<span>' + esc(tr("do.loadError")) + '</span></div></td></tr>';
       return;
     }
     if (!deliveryOrders.length) {
-      body.innerHTML = '<tr><td colspan="6" class="no-updates">' + esc(tr("do.empty")) + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="6"><div class="doc-empty-state">' + boxesIconSvg + '<span>' + esc(tr("do.empty")) + '</span></div></td></tr>';
       return;
     }
     body.innerHTML = deliveryOrders.map(function (o) {
@@ -314,11 +326,12 @@
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7"/></svg>' +
           '</button>'
         : "";
+      var itemCount = o.items ? o.items.length : 0;
       return '<tr data-action="open-order" data-id="' + esc(o.id) + '">' +
-        '<td>' + esc(o.docNo || "—") + '</td>' +
+        '<td><div class="ws-asset-name"><span class="ws-asset-icon-chip">' + docIconSvg + '</span><span>' + esc(o.docNo || "—") + '</span></div></td>' +
         '<td>' + esc(o.contractNo || "—") + '</td>' +
         '<td>' + esc(o.department || "—") + '</td>' +
-        '<td>' + (o.items ? o.items.length : 0) + '</td>' +
+        '<td><span class="do-item-count-pill">' + itemCount + '</span></td>' +
         '<td>' + esc(tr("do.createdBy").replace("{name}", o.createdByName || "—").replace("{date}", fmtLongDate(o.createdAt))) + '</td>' +
         '<td>' +
           '<button type="button" class="ws-row-details-btn" data-action="print-order" data-id="' + esc(o.id) + '" title="' + esc(tr("do.print")) + '" aria-label="' + esc(tr("do.print")) + '">' +
