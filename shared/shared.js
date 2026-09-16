@@ -1139,7 +1139,7 @@
   // Points the board/dashboard sidebar links + progress button at the current
   // project, and syncs the page title + the "current project" nav label.
   PM.syncSidebarLinks = function () {
-    if (PM.state) document.title = (PM.state.title || "IT Project") + " — IT Project Board";
+    if (PM.state) document.title = (PM.state.title || "IT Project") + " — Project Management Plan : PMP";
     var boardLabel = document.getElementById("sbBoardLabel");
     if (boardLabel && PM.state) boardLabel.textContent = PM.state.title || "Untitled project";
     var idParam = PM.currentProjectId ? ("?id=" + encodeURIComponent(PM.currentProjectId)) : "";

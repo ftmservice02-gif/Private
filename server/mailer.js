@@ -35,7 +35,7 @@ async function sendProjectInviteEmail({ to, recipientName, projectTitle, project
     <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 480px; margin: 0 auto; color: #1f2329;">
       <h2 style="color:#2f6fed; margin-bottom: 4px;">คุณได้รับเชิญเข้าร่วมโครงการ</h2>
       <p>${name ? "สวัสดีคุณ " + name + "," : "สวัสดีครับ/ค่ะ,"}</p>
-      <p><strong>${inviter}</strong> ได้เพิ่มคุณเข้าร่วมโครงการ <strong>"${title}"</strong> บน IT Project Board แล้ว</p>
+      <p><strong>${inviter}</strong> ได้เพิ่มคุณเข้าร่วมโครงการ <strong>"${title}"</strong> บน Project Management Plan : PMP แล้ว</p>
       <p style="margin: 20px 0;">
         <a href="${link}" style="display:inline-block;background:#2f6fed;color:#fff;padding:10px 22px;border-radius:7px;text-decoration:none;font-weight:600;">
           เปิดโครงการ
@@ -47,7 +47,7 @@ async function sendProjectInviteEmail({ to, recipientName, projectTitle, project
 
   try {
     await t.sendMail({
-      from: `"IT Project Board" <${process.env.SMTP_USER}>`,
+      from: `"Project Management Plan : PMP" <${process.env.SMTP_USER}>`,
       to,
       subject: `คุณได้รับเชิญเข้าร่วมโครงการ "${projectTitle || ""}"`,
       html,
@@ -90,9 +90,9 @@ async function sendReminderEmail({ to, recipientName, message, projectId, taskId
 
   try {
     await t.sendMail({
-      from: `"IT Project Board" <${process.env.SMTP_USER}>`,
+      from: `"Project Management Plan : PMP" <${process.env.SMTP_USER}>`,
       to,
-      subject: "แจ้งเตือนความคืบหน้าโครงการ — IT Project Board",
+      subject: "แจ้งเตือนความคืบหน้าโครงการ — Project Management Plan : PMP",
       html,
     });
   } catch (err) {
