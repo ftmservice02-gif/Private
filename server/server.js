@@ -880,8 +880,8 @@ app.post("/api/projects/:id/notify-members", requireAuth, requireProjectAccess, 
 // arbitrary key in, and defaulted to the original FM-PM-01 layout's own
 // columns when a client sends nothing (or an old record predates the
 // column picker and has none stored).
-const ALLOWED_DELIVERY_COLUMNS = ["item", "brand", "model", "serial", "qty", "remark", "location"];
-const DEFAULT_DELIVERY_COLUMNS = ["item", "brand", "model", "serial", "qty"];
+const ALLOWED_DELIVERY_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "qty", "remark", "location"];
+const DEFAULT_DELIVERY_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "remark"];
 const CUSTOM_COLUMN_KEY_RE = /^custom_[a-z0-9]{1,20}$/i;
 const MAX_CUSTOM_COLUMNS = 10;
 
@@ -909,7 +909,9 @@ function sanitizeDeliveryItems(items, customKeys) {
   return items
     .map((it) => {
       const row = {
+        type: String((it && it.type) || "").slice(0, 200).trim(),
         item: String((it && it.item) || "").slice(0, 500).trim(),
+        shortName: String((it && it.shortName) || "").slice(0, 200).trim(),
         brand: String((it && it.brand) || "").slice(0, 200).trim(),
         model: String((it && it.model) || "").slice(0, 200).trim(),
         serial: String((it && it.serial) || "").slice(0, 200).trim(),
