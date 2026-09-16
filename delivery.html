@@ -265,11 +265,6 @@
     { key: "remark", i18n: "do.remarkCol" },
   ];
   var DEFAULT_COLUMNS = ["item", "brand", "model", "serial", "qty"];
-  // Relative width hints (roughly matching the source form's own item-table
-  // proportions) used to size both the editor's and the print sheet's
-  // columns — normalized against whichever columns are actually enabled,
-  // not a fixed 6-column layout, since the set varies per order now.
-  var COLUMN_WIDTH_HINTS = { no: 6.5, item: 24.6, brand: 15.6, model: 18.2, serial: 24.6, qty: 9.1, remark: 15, location: 15 };
 
   function emptyItemRow() { return { item: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "" }; }
 
@@ -531,10 +526,11 @@
       .map(function (it, i) { return (it.item || ("#" + (i + 1))) + ": " + it.remark; }).join(" · ");
     var notesLine1 = [order.notes, itemRemarks].filter(Boolean).join(" — ");
 
-    var widthHint = function (key) { return COLUMN_WIDTH_HINTS[key] || 15; }; // custom columns: same hint as remark/location
-    var widthHintTotal = COLUMN_WIDTH_HINTS.no + cols.reduce(function (sum, c) { return sum + widthHint(c.key); }, 0);
-    var colgroupHtml = '<col style="width:' + (COLUMN_WIDTH_HINTS.no / widthHintTotal * 100).toFixed(1) + '%">' +
-      cols.map(function (c) { return '<col style="width:' + (widthHint(c.key) / widthHintTotal * 100).toFixed(1) + '%">'; }).join("");
+    // No fixed per-column width hints — table-layout: auto already sizes
+    // each column from its own actual content (across every row, header
+    // included), so a short "HP" column and a long, wrapping location
+    // column each end up the width their own content actually needs
+    // instead of a generic guessed share of the table.
     var theadHtml = '<tr><th>ลำดับ</th>' + cols.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join("") + '</tr>';
 
     return '<div class="do-copy">' +
@@ -566,7 +562,6 @@
         '</div>' +
       '</div>' +
       '<table class="do-print-items-table">' +
-        '<colgroup>' + colgroupHtml + '</colgroup>' +
         '<thead>' + theadHtml + '</thead>' +
         '<tbody>' + rowsHtml + '</tbody>' +
       '</table>' +
