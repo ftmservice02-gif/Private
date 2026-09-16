@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=104" />
+<link rel="stylesheet" href="shared/styles.css?v=105" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -152,6 +152,11 @@
         <div class="pf-card" style="margin-top:14px;">
           <div class="pf-card-head">
             <span class="pf-card-title" data-i18n="do.items">Items</span>
+            <div class="do-items-io-actions">
+              <button type="button" class="pf-btn pf-btn-outline" id="doExportExcelBtn" data-i18n="do.exportExcel">Export Excel</button>
+              <button type="button" class="pf-btn pf-btn-outline" id="doImportExcelBtn" data-i18n="do.importExcel">Import Excel</button>
+              <input type="file" id="doImportExcelInput" accept=".xlsx,.xls" hidden />
+            </div>
           </div>
           <div class="do-columns-picker-label" data-i18n="do.columnsLabel">Columns to show</div>
           <div class="do-columns-picker" id="doColumnsPicker"></div>
@@ -229,7 +234,8 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=89"></script>
+<script src="shared/vendor/xlsx.full.min.js"></script>
+<script src="shared/shared.js?v=90"></script>
 <script>
 (function () {
   "use strict";
@@ -598,6 +604,67 @@
     window.print();
   }
 
+  // ---------------- Excel import/export ----------------
+  // Exports whichever columns are currently shown, in that order, so the
+  // sheet a user downloads matches the table they're looking at. Import
+  // reverses this by header label: a label that matches a known column
+  // (built-in or already-added custom) maps back to its key, and anything
+  // else becomes a brand-new custom column rather than being dropped.
+
+  function exportItemsToExcel() {
+    var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
+    var header = cols.map(function (c) { return c.label; });
+    var rows = editorItems.map(function (row) { return cols.map(function (c) { return row[c.key] || ""; }); });
+    var ws = XLSX.utils.aoa_to_sheet([header].concat(rows));
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Items");
+    var docNo = document.getElementById("doDocNo").value.trim();
+    XLSX.writeFile(wb, (docNo || "delivery-order") + "-items.xlsx");
+  }
+
+  function importItemsFromExcel(file) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+        var sheet = wb.Sheets[wb.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+        var headerRow = (rows[0] || []).map(function (h) { return String(h || "").trim(); });
+        if (!headerRow.length) throw new Error("empty");
+
+        var catalog = columnCatalog(editorCustomColumns);
+        var keysForHeader = headerRow.map(function (label) {
+          var match = catalog.filter(function (c) { return c.label === label; })[0];
+          if (match) return match.key;
+          var key = "custom_" + Math.random().toString(36).slice(2, 8);
+          editorCustomColumns.push({ key: key, label: label });
+          catalog.push({ key: key, label: label, custom: true });
+          return key;
+        });
+        keysForHeader.forEach(function (key) {
+          if (editorColumns.indexOf(key) === -1) editorColumns.push(key);
+        });
+
+        var items = rows.slice(1)
+          .filter(function (r) { return r.some(function (v) { return String(v || "").trim(); }); })
+          .map(function (r) {
+            var row = emptyItemRow();
+            keysForHeader.forEach(function (key, i) { row[key] = String(r[i] || "").trim(); });
+            return row;
+          });
+        if (!items.length) throw new Error("no rows");
+
+        editorItems = items;
+        renderColumnsPicker();
+        renderItemsEditor();
+        PM.showToast(tr("do.importExcelSuccess").replace("{count}", items.length));
+      } catch (err) {
+        PM.showToast(tr("do.importExcelError"));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
   // ---------------- events ----------------
 
   document.getElementById("doNewBtn").addEventListener("click", function () { openEditor({}); });
@@ -610,6 +677,15 @@
   document.getElementById("doAddItemBtn").addEventListener("click", function () {
     editorItems.push(emptyItemRow());
     renderItemsEditor();
+  });
+  document.getElementById("doExportExcelBtn").addEventListener("click", exportItemsToExcel);
+  document.getElementById("doImportExcelBtn").addEventListener("click", function () {
+    document.getElementById("doImportExcelInput").click();
+  });
+  document.getElementById("doImportExcelInput").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (file) importItemsFromExcel(file);
+    e.target.value = "";
   });
   document.getElementById("doColumnsPicker").addEventListener("change", function (e) {
     var box = e.target.closest('[data-action="toggle-column"]');

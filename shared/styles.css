@@ -1663,6 +1663,8 @@
 
   .do-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 18px 0 30px; }
 
+  .do-items-io-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
   .do-columns-picker-label { font-size: 12.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
   .do-columns-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 10px; }
   .do-column-toggle-wrap { display: inline-flex; align-items: center; gap: 2px; }
