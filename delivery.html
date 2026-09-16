@@ -362,12 +362,24 @@
         '<td class="do-items-col-no">' + (idx + 1) + '</td>' +
         cols.map(function (c) {
           return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' +
-            '<input type="text" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />' +
+            (c.key === "type" ? renderTypeSelect(row.type) : '<input type="text" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />') +
           '</td>';
         }).join("") +
         '<td class="do-items-col-remove"><button type="button" class="pf-sublist-remove" data-action="remove-item-row" data-idx="' + idx + '">&times;</button></td>' +
       '</tr>';
     }).join("");
+  }
+
+  // Type is a fixed Hardware/Software pick rather than free text, since
+  // that's the only distinction the printed form actually needs for this
+  // column — an open text field just invites inconsistent spelling.
+  var TYPE_OPTIONS = ["", "Hardware", "Software"];
+  function renderTypeSelect(value) {
+    return '<select class="do-item-input" data-field="type">' +
+      TYPE_OPTIONS.map(function (opt) {
+        return '<option value="' + esc(opt) + '"' + (value === opt ? " selected" : "") + '>' + esc(opt || "—") + "</option>";
+      }).join("") +
+      "</select>";
   }
 
   function openEditor(order) {
@@ -722,11 +734,13 @@
   document.getElementById("doNewColumnName").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); addCustomColumn(); }
   });
-  document.getElementById("doItemsBody").addEventListener("input", function (e) {
+  function onItemFieldChange(e) {
     var row = e.target.closest("tr[data-idx]");
     if (!row || !e.target.dataset.field) return;
     editorItems[Number(row.dataset.idx)][e.target.dataset.field] = e.target.value;
-  });
+  }
+  document.getElementById("doItemsBody").addEventListener("input", onItemFieldChange);
+  document.getElementById("doItemsBody").addEventListener("change", onItemFieldChange);
   document.getElementById("doItemsBody").addEventListener("click", function (e) {
     var btn = e.target.closest('[data-action="remove-item-row"]');
     if (!btn) return;
