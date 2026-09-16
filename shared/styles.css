@@ -1661,6 +1661,12 @@
 
   /* ================= Delivery orders (delivery.html) ================= */
 
+  /* #deliveryView had no padding rule of its own (unlike #dashboardView /
+     #workspaceView below), so its content sat flush against the sidebar
+     with zero gutter — wider than dashboard's since the items table needs
+     the room. */
+  #deliveryView.active { padding: 26px 30px 50px; max-width: 1240px; margin: 0 auto; }
+
   .do-sub-project { color: var(--text-muted); font-size: 13.5px; margin-bottom: 10px; }
   .do-item-count-pill {
     display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 8px;
