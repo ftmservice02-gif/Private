@@ -225,7 +225,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=84"></script>
+<script src="shared/shared.js?v=85"></script>
 <script>
 (function () {
   "use strict";
@@ -246,14 +246,18 @@
   // field. DEFAULT_COLUMNS matches the original FM-PM-01 paper form; remark
   // and location are opt-in extras the app added on top of it, so they
   // default off rather than changing what a plain "new order" looks like.
+  // Display order for both the column picker and the item table itself —
+  // remark last, since it's free-text notes rather than a data field like
+  // the others and reads better trailing the row than breaking up the
+  // structured columns.
   var ITEM_COLUMNS = [
     { key: "item", i18n: "do.itemCol" },
     { key: "brand", i18n: "do.brandCol" },
     { key: "model", i18n: "do.modelCol" },
     { key: "serial", i18n: "do.serialCol" },
     { key: "qty", i18n: "do.qtyCol" },
-    { key: "remark", i18n: "do.remarkCol" },
     { key: "location", i18n: "do.locationCol" },
+    { key: "remark", i18n: "do.remarkCol" },
   ];
   var DEFAULT_COLUMNS = ["item", "brand", "model", "serial", "qty"];
   // Relative width hints (roughly matching the source form's own item-table
