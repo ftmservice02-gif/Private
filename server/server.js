@@ -874,31 +874,59 @@ app.post("/api/projects/:id/notify-members", requireAuth, requireProjectAccess, 
 // travel as a plain array on the record (see schema.sql's comment on
 // delivery_orders.items) rather than their own table/routes.
 
-function sanitizeDeliveryItems(items) {
-  if (!Array.isArray(items)) return [];
-  return items
-    .map((it) => ({
-      item: String((it && it.item) || "").slice(0, 500).trim(),
-      brand: String((it && it.brand) || "").slice(0, 200).trim(),
-      model: String((it && it.model) || "").slice(0, 200).trim(),
-      serial: String((it && it.serial) || "").slice(0, 200).trim(),
-      qty: String((it && it.qty) || "").slice(0, 50).trim(),
-      remark: String((it && it.remark) || "").slice(0, 500).trim(),
-      location: String((it && it.location) || "").slice(0, 200).trim(),
-    }))
-    .filter((it) => it.item || it.brand || it.model || it.serial || it.qty || it.remark || it.location);
-}
-
 // Which item-table columns a delivery order shows, chosen in the editor's
-// column picker — validated against this list so a client can't smuggle
-// an arbitrary key in, and defaulted to the original FM-PM-01 layout's
-// own columns when a client sends nothing (or an old record predates the
+// column picker — validated against this list (plus whatever custom
+// columns the same request defines) so a client can't smuggle an
+// arbitrary key in, and defaulted to the original FM-PM-01 layout's own
+// columns when a client sends nothing (or an old record predates the
 // column picker and has none stored).
 const ALLOWED_DELIVERY_COLUMNS = ["item", "brand", "model", "serial", "qty", "remark", "location"];
 const DEFAULT_DELIVERY_COLUMNS = ["item", "brand", "model", "serial", "qty"];
-function sanitizeDeliveryColumns(columns) {
+const CUSTOM_COLUMN_KEY_RE = /^custom_[a-z0-9]{1,20}$/i;
+const MAX_CUSTOM_COLUMNS = 10;
+
+// A user-added column beyond the built-in set — [{key, label}]. The key
+// must match what the client actually generates (custom_<random>); a
+// request with a malformed or duplicate key just drops that entry rather
+// than erroring the whole save.
+function sanitizeDeliveryCustomColumns(customColumns) {
+  if (!Array.isArray(customColumns)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const c of customColumns) {
+    const key = String((c && c.key) || "");
+    const label = String((c && c.label) || "").slice(0, 60).trim();
+    if (!CUSTOM_COLUMN_KEY_RE.test(key) || !label || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ key, label });
+    if (out.length >= MAX_CUSTOM_COLUMNS) break;
+  }
+  return out;
+}
+
+function sanitizeDeliveryItems(items, customKeys) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((it) => {
+      const row = {
+        item: String((it && it.item) || "").slice(0, 500).trim(),
+        brand: String((it && it.brand) || "").slice(0, 200).trim(),
+        model: String((it && it.model) || "").slice(0, 200).trim(),
+        serial: String((it && it.serial) || "").slice(0, 200).trim(),
+        qty: String((it && it.qty) || "").slice(0, 50).trim(),
+        remark: String((it && it.remark) || "").slice(0, 500).trim(),
+        location: String((it && it.location) || "").slice(0, 200).trim(),
+      };
+      for (const key of customKeys || []) row[key] = String((it && it[key]) || "").slice(0, 300).trim();
+      return row;
+    })
+    .filter((it) => Object.values(it).some(Boolean));
+}
+
+function sanitizeDeliveryColumns(columns, customKeys) {
+  const allowed = ALLOWED_DELIVERY_COLUMNS.concat(customKeys || []);
   if (!Array.isArray(columns)) return DEFAULT_DELIVERY_COLUMNS;
-  const filtered = columns.filter((c) => ALLOWED_DELIVERY_COLUMNS.includes(c));
+  const filtered = columns.filter((c) => allowed.includes(c));
   return filtered.length ? filtered : DEFAULT_DELIVERY_COLUMNS;
 }
 
@@ -911,6 +939,7 @@ function toDeliveryOrderJson(row) {
     department: row.department || "",
     items: row.items || [],
     columns: row.columns || DEFAULT_DELIVERY_COLUMNS,
+    customColumns: row.custom_columns || [],
     notes: row.notes || "",
     senderName: row.sender_name || "",
     senderPhone: row.sender_phone || "",
@@ -957,20 +986,23 @@ app.get("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireProjec
 
 app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   const b = req.body || {};
+  const customColumns = sanitizeDeliveryCustomColumns(b.customColumns);
+  const customKeys = customColumns.map((c) => c.key);
   try {
     const inserted = await pool.query(
       `INSERT INTO delivery_orders
-         (project_id, doc_no, contract_no, department, items, columns, notes,
+         (project_id, doc_no, contract_no, department, items, columns, custom_columns, notes,
           sender_name, sender_phone, sent_date, receiver_name, receiver_phone, received_date, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [
         req.params.id,
         (b.docNo || "").trim(),
         (b.contractNo || "").trim(),
         (b.department || "").trim(),
-        JSON.stringify(sanitizeDeliveryItems(b.items)),
-        JSON.stringify(sanitizeDeliveryColumns(b.columns)),
+        JSON.stringify(sanitizeDeliveryItems(b.items, customKeys)),
+        JSON.stringify(sanitizeDeliveryColumns(b.columns, customKeys)),
+        JSON.stringify(customColumns),
         (b.notes || "").trim(),
         (b.senderName || "").trim(),
         (b.senderPhone || "").trim(),
@@ -991,20 +1023,23 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
 
 app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   const b = req.body || {};
+  const customColumns = sanitizeDeliveryCustomColumns(b.customColumns);
+  const customKeys = customColumns.map((c) => c.key);
   try {
     const updated = await pool.query(
       `UPDATE delivery_orders SET
-         doc_no = $1, contract_no = $2, department = $3, items = $4, columns = $5, notes = $6,
-         sender_name = $7, sender_phone = $8, sent_date = $9,
-         receiver_name = $10, receiver_phone = $11, received_date = $12, updated_at = now()
-       WHERE id = $13 AND project_id = $14
+         doc_no = $1, contract_no = $2, department = $3, items = $4, columns = $5, custom_columns = $6, notes = $7,
+         sender_name = $8, sender_phone = $9, sent_date = $10,
+         receiver_name = $11, receiver_phone = $12, received_date = $13, updated_at = now()
+       WHERE id = $14 AND project_id = $15
        RETURNING *`,
       [
         (b.docNo || "").trim(),
         (b.contractNo || "").trim(),
         (b.department || "").trim(),
-        JSON.stringify(sanitizeDeliveryItems(b.items)),
-        JSON.stringify(sanitizeDeliveryColumns(b.columns)),
+        JSON.stringify(sanitizeDeliveryItems(b.items, customKeys)),
+        JSON.stringify(sanitizeDeliveryColumns(b.columns, customKeys)),
+        JSON.stringify(customColumns),
         (b.notes || "").trim(),
         (b.senderName || "").trim(),
         (b.senderPhone || "").trim(),

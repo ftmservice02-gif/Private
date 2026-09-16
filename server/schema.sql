@@ -282,3 +282,9 @@ CREATE INDEX IF NOT EXISTS idx_delivery_orders_project ON delivery_orders(projec
 -- layout's own 5 columns) via toDeliveryOrderJson's fallback rather than
 -- needing a backfill.
 ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS columns JSONB;
+
+-- User-defined item columns beyond the built-in set (item/brand/model/
+-- serial/qty/remark/location) — [{key, label}], key generated client-side
+-- ("custom_<random>") and never colliding with a built-in key. A key here
+-- can also appear in `columns` above to actually show it.
+ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS custom_columns JSONB;

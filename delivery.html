@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=102" />
+<link rel="stylesheet" href="shared/styles.css?v=103" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -155,6 +155,10 @@
           </div>
           <div class="do-columns-picker-label" data-i18n="do.columnsLabel">Columns to show</div>
           <div class="do-columns-picker" id="doColumnsPicker"></div>
+          <div class="do-add-column-row">
+            <input type="text" class="pf-input do-add-column-input" id="doNewColumnName" data-i18n-placeholder="do.newColumnPlaceholder" placeholder="New column name" />
+            <button type="button" class="pf-btn pf-btn-outline" id="doAddColumnBtn" data-i18n="do.addColumn">+ Add column</button>
+          </div>
           <div class="do-items-table-wrap">
             <table class="do-items-table">
               <thead id="doItemsHead"></thead>
@@ -225,7 +229,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=86"></script>
+<script src="shared/shared.js?v=87"></script>
 <script>
 (function () {
   "use strict";
@@ -240,6 +244,7 @@
   var editingOrder = null; // null when in list mode; a plain object while creating/editing
   var editorItems = []; // working copy of the item rows for the open editor
   var editorColumns = []; // working copy of which item columns are enabled, in display order
+  var editorCustomColumns = []; // working copy of user-added columns: [{key, label}]
 
   // The full catalog of item columns a delivery order can show — "#" isn't
   // in here since the row number is always shown and isn't a real data
@@ -267,6 +272,16 @@
   var COLUMN_WIDTH_HINTS = { no: 6.5, item: 24.6, brand: 15.6, model: 18.2, serial: 24.6, qty: 9.1, remark: 15, location: 15 };
 
   function emptyItemRow() { return { item: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "" }; }
+
+  // Built-in columns plus whatever custom ones this order has defined, in
+  // one uniform {key, label, custom} shape — custom columns carry the
+  // user's own typed label as-is (not run through tr(), since it isn't an
+  // app string), built-ins keep their bilingual do.*Col label.
+  function columnCatalog(customColumns) {
+    var builtins = ITEM_COLUMNS.map(function (c) { return { key: c.key, label: tr(c.i18n), custom: false }; });
+    var customs = (customColumns || []).map(function (c) { return { key: c.key, label: c.label, custom: true }; });
+    return builtins.concat(customs);
+  }
 
   // ---------------- list mode ----------------
 
@@ -318,20 +333,26 @@
 
   function renderColumnsPicker() {
     var wrap = document.getElementById("doColumnsPicker");
-    wrap.innerHTML = ITEM_COLUMNS.map(function (col) {
+    wrap.innerHTML = columnCatalog(editorCustomColumns).map(function (col) {
       var checked = editorColumns.indexOf(col.key) !== -1;
-      return '<label class="do-column-toggle">' +
-        '<input type="checkbox" data-action="toggle-column" data-col="' + col.key + '"' + (checked ? ' checked' : '') + ' />' +
-        '<span>' + esc(tr(col.i18n)) + '</span>' +
-      '</label>';
+      var removeBtn = col.custom
+        ? '<button type="button" class="do-column-remove" data-action="remove-custom-column" data-col="' + col.key + '" title="' + esc(tr("do.removeColumn")) + '" aria-label="' + esc(tr("do.removeColumn")) + '">&times;</button>'
+        : '';
+      return '<span class="do-column-toggle-wrap">' +
+        '<label class="do-column-toggle">' +
+          '<input type="checkbox" data-action="toggle-column" data-col="' + col.key + '"' + (checked ? ' checked' : '') + ' />' +
+          '<span>' + esc(col.label) + '</span>' +
+        '</label>' +
+        removeBtn +
+      '</span>';
     }).join("");
   }
 
   function renderItemsEditor() {
-    var cols = ITEM_COLUMNS.filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
+    var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
     var head = document.getElementById("doItemsHead");
     head.innerHTML = '<tr><th class="do-items-col-no">' + esc(tr("do.noCol")) + '</th>' +
-      cols.map(function (c) { return '<th' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(tr(c.i18n)) + '</th>'; }).join("") +
+      cols.map(function (c) { return '<th' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(c.label) + '</th>'; }).join("") +
       '<th class="do-items-col-remove"></th></tr>';
 
     var body = document.getElementById("doItemsBody");
@@ -350,8 +371,14 @@
 
   function openEditor(order) {
     editingOrder = order || {};
-    editorItems = (editingOrder.items && editingOrder.items.length) ? editingOrder.items.map(function (it) { return { item: it.item || "", brand: it.brand || "", model: it.model || "", serial: it.serial || "", qty: it.qty || "", remark: it.remark || "", location: it.location || "" }; }) : [emptyItemRow()];
+    // Object.assign onto a fresh emptyItemRow() (rather than a fixed
+    // item/brand/model/... whitelist) so a custom column's stored value
+    // survives round-tripping through the editor along with the built-ins.
+    editorItems = (editingOrder.items && editingOrder.items.length)
+      ? editingOrder.items.map(function (it) { return Object.assign(emptyItemRow(), it); })
+      : [emptyItemRow()];
     editorColumns = (editingOrder.columns && editingOrder.columns.length) ? editingOrder.columns.slice() : DEFAULT_COLUMNS.slice();
+    editorCustomColumns = (editingOrder.customColumns && editingOrder.customColumns.length) ? editingOrder.customColumns.map(function (c) { return { key: c.key, label: c.label }; }) : [];
     renderColumnsPicker();
 
     document.getElementById("doEditorTitle").textContent = tr(order && order.id ? "do.editTitle" : "do.newTitle");
@@ -385,6 +412,7 @@
       department: document.getElementById("doDepartment").value,
       items: editorItems,
       columns: editorColumns,
+      customColumns: editorCustomColumns,
       notes: document.getElementById("doNotes").value,
       senderName: document.getElementById("doSenderName").value,
       senderPhone: document.getElementById("doSenderPhone").value,
@@ -466,7 +494,9 @@
 
   function printColumnsFor(order) {
     var enabled = (order.columns && order.columns.length) ? order.columns : DEFAULT_COLUMNS;
-    return ITEM_COLUMNS.filter(function (c) { return enabled.indexOf(c.key) !== -1; });
+    var catalog = ITEM_COLUMNS.map(function (c) { return { key: c.key, label: PRINT_COLUMN_LABELS[c.key] }; })
+      .concat((order.customColumns || []).map(function (c) { return { key: c.key, label: c.label }; }));
+    return catalog.filter(function (c) { return enabled.indexOf(c.key) !== -1; });
   }
 
   function renderPrintRow(n, it, cols) {
@@ -501,10 +531,11 @@
       .map(function (it, i) { return (it.item || ("#" + (i + 1))) + ": " + it.remark; }).join(" · ");
     var notesLine1 = [order.notes, itemRemarks].filter(Boolean).join(" — ");
 
-    var widthHintTotal = COLUMN_WIDTH_HINTS.no + cols.reduce(function (sum, c) { return sum + COLUMN_WIDTH_HINTS[c.key]; }, 0);
+    var widthHint = function (key) { return COLUMN_WIDTH_HINTS[key] || 15; }; // custom columns: same hint as remark/location
+    var widthHintTotal = COLUMN_WIDTH_HINTS.no + cols.reduce(function (sum, c) { return sum + widthHint(c.key); }, 0);
     var colgroupHtml = '<col style="width:' + (COLUMN_WIDTH_HINTS.no / widthHintTotal * 100).toFixed(1) + '%">' +
-      cols.map(function (c) { return '<col style="width:' + (COLUMN_WIDTH_HINTS[c.key] / widthHintTotal * 100).toFixed(1) + '%">'; }).join("");
-    var theadHtml = '<tr><th>ลำดับ</th>' + cols.map(function (c) { return '<th>' + esc(PRINT_COLUMN_LABELS[c.key]) + '</th>'; }).join("") + '</tr>';
+      cols.map(function (c) { return '<col style="width:' + (widthHint(c.key) / widthHintTotal * 100).toFixed(1) + '%">'; }).join("");
+    var theadHtml = '<tr><th>ลำดับ</th>' + cols.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join("") + '</tr>';
 
     return '<div class="do-copy">' +
       '<div class="do-print-form-title">ใบส่งสินค้า</div>' +
@@ -593,6 +624,32 @@
     if (box.checked && at === -1) editorColumns.push(key);
     if (!box.checked && at !== -1) editorColumns.splice(at, 1);
     renderItemsEditor();
+  });
+  document.getElementById("doColumnsPicker").addEventListener("click", function (e) {
+    var btn = e.target.closest('[data-action="remove-custom-column"]');
+    if (!btn) return;
+    var key = btn.dataset.col;
+    editorCustomColumns = editorCustomColumns.filter(function (c) { return c.key !== key; });
+    var at = editorColumns.indexOf(key);
+    if (at !== -1) editorColumns.splice(at, 1);
+    editorItems.forEach(function (row) { delete row[key]; });
+    renderColumnsPicker();
+    renderItemsEditor();
+  });
+  function addCustomColumn() {
+    var input = document.getElementById("doNewColumnName");
+    var label = input.value.trim();
+    if (!label) return;
+    var key = "custom_" + Math.random().toString(36).slice(2, 8);
+    editorCustomColumns.push({ key: key, label: label });
+    editorColumns.push(key);
+    input.value = "";
+    renderColumnsPicker();
+    renderItemsEditor();
+  }
+  document.getElementById("doAddColumnBtn").addEventListener("click", addCustomColumn);
+  document.getElementById("doNewColumnName").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addCustomColumn(); }
   });
   document.getElementById("doItemsBody").addEventListener("input", function (e) {
     var row = e.target.closest("tr[data-idx]");
