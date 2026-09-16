@@ -229,7 +229,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=88"></script>
+<script src="shared/shared.js?v=89"></script>
 <script>
 (function () {
   "use strict";
@@ -262,10 +262,11 @@
     { key: "location", i18n: "do.locationCol" },
     { key: "qty", i18n: "do.qtyCol" },
     { key: "remark", i18n: "do.remarkCol" },
+    { key: "note", i18n: "do.noteCol" },
   ];
-  var DEFAULT_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "remark"];
+  var DEFAULT_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "remark", "note"];
 
-  function emptyItemRow() { return { type: "", item: "", shortName: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "" }; }
+  function emptyItemRow() { return { type: "", item: "", shortName: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "", note: "" }; }
 
   // Built-in columns plus whatever custom ones this order has defined, in
   // one uniform {key, label, custom} shape — custom columns carry the
@@ -484,7 +485,7 @@
   // rest of the print sheet — it mirrors an official printed document, not
   // app UI. Deliberately separate from ITEM_COLUMNS' bilingual do.*Col
   // labels used in the editor.
-  var PRINT_COLUMN_LABELS = { type: "ประเภท", item: "รายการอุปกรณ์", shortName: "ชื่อย่อ", brand: "ยี่ห้อ", model: "รุ่น", serial: "Serial Number", qty: "จำนวน", remark: "รายละเอียด", location: "สถานที่ติดตั้ง" };
+  var PRINT_COLUMN_LABELS = { type: "ประเภท", item: "รายการอุปกรณ์", shortName: "ชื่อย่อ", brand: "ยี่ห้อ", model: "รุ่น", serial: "Serial Number", qty: "จำนวน", remark: "รายละเอียด", location: "สถานที่ติดตั้ง", note: "หมายเหตุ" };
 
   function printColumnsFor(order) {
     var enabled = (order.columns && order.columns.length) ? order.columns : DEFAULT_COLUMNS;
