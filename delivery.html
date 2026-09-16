@@ -225,7 +225,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=85"></script>
+<script src="shared/shared.js?v=86"></script>
 <script>
 (function () {
   "use strict";
@@ -330,7 +330,7 @@
   function renderItemsEditor() {
     var cols = ITEM_COLUMNS.filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
     var head = document.getElementById("doItemsHead");
-    head.innerHTML = '<tr><th class="do-items-col-no">#</th>' +
+    head.innerHTML = '<tr><th class="do-items-col-no">' + esc(tr("do.noCol")) + '</th>' +
       cols.map(function (c) { return '<th' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(tr(c.i18n)) + '</th>'; }).join("") +
       '<th class="do-items-col-remove"></th></tr>';
 
