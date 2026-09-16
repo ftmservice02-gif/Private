@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=101" />
+<link rel="stylesheet" href="shared/styles.css?v=102" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -153,20 +153,11 @@
           <div class="pf-card-head">
             <span class="pf-card-title" data-i18n="do.items">Items</span>
           </div>
+          <div class="do-columns-picker-label" data-i18n="do.columnsLabel">Columns to show</div>
+          <div class="do-columns-picker" id="doColumnsPicker"></div>
           <div class="do-items-table-wrap">
             <table class="do-items-table">
-              <thead>
-                <tr>
-                  <th class="do-items-col-no">#</th>
-                  <th data-i18n="do.itemCol">Equipment</th>
-                  <th data-i18n="do.brandCol">Brand</th>
-                  <th data-i18n="do.modelCol">Model</th>
-                  <th data-i18n="do.serialCol">Serial Number</th>
-                  <th class="do-items-col-qty" data-i18n="do.qtyCol">Qty</th>
-                  <th data-i18n="do.remarkCol">Remark</th>
-                  <th class="do-items-col-remove"></th>
-                </tr>
-              </thead>
+              <thead id="doItemsHead"></thead>
               <tbody id="doItemsBody"></tbody>
             </table>
           </div>
@@ -234,7 +225,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=83"></script>
+<script src="shared/shared.js?v=84"></script>
 <script>
 (function () {
   "use strict";
@@ -248,8 +239,30 @@
   var doListLoaded = false;
   var editingOrder = null; // null when in list mode; a plain object while creating/editing
   var editorItems = []; // working copy of the item rows for the open editor
+  var editorColumns = []; // working copy of which item columns are enabled, in display order
 
-  function emptyItemRow() { return { item: "", brand: "", model: "", serial: "", qty: "", remark: "" }; }
+  // The full catalog of item columns a delivery order can show — "#" isn't
+  // in here since the row number is always shown and isn't a real data
+  // field. DEFAULT_COLUMNS matches the original FM-PM-01 paper form; remark
+  // and location are opt-in extras the app added on top of it, so they
+  // default off rather than changing what a plain "new order" looks like.
+  var ITEM_COLUMNS = [
+    { key: "item", i18n: "do.itemCol" },
+    { key: "brand", i18n: "do.brandCol" },
+    { key: "model", i18n: "do.modelCol" },
+    { key: "serial", i18n: "do.serialCol" },
+    { key: "qty", i18n: "do.qtyCol" },
+    { key: "remark", i18n: "do.remarkCol" },
+    { key: "location", i18n: "do.locationCol" },
+  ];
+  var DEFAULT_COLUMNS = ["item", "brand", "model", "serial", "qty"];
+  // Relative width hints (roughly matching the source form's own item-table
+  // proportions) used to size both the editor's and the print sheet's
+  // columns — normalized against whichever columns are actually enabled,
+  // not a fixed 6-column layout, since the set varies per order now.
+  var COLUMN_WIDTH_HINTS = { no: 6.5, item: 24.6, brand: 15.6, model: 18.2, serial: 24.6, qty: 9.1, remark: 15, location: 15 };
+
+  function emptyItemRow() { return { item: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "" }; }
 
   // ---------------- list mode ----------------
 
@@ -299,17 +312,33 @@
 
   // ---------------- editor mode ----------------
 
+  function renderColumnsPicker() {
+    var wrap = document.getElementById("doColumnsPicker");
+    wrap.innerHTML = ITEM_COLUMNS.map(function (col) {
+      var checked = editorColumns.indexOf(col.key) !== -1;
+      return '<label class="do-column-toggle">' +
+        '<input type="checkbox" data-action="toggle-column" data-col="' + col.key + '"' + (checked ? ' checked' : '') + ' />' +
+        '<span>' + esc(tr(col.i18n)) + '</span>' +
+      '</label>';
+    }).join("");
+  }
+
   function renderItemsEditor() {
+    var cols = ITEM_COLUMNS.filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
+    var head = document.getElementById("doItemsHead");
+    head.innerHTML = '<tr><th class="do-items-col-no">#</th>' +
+      cols.map(function (c) { return '<th' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(tr(c.i18n)) + '</th>'; }).join("") +
+      '<th class="do-items-col-remove"></th></tr>';
+
     var body = document.getElementById("doItemsBody");
     body.innerHTML = editorItems.map(function (row, idx) {
       return '<tr data-idx="' + idx + '">' +
         '<td class="do-items-col-no">' + (idx + 1) + '</td>' +
-        '<td><input type="text" class="do-item-input" data-field="item" value="' + esc(row.item) + '" /></td>' +
-        '<td><input type="text" class="do-item-input" data-field="brand" value="' + esc(row.brand) + '" /></td>' +
-        '<td><input type="text" class="do-item-input" data-field="model" value="' + esc(row.model) + '" /></td>' +
-        '<td><input type="text" class="do-item-input" data-field="serial" value="' + esc(row.serial) + '" /></td>' +
-        '<td class="do-items-col-qty"><input type="text" class="do-item-input" data-field="qty" value="' + esc(row.qty) + '" /></td>' +
-        '<td><input type="text" class="do-item-input" data-field="remark" value="' + esc(row.remark) + '" /></td>' +
+        cols.map(function (c) {
+          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' +
+            '<input type="text" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />' +
+          '</td>';
+        }).join("") +
         '<td class="do-items-col-remove"><button type="button" class="pf-sublist-remove" data-action="remove-item-row" data-idx="' + idx + '">&times;</button></td>' +
       '</tr>';
     }).join("");
@@ -317,7 +346,9 @@
 
   function openEditor(order) {
     editingOrder = order || {};
-    editorItems = (editingOrder.items && editingOrder.items.length) ? editingOrder.items.map(function (it) { return { item: it.item || "", brand: it.brand || "", model: it.model || "", serial: it.serial || "", qty: it.qty || "", remark: it.remark || "" }; }) : [emptyItemRow()];
+    editorItems = (editingOrder.items && editingOrder.items.length) ? editingOrder.items.map(function (it) { return { item: it.item || "", brand: it.brand || "", model: it.model || "", serial: it.serial || "", qty: it.qty || "", remark: it.remark || "", location: it.location || "" }; }) : [emptyItemRow()];
+    editorColumns = (editingOrder.columns && editingOrder.columns.length) ? editingOrder.columns.slice() : DEFAULT_COLUMNS.slice();
+    renderColumnsPicker();
 
     document.getElementById("doEditorTitle").textContent = tr(order && order.id ? "do.editTitle" : "do.newTitle");
     document.getElementById("doEditorCrumb").textContent = tr(order && order.id ? "do.editTitle" : "do.newTitle");
@@ -349,6 +380,7 @@
       contractNo: document.getElementById("doContractNo").value,
       department: document.getElementById("doDepartment").value,
       items: editorItems,
+      columns: editorColumns,
       notes: document.getElementById("doNotes").value,
       senderName: document.getElementById("doSenderName").value,
       senderPhone: document.getElementById("doSenderPhone").value,
@@ -422,14 +454,23 @@
     return '<div class="do-print-sign-paren">(<span class="do-print-paren-fill">' + esc(name || "") + '</span>)</div>';
   }
 
-  function renderPrintRow(n, it) {
+  // Kept in Thai regardless of the app's own language toggle, same as the
+  // rest of the print sheet — it mirrors an official printed document, not
+  // app UI. Deliberately separate from ITEM_COLUMNS' bilingual do.*Col
+  // labels used in the editor.
+  var PRINT_COLUMN_LABELS = { item: "รายการอุปกรณ์", brand: "ยี่ห้อ", model: "รุ่น", serial: "Serial Number", qty: "จำนวน", remark: "หมายเหตุ", location: "สถานที่" };
+
+  function printColumnsFor(order) {
+    var enabled = (order.columns && order.columns.length) ? order.columns : DEFAULT_COLUMNS;
+    return ITEM_COLUMNS.filter(function (c) { return enabled.indexOf(c.key) !== -1; });
+  }
+
+  function renderPrintRow(n, it, cols) {
     return '<tr>' +
       '<td class="do-print-col-no">' + n + '</td>' +
-      '<td>' + esc(it.item) + '</td>' +
-      '<td>' + esc(it.brand) + '</td>' +
-      '<td>' + esc(it.model) + '</td>' +
-      '<td>' + esc(it.serial) + '</td>' +
-      '<td class="do-print-col-qty">' + esc(it.qty) + '</td>' +
+      cols.map(function (c) {
+        return '<td' + (c.key === "qty" ? ' class="do-print-col-qty"' : '') + '>' + esc(it[c.key] || "") + '</td>';
+      }).join("") +
     '</tr>';
   }
 
@@ -442,14 +483,24 @@
   // signature block.
   function renderPrintCopy(order, projectTitle, copyLabel) {
     var items = (order.items && order.items.length) ? order.items : [];
+    var cols = printColumnsFor(order);
     var minRows = 8;
     var blankRows = Math.max(0, minRows - items.length);
-    var rowsHtml = items.map(function (it, i) { return renderPrintRow(i + 1, it); }).join("")
-      + Array.from({ length: blankRows }).map(function (_, i) { return renderPrintRow(items.length + i + 1, emptyItemRow()); }).join("");
+    var rowsHtml = items.map(function (it, i) { return renderPrintRow(i + 1, it, cols); }).join("")
+      + Array.from({ length: blankRows }).map(function (_, i) { return renderPrintRow(items.length + i + 1, emptyItemRow(), cols); }).join("");
 
-    var itemRemarks = items.filter(function (it) { return it.remark; })
+    // Remark only gets folded into the general notes line when there's no
+    // dedicated column showing it — once the user turns that column on,
+    // showing it in both places would just be redundant.
+    var showsRemarkCol = cols.some(function (c) { return c.key === "remark"; });
+    var itemRemarks = showsRemarkCol ? "" : items.filter(function (it) { return it.remark; })
       .map(function (it, i) { return (it.item || ("#" + (i + 1))) + ": " + it.remark; }).join(" · ");
     var notesLine1 = [order.notes, itemRemarks].filter(Boolean).join(" — ");
+
+    var widthHintTotal = COLUMN_WIDTH_HINTS.no + cols.reduce(function (sum, c) { return sum + COLUMN_WIDTH_HINTS[c.key]; }, 0);
+    var colgroupHtml = '<col style="width:' + (COLUMN_WIDTH_HINTS.no / widthHintTotal * 100).toFixed(1) + '%">' +
+      cols.map(function (c) { return '<col style="width:' + (COLUMN_WIDTH_HINTS[c.key] / widthHintTotal * 100).toFixed(1) + '%">'; }).join("");
+    var theadHtml = '<tr><th>ลำดับ</th>' + cols.map(function (c) { return '<th>' + esc(PRINT_COLUMN_LABELS[c.key]) + '</th>'; }).join("") + '</tr>';
 
     return '<div class="do-copy">' +
       '<div class="do-print-form-title">ใบส่งสินค้า</div>' +
@@ -480,8 +531,8 @@
         '</div>' +
       '</div>' +
       '<table class="do-print-items-table">' +
-        '<colgroup><col style="width:9%"><col style="width:23.5%"><col style="width:15.6%"><col style="width:18.2%"><col style="width:24.6%"><col style="width:9.1%"></colgroup>' +
-        '<thead><tr><th>ลำดับ</th><th>รายการอุปกรณ์</th><th>ยี่ห้อ</th><th>รุ่น</th><th>Serial Number</th><th>จำนวน</th></tr></thead>' +
+        '<colgroup>' + colgroupHtml + '</colgroup>' +
+        '<thead>' + theadHtml + '</thead>' +
         '<tbody>' + rowsHtml + '</tbody>' +
       '</table>' +
       '<div class="do-print-notes-box">' +
@@ -528,6 +579,15 @@
   });
   document.getElementById("doAddItemBtn").addEventListener("click", function () {
     editorItems.push(emptyItemRow());
+    renderItemsEditor();
+  });
+  document.getElementById("doColumnsPicker").addEventListener("change", function (e) {
+    var box = e.target.closest('[data-action="toggle-column"]');
+    if (!box) return;
+    var key = box.dataset.col;
+    var at = editorColumns.indexOf(key);
+    if (box.checked && at === -1) editorColumns.push(key);
+    if (!box.checked && at !== -1) editorColumns.splice(at, 1);
     renderItemsEditor();
   });
   document.getElementById("doItemsBody").addEventListener("input", function (e) {

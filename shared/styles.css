@@ -1663,6 +1663,11 @@
 
   .do-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 18px 0 30px; }
 
+  .do-columns-picker-label { font-size: 12.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+  .do-columns-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; }
+  .do-column-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+  .do-column-toggle input { cursor: pointer; }
+
   .do-items-table-wrap { overflow-x: auto; }
   .do-items-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 13px; }
   .do-items-table th {

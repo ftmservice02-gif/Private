@@ -884,8 +884,22 @@ function sanitizeDeliveryItems(items) {
       serial: String((it && it.serial) || "").slice(0, 200).trim(),
       qty: String((it && it.qty) || "").slice(0, 50).trim(),
       remark: String((it && it.remark) || "").slice(0, 500).trim(),
+      location: String((it && it.location) || "").slice(0, 200).trim(),
     }))
-    .filter((it) => it.item || it.brand || it.model || it.serial || it.qty || it.remark);
+    .filter((it) => it.item || it.brand || it.model || it.serial || it.qty || it.remark || it.location);
+}
+
+// Which item-table columns a delivery order shows, chosen in the editor's
+// column picker — validated against this list so a client can't smuggle
+// an arbitrary key in, and defaulted to the original FM-PM-01 layout's
+// own columns when a client sends nothing (or an old record predates the
+// column picker and has none stored).
+const ALLOWED_DELIVERY_COLUMNS = ["item", "brand", "model", "serial", "qty", "remark", "location"];
+const DEFAULT_DELIVERY_COLUMNS = ["item", "brand", "model", "serial", "qty"];
+function sanitizeDeliveryColumns(columns) {
+  if (!Array.isArray(columns)) return DEFAULT_DELIVERY_COLUMNS;
+  const filtered = columns.filter((c) => ALLOWED_DELIVERY_COLUMNS.includes(c));
+  return filtered.length ? filtered : DEFAULT_DELIVERY_COLUMNS;
 }
 
 function toDeliveryOrderJson(row) {
@@ -896,6 +910,7 @@ function toDeliveryOrderJson(row) {
     contractNo: row.contract_no || "",
     department: row.department || "",
     items: row.items || [],
+    columns: row.columns || DEFAULT_DELIVERY_COLUMNS,
     notes: row.notes || "",
     senderName: row.sender_name || "",
     senderPhone: row.sender_phone || "",
@@ -945,9 +960,9 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
   try {
     const inserted = await pool.query(
       `INSERT INTO delivery_orders
-         (project_id, doc_no, contract_no, department, items, notes,
+         (project_id, doc_no, contract_no, department, items, columns, notes,
           sender_name, sender_phone, sent_date, receiver_name, receiver_phone, received_date, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
       [
         req.params.id,
@@ -955,6 +970,7 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
         (b.contractNo || "").trim(),
         (b.department || "").trim(),
         JSON.stringify(sanitizeDeliveryItems(b.items)),
+        JSON.stringify(sanitizeDeliveryColumns(b.columns)),
         (b.notes || "").trim(),
         (b.senderName || "").trim(),
         (b.senderPhone || "").trim(),
@@ -978,16 +994,17 @@ app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor
   try {
     const updated = await pool.query(
       `UPDATE delivery_orders SET
-         doc_no = $1, contract_no = $2, department = $3, items = $4, notes = $5,
-         sender_name = $6, sender_phone = $7, sent_date = $8,
-         receiver_name = $9, receiver_phone = $10, received_date = $11, updated_at = now()
-       WHERE id = $12 AND project_id = $13
+         doc_no = $1, contract_no = $2, department = $3, items = $4, columns = $5, notes = $6,
+         sender_name = $7, sender_phone = $8, sent_date = $9,
+         receiver_name = $10, receiver_phone = $11, received_date = $12, updated_at = now()
+       WHERE id = $13 AND project_id = $14
        RETURNING *`,
       [
         (b.docNo || "").trim(),
         (b.contractNo || "").trim(),
         (b.department || "").trim(),
         JSON.stringify(sanitizeDeliveryItems(b.items)),
+        JSON.stringify(sanitizeDeliveryColumns(b.columns)),
         (b.notes || "").trim(),
         (b.senderName || "").trim(),
         (b.senderPhone || "").trim(),

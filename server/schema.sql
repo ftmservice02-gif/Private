@@ -274,3 +274,11 @@ CREATE TABLE IF NOT EXISTS delivery_orders (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_delivery_orders_project ON delivery_orders(project_id);
+
+-- Which item-table columns a given order's editor/print sheet shows (a
+-- subset of item/brand/model/serial/qty/remark/location, validated
+-- server-side against that exact list) — added after the table itself, so
+-- existing rows just get the column's default (the original FM-PM-01
+-- layout's own 5 columns) via toDeliveryOrderJson's fallback rather than
+-- needing a backfill.
+ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS columns JSONB;
