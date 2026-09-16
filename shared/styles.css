@@ -1745,9 +1745,13 @@
     display: flex; font-size: 14pt; border: 1px solid #000; border-top: none; margin-top: -1px;
     padding: 8px 12px 12px; background: #BDD6EE;
   }
-  .do-print-sign-col { flex: 0 0 46.7%; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding-right: 16px; }
-  .do-print-sign-col-right { flex-basis: 53.3%; padding-right: 0; padding-left: 16px; }
-  .do-print-sign-note { font-weight: 700; font-size: 12pt; }
+  .do-print-sign-col { flex: 0 0 46.7%; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding-right: 10px; }
+  .do-print-sign-col-right { flex-basis: 53.3%; padding-right: 0; padding-left: 10px; }
+  /* One point smaller than the source's 12pt, deliberately — this line is
+     long enough that whether it fits on one line is sensitive to which
+     Thai font actually renders (TH Sarabun New vs. a browser's fallback),
+     and the smaller size buys enough margin to fit either way. */
+  .do-print-sign-note { font-weight: 700; font-size: 11pt; line-height: 1.25; }
   .do-print-sign-label { font-weight: 700; }
   /* "ลงชื่อ/หมายเลขโทรศัพท์/วันที่ .................." — the label sits at
      a fixed width, then a long fixed run of dots is clipped by
