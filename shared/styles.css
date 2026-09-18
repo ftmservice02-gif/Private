@@ -1668,33 +1668,6 @@
   #deliveryView.active { padding: 26px 30px 50px; max-width: 1240px; margin: 0 auto; }
 
   .do-sub-project { color: var(--text-muted); font-size: 13.5px; margin-bottom: 10px; }
-
-  /* Attachments card — same visual language as .srp-attachment* (the
-     stuck-reason popover's file chips in board.html), just not scoped to
-     a popover since this card sits directly in the page. */
-  .do-attachments { display: flex; flex-wrap: wrap; gap: 8px; }
-  .do-attachments:not(:empty) { margin-bottom: 10px; }
-  .do-attachment { position: relative; display: flex; align-items: center; }
-  .do-attachment-thumb-link { display: block; }
-  .do-attachment-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); display: block; }
-  .do-attachment-file {
-    display: flex; align-items: center; gap: 6px; max-width: 220px; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--border);
-    background: var(--surface-2); color: var(--text); font-size: 12.5px; font-weight: 600; text-decoration: none;
-    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  }
-  .do-attachment-remove {
-    position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 999px; border: none;
-    background: var(--text-muted); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; padding: 0;
-    display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--surface);
-  }
-  .do-attachment-remove:hover { background: var(--stuck-bg); }
-  .do-attach-btn {
-    display: flex; align-items: center; gap: 6px; border: 1px dashed var(--border-strong); background: none;
-    color: var(--text-muted); border-radius: 9px; padding: 9px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer;
-    font: inherit; width: 100%; justify-content: center;
-  }
-  .do-attach-btn:hover { border-color: var(--accent); color: var(--accent); }
-
   .do-item-count-pill {
     display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 8px;
     border-radius: 999px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 12px; font-weight: 700;

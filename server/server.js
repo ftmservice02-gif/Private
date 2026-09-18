@@ -936,23 +936,6 @@ function sanitizeDeliveryColumns(columns, customKeys) {
   return filtered.length ? filtered : DEFAULT_DELIVERY_COLUMNS;
 }
 
-// Order-level file attachments (photos, a signed copy, etc.) — trusts
-// {url, name, size, mime} as opaque values already returned by
-// POST /api/uploads (same shape as a task's stuck_attachments), just
-// bounds the string lengths and drops anything malformed.
-function sanitizeDeliveryAttachments(attachments) {
-  if (!Array.isArray(attachments)) return [];
-  return attachments
-    .filter((a) => a && typeof a.url === "string" && typeof a.name === "string")
-    .map((a) => ({
-      id: String(a.id || "").slice(0, 40) || crypto.randomBytes(8).toString("hex"),
-      url: a.url.slice(0, 500),
-      name: a.name.slice(0, 255),
-      size: Number(a.size) || 0,
-      mime: String(a.mime || "").slice(0, 100),
-    }));
-}
-
 function toDeliveryOrderJson(row) {
   return {
     id: row.id,
@@ -963,7 +946,6 @@ function toDeliveryOrderJson(row) {
     items: row.items || [],
     columns: row.columns || DEFAULT_DELIVERY_COLUMNS,
     customColumns: row.custom_columns || [],
-    attachments: row.attachments || [],
     notes: row.notes || "",
     senderName: row.sender_name || "",
     senderPhone: row.sender_phone || "",
@@ -1015,9 +997,9 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
   try {
     const inserted = await pool.query(
       `INSERT INTO delivery_orders
-         (project_id, doc_no, contract_no, department, items, columns, custom_columns, attachments, notes,
+         (project_id, doc_no, contract_no, department, items, columns, custom_columns, notes,
           sender_name, sender_phone, sent_date, receiver_name, receiver_phone, received_date, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [
         req.params.id,
@@ -1027,7 +1009,6 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
         JSON.stringify(sanitizeDeliveryItems(b.items, customKeys)),
         JSON.stringify(sanitizeDeliveryColumns(b.columns, customKeys)),
         JSON.stringify(customColumns),
-        JSON.stringify(sanitizeDeliveryAttachments(b.attachments)),
         (b.notes || "").trim(),
         (b.senderName || "").trim(),
         (b.senderPhone || "").trim(),
@@ -1053,10 +1034,10 @@ app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor
   try {
     const updated = await pool.query(
       `UPDATE delivery_orders SET
-         doc_no = $1, contract_no = $2, department = $3, items = $4, columns = $5, custom_columns = $6, attachments = $7, notes = $8,
-         sender_name = $9, sender_phone = $10, sent_date = $11,
-         receiver_name = $12, receiver_phone = $13, received_date = $14, updated_at = now()
-       WHERE id = $15 AND project_id = $16
+         doc_no = $1, contract_no = $2, department = $3, items = $4, columns = $5, custom_columns = $6, notes = $7,
+         sender_name = $8, sender_phone = $9, sent_date = $10,
+         receiver_name = $11, receiver_phone = $12, received_date = $13, updated_at = now()
+       WHERE id = $14 AND project_id = $15
        RETURNING *`,
       [
         (b.docNo || "").trim(),
@@ -1065,7 +1046,6 @@ app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor
         JSON.stringify(sanitizeDeliveryItems(b.items, customKeys)),
         JSON.stringify(sanitizeDeliveryColumns(b.columns, customKeys)),
         JSON.stringify(customColumns),
-        JSON.stringify(sanitizeDeliveryAttachments(b.attachments)),
         (b.notes || "").trim(),
         (b.senderName || "").trim(),
         (b.senderPhone || "").trim(),

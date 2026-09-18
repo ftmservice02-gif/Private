@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=110" />
+<link rel="stylesheet" href="shared/styles.css?v=109" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -174,16 +174,6 @@
         </div>
 
         <div class="pf-card" style="margin-top:14px;">
-          <div class="pf-card-head"><span class="pf-card-title" data-i18n="do.attachmentsSection">Attachments</span></div>
-          <div class="do-attachments" id="doAttachments"></div>
-          <button type="button" class="do-attach-btn" id="doAttachBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-            <span data-i18n="stuck.attachFile">Attach photo or file</span>
-          </button>
-          <input type="file" id="doAttachInput" hidden />
-        </div>
-
-        <div class="pf-card" style="margin-top:14px;">
           <div class="pf-field">
             <label class="pf-label" data-i18n="do.notes">Notes</label>
             <textarea class="pf-input pf-textarea" id="doNotes"></textarea>
@@ -265,7 +255,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="shared/vendor/xlsx.full.min.js"></script>
-<script src="shared/shared.js?v=96"></script>
+<script src="shared/shared.js?v=95"></script>
 <script>
 (function () {
   "use strict";
@@ -285,7 +275,6 @@
   var editorItems = []; // working copy of the item rows for the open editor
   var editorColumns = []; // working copy of which item columns are enabled, in display order
   var editorCustomColumns = []; // working copy of user-added columns: [{key, label}]
-  var editorAttachments = []; // working copy of order-level file attachments: [{id, url, name, size, mime}]
 
   // The full catalog of item columns a delivery order can show — "#" isn't
   // in here since the row number is always shown and isn't a real data
@@ -400,45 +389,6 @@
     }).join("");
   }
 
-  function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / 1024 / 1024).toFixed(1) + " MB";
-  }
-
-  // Order-level file attachments (photos of the equipment, a signed copy,
-  // etc.) — a separate card from Items, same upload-to-/api/uploads flow
-  // as a task's stuck-reason attachments in board.html.
-  function renderAttachments() {
-    var origin = PM.API_BASE.replace(/\/api$/, "");
-    document.getElementById("doAttachments").innerHTML = editorAttachments.map(function (a) {
-      var isImage = (a.mime || "").indexOf("image/") === 0;
-      return '<div class="do-attachment">' +
-        (isImage
-          ? '<a href="' + esc(origin + a.url) + '" target="_blank" rel="noopener" class="do-attachment-thumb-link"><img src="' + esc(origin + a.url) + '" alt="' + esc(a.name) + '" class="do-attachment-thumb" /></a>'
-          : '<a href="' + esc(origin + a.url) + '" target="_blank" rel="noopener" class="do-attachment-file">📎 ' + esc(a.name) + '</a>') +
-        '<button type="button" class="do-attachment-remove" data-action="remove-attachment" data-id="' + esc(a.id) + '" title="' + esc(tr("stuck.removeAttachment")) + '" aria-label="' + esc(tr("stuck.removeAttachment")) + '">&times;</button>' +
-      '</div>';
-    }).join("");
-  }
-
-  function uploadAttachment(file) {
-    if (file.size > 15 * 1024 * 1024) { PM.showToast(tr("panel.attachTooLarge")); return; }
-    var fd = new FormData();
-    fd.append("file", file);
-    PM.showToast(tr("panel.attachUploading"));
-    PM.authFetch(PM.API_BASE + "/uploads", { method: "POST", body: fd }).then(function (r) {
-      if (!r.ok) throw new Error("upload failed");
-      return r.json();
-    }).then(function (data) {
-      editorAttachments.push({ id: PM.uid(), url: data.url, name: data.name, size: data.size, mime: data.mime });
-      renderAttachments();
-      PM.showToast(tr("panel.attachAdded"));
-    }).catch(function () {
-      PM.showToast(tr("panel.attachError"));
-    });
-  }
-
   // The table is a read-only summary now — filling in a row's fields
   // happens in the #doItemModal popup (openItemModal), so a row here just
   // shows each column's current value as text and opens that popup on
@@ -525,9 +475,7 @@
     editorItems = (editingOrder.items || []).map(function (it) { return Object.assign(emptyItemRow(), it); });
     editorColumns = (editingOrder.columns && editingOrder.columns.length) ? editingOrder.columns.slice() : DEFAULT_COLUMNS.slice();
     editorCustomColumns = (editingOrder.customColumns && editingOrder.customColumns.length) ? editingOrder.customColumns.map(function (c) { return { key: c.key, label: c.label }; }) : [];
-    editorAttachments = (editingOrder.attachments || []).slice();
     renderColumnsPicker();
-    renderAttachments();
 
     document.getElementById("doEditorTitle").textContent = tr(order && order.id ? "do.editTitle" : "do.newTitle");
     document.getElementById("doEditorCrumb").textContent = tr(order && order.id ? "do.editTitle" : "do.newTitle");
@@ -561,7 +509,6 @@
       items: editorItems,
       columns: editorColumns,
       customColumns: editorCustomColumns,
-      attachments: editorAttachments,
       notes: document.getElementById("doNotes").value,
       senderName: document.getElementById("doSenderName").value,
       senderPhone: document.getElementById("doSenderPhone").value,
@@ -834,20 +781,6 @@
   document.getElementById("doItemModalSaveBtn").addEventListener("click", saveItemModal);
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && document.getElementById("doItemModal").classList.contains("open")) closeItemModal();
-  });
-  document.getElementById("doAttachBtn").addEventListener("click", function () {
-    document.getElementById("doAttachInput").click();
-  });
-  document.getElementById("doAttachInput").addEventListener("change", function (e) {
-    var file = e.target.files[0];
-    if (file) uploadAttachment(file);
-    e.target.value = "";
-  });
-  document.getElementById("doAttachments").addEventListener("click", function (e) {
-    var btn = e.target.closest('[data-action="remove-attachment"]');
-    if (!btn) return;
-    editorAttachments = editorAttachments.filter(function (a) { return a.id !== btn.dataset.id; });
-    renderAttachments();
   });
   document.getElementById("doExportExcelBtn").addEventListener("click", exportItemsToExcel);
   document.getElementById("doImportExcelBtn").addEventListener("click", function () {

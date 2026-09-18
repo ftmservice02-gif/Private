@@ -288,9 +288,3 @@ ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS columns JSONB;
 -- ("custom_<random>") and never colliding with a built-in key. A key here
 -- can also appear in `columns` above to actually show it.
 ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS custom_columns JSONB;
-
--- Order-level file attachments (a photo of the equipment, a signed copy,
--- etc.) — [{id, url, name, size, mime}], same shape and same /api/uploads
--- upload flow as a task's stuck_attachments. Separate from the Items
--- table entirely — this isn't per-row data.
-ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS attachments JSONB;
