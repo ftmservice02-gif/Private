@@ -393,6 +393,16 @@
   // happens in the #doItemModal popup (openItemModal), so a row here just
   // shows each column's current value as text and opens that popup on
   // click, same pattern as the delivery-order list's own rows.
+  // Details isn't free text — it always just marks "there's an attached
+  // document for this item", so every place that shows a row's value
+  // (table, popup, print) shows this fixed string for that column instead
+  // of whatever text happens to be stored.
+  var DETAILS_FIXED_TEXT = "เอกสารแนบ";
+  function itemDisplayValue(row, key) {
+    if (key === "remark") return DETAILS_FIXED_TEXT;
+    return DATE_COLUMNS.indexOf(key) !== -1 ? fmtThaiDate(row[key]) : (row[key] || "");
+  }
+
   function renderItemsEditor() {
     var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
     var head = document.getElementById("doItemsHead");
@@ -409,8 +419,7 @@
       return '<tr data-idx="' + idx + '" data-action="edit-item-row">' +
         '<td class="do-items-col-no">' + (idx + 1) + '</td>' +
         cols.map(function (c) {
-          var display = DATE_COLUMNS.indexOf(c.key) !== -1 ? fmtThaiDate(row[c.key]) : (row[c.key] || "");
-          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(display) + '</td>';
+          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(itemDisplayValue(row, c.key)) + '</td>';
         }).join("") +
         '<td class="do-items-col-remove"><button type="button" class="pf-sublist-remove" data-action="remove-item-row" data-idx="' + idx + '" title="' + esc(tr("do.removeItem")) + '" aria-label="' + esc(tr("do.removeItem")) + '">&times;</button></td>' +
       '</tr>';
@@ -425,7 +434,8 @@
     var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
     var row = itemModalIndex === -1 ? emptyItemRow() : editorItems[itemModalIndex];
     document.getElementById("doItemModalBody").innerHTML = cols.map(function (c) {
-      var inputHtml = c.key === "type" ? renderTypeSelect(row.type)
+      var inputHtml = c.key === "remark" ? '<input type="text" class="pf-input" data-field="remark" value="' + esc(DETAILS_FIXED_TEXT) + '" readonly />'
+        : c.key === "type" ? renderTypeSelect(row.type)
         : DATE_COLUMNS.indexOf(c.key) !== -1 ? '<input type="date" class="pf-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />'
         : '<input type="text" class="pf-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />';
       return '<div class="pf-field"><label class="pf-label">' + esc(c.label) + '</label>' + inputHtml + '</div>';
@@ -600,10 +610,15 @@
   }
 
   function renderPrintRow(n, it, cols) {
+    // Blank filler rows (padding the sheet out to minRows) must stay blank
+    // in every column, so the Details fixed-text override only applies
+    // once the row actually holds something.
+    var isBlankRow = !Object.keys(it).some(function (k) { return k !== "remark" && it[k]; });
     return '<tr>' +
       '<td class="do-print-col-no">' + n + '</td>' +
       cols.map(function (c) {
-        var value = DATE_COLUMNS.indexOf(c.key) !== -1 ? fmtThaiDate(it[c.key]) : (it[c.key] || "");
+        var value = (c.key === "remark" && !isBlankRow) ? DETAILS_FIXED_TEXT
+          : DATE_COLUMNS.indexOf(c.key) !== -1 ? fmtThaiDate(it[c.key]) : (it[c.key] || "");
         return '<td' + (c.key === "qty" ? ' class="do-print-col-qty"' : '') + '>' + esc(value) + '</td>';
       }).join("") +
     '</tr>';
@@ -714,7 +729,7 @@
   function exportItemsToExcel() {
     var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
     var header = cols.map(function (c) { return c.label; });
-    var rows = editorItems.map(function (row) { return cols.map(function (c) { return row[c.key] || ""; }); });
+    var rows = editorItems.map(function (row) { return cols.map(function (c) { return c.key === "remark" ? DETAILS_FIXED_TEXT : (row[c.key] || ""); }); });
     var ws = XLSX.utils.aoa_to_sheet([header].concat(rows));
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Items");
