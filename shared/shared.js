@@ -230,7 +230,7 @@
       "do.noCol": "ลำดับ", "do.typeCol": "ประเภท", "do.itemCol": "รายการอุปกรณ์", "do.shortNameCol": "ชื่อย่อ", "do.brandCol": "ยี่ห้อ", "do.modelCol": "รุ่น", "do.serialCol": "Serial Number",
       "do.qtyCol": "จำนวน", "do.remarkCol": "รายละเอียด", "do.noteCol": "หมายเหตุ", "do.locationCol": "สถานที่ติดตั้ง", "do.columnsLabel": "คอลัมน์ที่จะแสดง", "do.addItemRow": "+ เพิ่มรายการ",
       "do.addItemTitle": "เพิ่มรายการ", "do.editItemTitle": "แก้ไขรายการ", "do.cancel": "ยกเลิก", "do.editItem": "แก้ไขรายการ", "do.removeItem": "ลบรายการ", "do.noItemsYet": "ยังไม่มีรายการ",
-      "do.receivedDateCol": "วันรับอุปกรณ์", "do.warrantyStartCol": "วันเริ่มประกัน", "do.warrantyEndCol": "วันสิ้นสุดประกัน",
+      "do.receivedDateCol": "วันรับอุปกรณ์", "do.warrantyStartCol": "เริ่มรับประกัน", "do.warrantyEndCol": "สิ้นสุดการรับประกัน",
       "do.addColumn": "+ เพิ่มคอลัมน์", "do.newColumnPlaceholder": "ชื่อคอลัมน์ใหม่", "do.removeColumn": "ลบคอลัมน์นี้",
       "do.exportExcel": "ส่งออก Excel", "do.importExcel": "นำเข้า Excel", "do.importExcelSuccess": "นำเข้าข้อมูล {count} แถวจาก Excel แล้ว", "do.importExcelError": "ไม่สามารถอ่านไฟล์ Excel นี้ได้",
       "do.notes": "หมายเหตุเพิ่มเติม", "do.senderSection": "ผู้ส่งสินค้า", "do.receiverSection": "ผู้รับสินค้า",
