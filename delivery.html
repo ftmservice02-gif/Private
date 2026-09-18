@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=107" />
+<link rel="stylesheet" href="shared/styles.css?v=108" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -170,7 +170,7 @@
               <tbody id="doItemsBody"></tbody>
             </table>
           </div>
-          <button type="button" class="pf-btn pf-btn-outline" id="doAddItemBtn" style="margin-top:10px;" data-i18n="do.addItemRow">+ Add row</button>
+          <button type="button" class="pf-btn pf-btn-outline" id="doAddItemBtn" style="margin-top:10px;" data-i18n="do.addItemRow">+ Add item</button>
         </div>
 
         <div class="pf-card" style="margin-top:14px;">
@@ -232,10 +232,30 @@
 <!-- ---- Printable sheet: hidden on screen, shown only for window.print() ---- -->
 <div id="doPrintArea" class="do-print-area"></div>
 
+<!-- ---- Item entry popup (add/edit one row of the Items table) ---- -->
+<div class="panel-backdrop" id="doItemBackdrop"></div>
+<div class="pf-modal" id="doItemModal" role="dialog" aria-label="Item" style="width:min(640px,94vw);">
+  <div class="pf-header">
+    <div class="pf-title" id="doItemModalTitle" data-i18n="do.addItemTitle">Add item</div>
+    <div class="pf-header-actions">
+      <button class="panel-close" id="doItemModalCloseBtn" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="pf-body">
+    <div class="pf-grid" id="doItemModalBody"></div>
+  </div>
+  <div class="do-item-modal-actions">
+    <button type="button" class="pf-btn pf-btn-outline" id="doItemModalCancelBtn" data-i18n="do.cancel">Cancel</button>
+    <button type="button" class="pf-btn pf-btn-primary" id="doItemModalSaveBtn" data-i18n="do.save">Save</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="shared/vendor/xlsx.full.min.js"></script>
-<script src="shared/shared.js?v=93"></script>
+<script src="shared/shared.js?v=94"></script>
 <script>
 (function () {
   "use strict";
@@ -369,6 +389,10 @@
     }).join("");
   }
 
+  // The table is a read-only summary now — filling in a row's fields
+  // happens in the #doItemModal popup (openItemModal), so a row here just
+  // shows each column's current value as text and opens that popup on
+  // click, same pattern as the delivery-order list's own rows.
   function renderItemsEditor() {
     var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
     var head = document.getElementById("doItemsHead");
@@ -377,18 +401,58 @@
       '<th class="do-items-col-remove"></th></tr>';
 
     var body = document.getElementById("doItemsBody");
+    if (!editorItems.length) {
+      body.innerHTML = '<tr><td colspan="' + (cols.length + 2) + '" class="no-updates">' + esc(tr("do.noItemsYet")) + '</td></tr>';
+      return;
+    }
     body.innerHTML = editorItems.map(function (row, idx) {
-      return '<tr data-idx="' + idx + '">' +
+      return '<tr data-idx="' + idx + '" data-action="edit-item-row">' +
         '<td class="do-items-col-no">' + (idx + 1) + '</td>' +
         cols.map(function (c) {
-          var inputHtml = c.key === "type" ? renderTypeSelect(row.type)
-            : DATE_COLUMNS.indexOf(c.key) !== -1 ? '<input type="date" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />'
-            : '<input type="text" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />';
-          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + inputHtml + '</td>';
+          var display = DATE_COLUMNS.indexOf(c.key) !== -1 ? fmtThaiDate(row[c.key]) : (row[c.key] || "");
+          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + esc(display) + '</td>';
         }).join("") +
-        '<td class="do-items-col-remove"><button type="button" class="pf-sublist-remove" data-action="remove-item-row" data-idx="' + idx + '">&times;</button></td>' +
+        '<td class="do-items-col-remove"><button type="button" class="pf-sublist-remove" data-action="remove-item-row" data-idx="' + idx + '" title="' + esc(tr("do.removeItem")) + '" aria-label="' + esc(tr("do.removeItem")) + '">&times;</button></td>' +
       '</tr>';
     }).join("");
+  }
+
+  // ---------------- item entry popup ----------------
+
+  var itemModalIndex = -1; // index into editorItems being edited, or -1 for a new row
+
+  function renderItemModalFields() {
+    var cols = columnCatalog(editorCustomColumns).filter(function (c) { return editorColumns.indexOf(c.key) !== -1; });
+    var row = itemModalIndex === -1 ? emptyItemRow() : editorItems[itemModalIndex];
+    document.getElementById("doItemModalBody").innerHTML = cols.map(function (c) {
+      var inputHtml = c.key === "type" ? renderTypeSelect(row.type)
+        : DATE_COLUMNS.indexOf(c.key) !== -1 ? '<input type="date" class="pf-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />'
+        : '<input type="text" class="pf-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />';
+      return '<div class="pf-field"><label class="pf-label">' + esc(c.label) + '</label>' + inputHtml + '</div>';
+    }).join("");
+  }
+
+  function openItemModal(idx) {
+    itemModalIndex = idx;
+    document.getElementById("doItemModalTitle").textContent = tr(idx === -1 ? "do.addItemTitle" : "do.editItemTitle");
+    renderItemModalFields();
+    document.getElementById("doItemBackdrop").classList.add("open");
+    document.getElementById("doItemModal").classList.add("open");
+  }
+
+  function closeItemModal() {
+    document.getElementById("doItemBackdrop").classList.remove("open");
+    document.getElementById("doItemModal").classList.remove("open");
+  }
+
+  function saveItemModal() {
+    var row = itemModalIndex === -1 ? emptyItemRow() : editorItems[itemModalIndex];
+    document.querySelectorAll("#doItemModalBody [data-field]").forEach(function (el) {
+      row[el.dataset.field] = el.value;
+    });
+    if (itemModalIndex === -1) editorItems.push(row);
+    closeItemModal();
+    renderItemsEditor();
   }
 
   // Type is a fixed Hardware/Software pick rather than free text, since
@@ -408,9 +472,7 @@
     // Object.assign onto a fresh emptyItemRow() (rather than a fixed
     // item/brand/model/... whitelist) so a custom column's stored value
     // survives round-tripping through the editor along with the built-ins.
-    editorItems = (editingOrder.items && editingOrder.items.length)
-      ? editingOrder.items.map(function (it) { return Object.assign(emptyItemRow(), it); })
-      : [emptyItemRow()];
+    editorItems = (editingOrder.items || []).map(function (it) { return Object.assign(emptyItemRow(), it); });
     editorColumns = (editingOrder.columns && editingOrder.columns.length) ? editingOrder.columns.slice() : DEFAULT_COLUMNS.slice();
     editorCustomColumns = (editingOrder.customColumns && editingOrder.customColumns.length) ? editingOrder.customColumns.map(function (c) { return { key: c.key, label: c.label }; }) : [];
     renderColumnsPicker();
@@ -712,9 +774,13 @@
   document.getElementById("doPrintFromEditorBtn").addEventListener("click", function () {
     printOrder(Object.assign({}, editingOrder, collectEditorPayload()));
   });
-  document.getElementById("doAddItemBtn").addEventListener("click", function () {
-    editorItems.push(emptyItemRow());
-    renderItemsEditor();
+  document.getElementById("doAddItemBtn").addEventListener("click", function () { openItemModal(-1); });
+  document.getElementById("doItemModalCloseBtn").addEventListener("click", closeItemModal);
+  document.getElementById("doItemModalCancelBtn").addEventListener("click", closeItemModal);
+  document.getElementById("doItemBackdrop").addEventListener("click", closeItemModal);
+  document.getElementById("doItemModalSaveBtn").addEventListener("click", saveItemModal);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && document.getElementById("doItemModal").classList.contains("open")) closeItemModal();
   });
   document.getElementById("doExportExcelBtn").addEventListener("click", exportItemsToExcel);
   document.getElementById("doImportExcelBtn").addEventListener("click", function () {
@@ -760,19 +826,15 @@
   document.getElementById("doNewColumnName").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); addCustomColumn(); }
   });
-  function onItemFieldChange(e) {
-    var row = e.target.closest("tr[data-idx]");
-    if (!row || !e.target.dataset.field) return;
-    editorItems[Number(row.dataset.idx)][e.target.dataset.field] = e.target.value;
-  }
-  document.getElementById("doItemsBody").addEventListener("input", onItemFieldChange);
-  document.getElementById("doItemsBody").addEventListener("change", onItemFieldChange);
   document.getElementById("doItemsBody").addEventListener("click", function (e) {
-    var btn = e.target.closest('[data-action="remove-item-row"]');
-    if (!btn) return;
-    editorItems.splice(Number(btn.dataset.idx), 1);
-    if (!editorItems.length) editorItems.push(emptyItemRow());
-    renderItemsEditor();
+    var removeBtn = e.target.closest('[data-action="remove-item-row"]');
+    if (removeBtn) {
+      editorItems.splice(Number(removeBtn.dataset.idx), 1);
+      renderItemsEditor();
+      return;
+    }
+    var row = e.target.closest('[data-action="edit-item-row"]');
+    if (row) openItemModal(Number(row.dataset.idx));
   });
   document.getElementById("doListBody").addEventListener("click", function (e) {
     var deleteBtn = e.target.closest('[data-action="delete-order"]');

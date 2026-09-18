@@ -1707,6 +1707,15 @@
   .do-item-input:hover { border-color: var(--border-strong); }
   .do-item-input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
 
+  /* Item rows are read-only summaries now — filling a row's fields happens
+     in the #doItemModal popup instead, so the whole row is just a button
+     to reopen that popup pre-filled, same click-to-open pattern as the
+     delivery-order list rows. */
+  .do-items-table tbody tr { cursor: pointer; }
+  .do-items-table tbody tr:hover td { background: var(--surface-2); }
+  .do-items-table td { padding: 9px 8px; }
+  .do-item-modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 0 20px 20px; flex-shrink: 0; }
+
   /* The print sheet stays off-screen and invisible until the browser's own
      print dialog is triggered — see printOrder() in delivery.html, which
      fills #doPrintArea right before calling window.print(). Kept in the
