@@ -1716,6 +1716,16 @@
   .do-items-table td { padding: 9px 8px; }
   .do-item-modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 0 20px 20px; flex-shrink: 0; }
 
+  /* #doItemModal reuses .pf-modal, whose own background is --canvas (the
+     page background) since it was designed to hold floating --surface
+     .pf-card sections — this popup has no card wrapper around its fields,
+     so on --canvas it barely read as a popup at all. Scoped to this one
+     modal (not .pf-modal generally, which workspace.html's project-intake
+     form still wants unchanged) — a --surface background plus a dimmed
+     backdrop instead of the shared transparent one. */
+  #doItemModal { background: var(--surface); box-shadow: 0 12px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12); }
+  #doItemBackdrop.open { background: rgba(15,17,23,0.45); }
+
   /* The print sheet stays off-screen and invisible until the browser's own
      print dialog is triggered — see printOrder() in delivery.html, which
      fills #doPrintArea right before calling window.print(). Kept in the
