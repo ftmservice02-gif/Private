@@ -288,3 +288,10 @@ ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS columns JSONB;
 -- ("custom_<random>") and never colliding with a built-in key. A key here
 -- can also appear in `columns` above to actually show it.
 ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS custom_columns JSONB;
+
+-- Warranty tracking for the whole order (not per item) — when the
+-- equipment was received and its warranty window, filled in outside the
+-- items table rather than as a per-row field.
+ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS equipment_received_date DATE;
+ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS warranty_start DATE;
+ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS warranty_end DATE;

@@ -880,8 +880,8 @@ app.post("/api/projects/:id/notify-members", requireAuth, requireProjectAccess, 
 // arbitrary key in, and defaulted to the original FM-PM-01 layout's own
 // columns when a client sends nothing (or an old record predates the
 // column picker and has none stored).
-const ALLOWED_DELIVERY_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "qty", "remark", "location", "note", "receivedDate", "warrantyStart", "warrantyEnd"];
-const DEFAULT_DELIVERY_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "receivedDate", "warrantyStart", "warrantyEnd", "remark", "note"];
+const ALLOWED_DELIVERY_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "qty", "remark", "location", "note"];
+const DEFAULT_DELIVERY_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "remark", "note"];
 const CUSTOM_COLUMN_KEY_RE = /^custom_[a-z0-9]{1,20}$/i;
 const MAX_CUSTOM_COLUMNS = 10;
 
@@ -919,9 +919,6 @@ function sanitizeDeliveryItems(items, customKeys) {
         remark: String((it && it.remark) || "").slice(0, 500).trim(),
         location: String((it && it.location) || "").slice(0, 200).trim(),
         note: String((it && it.note) || "").slice(0, 500).trim(),
-        receivedDate: String((it && it.receivedDate) || "").slice(0, 10).trim(),
-        warrantyStart: String((it && it.warrantyStart) || "").slice(0, 10).trim(),
-        warrantyEnd: String((it && it.warrantyEnd) || "").slice(0, 10).trim(),
       };
       for (const key of customKeys || []) row[key] = String((it && it[key]) || "").slice(0, 300).trim();
       return row;
@@ -953,6 +950,9 @@ function toDeliveryOrderJson(row) {
     receiverName: row.receiver_name || "",
     receiverPhone: row.receiver_phone || "",
     receivedDate: row.received_date,
+    equipmentReceivedDate: row.equipment_received_date,
+    warrantyStart: row.warranty_start,
+    warrantyEnd: row.warranty_end,
     createdByName: row.created_by_name || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -998,8 +998,9 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
     const inserted = await pool.query(
       `INSERT INTO delivery_orders
          (project_id, doc_no, contract_no, department, items, columns, custom_columns, notes,
-          sender_name, sender_phone, sent_date, receiver_name, receiver_phone, received_date, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          sender_name, sender_phone, sent_date, receiver_name, receiver_phone, received_date,
+          equipment_received_date, warranty_start, warranty_end, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
        RETURNING *`,
       [
         req.params.id,
@@ -1016,6 +1017,9 @@ app.post("/api/projects/:id/delivery-orders", requireAuth, requireEditor, requir
         (b.receiverName || "").trim(),
         (b.receiverPhone || "").trim(),
         b.receivedDate || null,
+        b.equipmentReceivedDate || null,
+        b.warrantyStart || null,
+        b.warrantyEnd || null,
         req.user.id,
       ]
     );
@@ -1036,8 +1040,9 @@ app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor
       `UPDATE delivery_orders SET
          doc_no = $1, contract_no = $2, department = $3, items = $4, columns = $5, custom_columns = $6, notes = $7,
          sender_name = $8, sender_phone = $9, sent_date = $10,
-         receiver_name = $11, receiver_phone = $12, received_date = $13, updated_at = now()
-       WHERE id = $14 AND project_id = $15
+         receiver_name = $11, receiver_phone = $12, received_date = $13,
+         equipment_received_date = $14, warranty_start = $15, warranty_end = $16, updated_at = now()
+       WHERE id = $17 AND project_id = $18
        RETURNING *`,
       [
         (b.docNo || "").trim(),
@@ -1053,6 +1058,9 @@ app.put("/api/projects/:id/delivery-orders/:orderId", requireAuth, requireEditor
         (b.receiverName || "").trim(),
         (b.receiverPhone || "").trim(),
         b.receivedDate || null,
+        b.equipmentReceivedDate || null,
+        b.warrantyStart || null,
+        b.warrantyEnd || null,
         req.params.orderId,
         req.params.id,
       ]

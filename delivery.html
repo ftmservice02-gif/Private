@@ -174,6 +174,24 @@
         </div>
 
         <div class="pf-card" style="margin-top:14px;">
+          <div class="pf-card-head"><span class="pf-card-title" data-i18n="do.warrantySection">Warranty</span></div>
+          <div class="pf-grid">
+            <div class="pf-field">
+              <label class="pf-label" data-i18n="do.equipmentReceivedDate">Equipment received date</label>
+              <input type="date" class="pf-input" id="doEquipmentReceivedDate" />
+            </div>
+            <div class="pf-field">
+              <label class="pf-label" data-i18n="do.warrantyStart">Warranty start date</label>
+              <input type="date" class="pf-input" id="doWarrantyStart" />
+            </div>
+            <div class="pf-field">
+              <label class="pf-label" data-i18n="do.warrantyEnd">Warranty end date</label>
+              <input type="date" class="pf-input" id="doWarrantyEnd" />
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-card" style="margin-top:14px;">
           <div class="pf-field">
             <label class="pf-label" data-i18n="do.notes">Notes</label>
             <textarea class="pf-input pf-textarea" id="doNotes"></textarea>
@@ -235,7 +253,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="shared/vendor/xlsx.full.min.js"></script>
-<script src="shared/shared.js?v=93"></script>
+<script src="shared/shared.js?v=94"></script>
 <script>
 (function () {
   "use strict";
@@ -271,19 +289,12 @@
     { key: "serial", i18n: "do.serialCol" },
     { key: "location", i18n: "do.locationCol" },
     { key: "qty", i18n: "do.qtyCol" },
-    { key: "receivedDate", i18n: "do.receivedDateCol" },
-    { key: "warrantyStart", i18n: "do.warrantyStartCol" },
-    { key: "warrantyEnd", i18n: "do.warrantyEndCol" },
     { key: "remark", i18n: "do.remarkCol" },
     { key: "note", i18n: "do.noteCol" },
   ];
-  var DEFAULT_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "receivedDate", "warrantyStart", "warrantyEnd", "remark", "note"];
-  // Date-valued item columns get a native date picker instead of a plain
-  // text box, same reasoning as the Type dropdown — keeps the stored value
-  // in a consistent, sortable format instead of free-text dates.
-  var DATE_COLUMNS = ["receivedDate", "warrantyStart", "warrantyEnd"];
+  var DEFAULT_COLUMNS = ["type", "item", "shortName", "brand", "model", "serial", "location", "qty", "remark", "note"];
 
-  function emptyItemRow() { return { type: "", item: "", shortName: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "", note: "", receivedDate: "", warrantyStart: "", warrantyEnd: "" }; }
+  function emptyItemRow() { return { type: "", item: "", shortName: "", brand: "", model: "", serial: "", qty: "", remark: "", location: "", note: "" }; }
 
   // Built-in columns plus whatever custom ones this order has defined, in
   // one uniform {key, label, custom} shape — custom columns carry the
@@ -381,10 +392,9 @@
       return '<tr data-idx="' + idx + '">' +
         '<td class="do-items-col-no">' + (idx + 1) + '</td>' +
         cols.map(function (c) {
-          var inputHtml = c.key === "type" ? renderTypeSelect(row.type)
-            : DATE_COLUMNS.indexOf(c.key) !== -1 ? '<input type="date" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />'
-            : '<input type="text" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />';
-          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' + inputHtml + '</td>';
+          return '<td' + (c.key === "qty" ? ' class="do-items-col-qty"' : '') + '>' +
+            (c.key === "type" ? renderTypeSelect(row.type) : '<input type="text" class="do-item-input" data-field="' + c.key + '" value="' + esc(row[c.key] || "") + '" />') +
+          '</td>';
         }).join("") +
         '<td class="do-items-col-remove"><button type="button" class="pf-sublist-remove" data-action="remove-item-row" data-idx="' + idx + '">&times;</button></td>' +
       '</tr>';
@@ -421,6 +431,9 @@
     document.getElementById("doContractNo").value = editingOrder.contractNo || "";
     document.getElementById("doDepartment").value = editingOrder.department || "";
     document.getElementById("doNotes").value = editingOrder.notes || "";
+    document.getElementById("doEquipmentReceivedDate").value = editingOrder.equipmentReceivedDate || "";
+    document.getElementById("doWarrantyStart").value = editingOrder.warrantyStart || "";
+    document.getElementById("doWarrantyEnd").value = editingOrder.warrantyEnd || "";
     document.getElementById("doSenderName").value = editingOrder.senderName || (order && order.id ? "" : (PM.currentUser ? PM.currentUser.name : ""));
     document.getElementById("doSenderPhone").value = editingOrder.senderPhone || "";
     document.getElementById("doSentDate").value = editingOrder.sentDate || "";
@@ -448,6 +461,9 @@
       columns: editorColumns,
       customColumns: editorCustomColumns,
       notes: document.getElementById("doNotes").value,
+      equipmentReceivedDate: document.getElementById("doEquipmentReceivedDate").value,
+      warrantyStart: document.getElementById("doWarrantyStart").value,
+      warrantyEnd: document.getElementById("doWarrantyEnd").value,
       senderName: document.getElementById("doSenderName").value,
       senderPhone: document.getElementById("doSenderPhone").value,
       sentDate: document.getElementById("doSentDate").value,
@@ -503,6 +519,18 @@
     return d.getDate() + " " + THAI_MONTHS[d.getMonth()] + " " + (d.getFullYear() + 543);
   }
 
+  // Only takes up a row in the printed fields box when the order actually
+  // has warranty info — most orders won't, and skipping the row keeps
+  // those printing at the tightly-tuned one-page height.
+  function warrantyFieldsRowHtml(order) {
+    if (!order.equipmentReceivedDate && !order.warrantyStart && !order.warrantyEnd) return "";
+    var range = [fmtThaiDate(order.warrantyStart), fmtThaiDate(order.warrantyEnd)].filter(Boolean).join(" – ");
+    return '<div class="do-print-field-row do-print-field-row-2">' +
+      '<span><b>วันรับอุปกรณ์</b> : ' + esc(fmtThaiDate(order.equipmentReceivedDate)) + '</span>' +
+      '<span><b>ระยะเวลาประกัน</b> : ' + esc(range) + '</span>' +
+    '</div>';
+  }
+
   // "ลงชื่อ .................." — a label followed by a dotted line that
   // fills whatever's left of the row, however wide that row happens to be
   // (a long fixed run of dots inside a flex:1, overflow:hidden, nowrap
@@ -524,11 +552,7 @@
   // rest of the print sheet — it mirrors an official printed document, not
   // app UI. Deliberately separate from ITEM_COLUMNS' bilingual do.*Col
   // labels used in the editor.
-  var PRINT_COLUMN_LABELS = {
-    type: "ประเภท", item: "รายการอุปกรณ์", shortName: "ชื่อย่อ", brand: "ยี่ห้อ", model: "รุ่น", serial: "Serial Number",
-    qty: "จำนวน", remark: "รายละเอียด", location: "สถานที่ติดตั้ง", note: "หมายเหตุ",
-    receivedDate: "วันรับอุปกรณ์", warrantyStart: "วันเริ่มประกัน", warrantyEnd: "วันสิ้นสุดประกัน",
-  };
+  var PRINT_COLUMN_LABELS = { type: "ประเภท", item: "รายการอุปกรณ์", shortName: "ชื่อย่อ", brand: "ยี่ห้อ", model: "รุ่น", serial: "Serial Number", qty: "จำนวน", remark: "รายละเอียด", location: "สถานที่ติดตั้ง", note: "หมายเหตุ" };
 
   function printColumnsFor(order) {
     var enabled = (order.columns && order.columns.length) ? order.columns : DEFAULT_COLUMNS;
@@ -541,8 +565,7 @@
     return '<tr>' +
       '<td class="do-print-col-no">' + n + '</td>' +
       cols.map(function (c) {
-        var value = DATE_COLUMNS.indexOf(c.key) !== -1 ? fmtThaiDate(it[c.key]) : (it[c.key] || "");
-        return '<td' + (c.key === "qty" ? ' class="do-print-col-qty"' : '') + '>' + esc(value) + '</td>';
+        return '<td' + (c.key === "qty" ? ' class="do-print-col-qty"' : '') + '>' + esc(it[c.key] || "") + '</td>';
       }).join("") +
     '</tr>';
   }
@@ -604,6 +627,7 @@
           '<span><b>สัญญาเลขที่</b> : ' + esc(order.contractNo || "") + '</span>' +
           '<span><b>หน่วยงาน</b> : ' + esc(order.department || "") + '</span>' +
         '</div>' +
+        (warrantyFieldsRowHtml(order)) +
       '</div>' +
       '<table class="do-print-items-table">' +
         '<thead>' + theadHtml + '</thead>' +
