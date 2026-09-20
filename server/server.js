@@ -509,6 +509,47 @@ app.get("/api/calendar-events", requireAuth, async (req, res) => {
   }
 });
 
+// Task/subitem updates (the chat/comment thread) within a date range, for the
+// calendar's optional "updates & comments" layer — same project visibility as
+// /api/calendar-events. The range is required and capped at 62 days so this
+// never tries to ship a whole workspace's history in one response. Rich-text
+// updates are stored as HTML, so tags are stripped here and the text cut to a
+// one-line preview; the client only ever renders it as plain text.
+app.get("/api/calendar-updates", requireAuth, async (req, res) => {
+  const from = String(req.query.from || ""), to = String(req.query.to || "");
+  const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if (!isDate(from) || !isDate(to)) return res.status(400).json({ error: "from and to (YYYY-MM-DD) are required" });
+  if ((new Date(to) - new Date(from)) / 86400000 > 62) return res.status(400).json({ error: "Range too large" });
+  try {
+    const isAdmin = req.user.role === "admin";
+    const result = await pool.query(
+      `SELECT u.id, u.author, u.time, u.text, u.is_html, t.id AS task_id, t.name AS task_name,
+              p.id AS project_id, p.title AS project_title
+       FROM projects p
+       JOIN groups g ON g.project_id = p.id
+       JOIN tasks t ON t.group_id = g.id
+       JOIN updates u ON u.task_id = t.id
+       WHERE u.time::date >= $3::date AND u.time::date <= $4::date
+         AND ($1 OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $2))
+       ORDER BY u.time`,
+      [isAdmin, req.user.id, from, to]
+    );
+    res.json(result.rows.map((r) => {
+      const plain = String(r.text || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+      const d = new Date(r.time);
+      const pad = (n) => String(n).padStart(2, "0");
+      return {
+        id: r.id, author: r.author || "", date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+        text: plain.slice(0, 140), taskId: r.task_id, taskName: r.task_name,
+        projectId: r.project_id, projectTitle: r.project_title,
+      };
+    }));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load updates" });
+  }
+});
+
 // The external calendar (Google Calendar / Outlook / etc.) URL calendar.html
 // embeds in its second tab — one workspace-wide value in app_settings, set by
 // an admin, readable by everyone signed in. Only http(s) URLs are accepted

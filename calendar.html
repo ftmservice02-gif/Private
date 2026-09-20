@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=111" />
+<link rel="stylesheet" href="shared/styles.css?v=112" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -119,6 +119,7 @@
             <select class="pf-input cal-select" id="calProjectSel" aria-label="Project"></select>
             <select class="pf-input cal-select" id="calPersonSel" aria-label="Person"></select>
           </div>
+          <label class="cal-toggle"><input type="checkbox" id="calUpdatesToggle" /> <span data-i18n="cal.showUpdates">Show updates & comments</span></label>
           <div class="cal-filter">
             <button type="button" class="cal-filter-btn" data-filter="mine" data-i18n="cal.mine">My tasks</button>
             <button type="button" class="cal-filter-btn active" data-filter="team" data-i18n="cal.team">Whole team</button>
@@ -145,7 +146,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=97"></script>
+<script src="shared/shared.js?v=98"></script>
 <script>
 (function () {
   "use strict";
@@ -163,6 +164,9 @@
   function locale() { return PM.lang === "th" ? "th-TH" : "en-US"; }
 
   var personFilter = "", projectFilter = "";
+  var updates = [];
+  var showUpdates = false;
+  try { showUpdates = localStorage.getItem("pm-cal-show-updates") === "1"; } catch (e) {}
   function initials(name) {
     var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return "?";
@@ -179,10 +183,34 @@
     });
   }
 
+  function visibleUpdates() {
+    if (!showUpdates) return [];
+    var me = ((PM.currentUser && PM.currentUser.name) || "").trim().toLowerCase();
+    return updates.filter(function (u) {
+      if (filter === "mine" && !(me && (u.author || "").trim().toLowerCase() === me)) return false;
+      if (personFilter && (u.author || "") !== personFilter) return false;
+      if (projectFilter && u.projectId !== projectFilter) return false;
+      return true;
+    });
+  }
+
+  // Fetches the comment layer for exactly the 6-week window the grid shows.
+  function loadUpdates() {
+    if (!showUpdates) { updates = []; return Promise.resolve(); }
+    var start = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+    start.setDate(1 - start.getDay());
+    var end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 41);
+    return PM.authFetch(PM.API_BASE + "/calendar-updates?from=" + iso(start) + "&to=" + iso(end))
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (list) { updates = list; })
+      .catch(function () { updates = []; });
+  }
+
   // People/project pickers are built from the events themselves, so they only
   // ever list people who actually have dated work in a project you can see.
   function renderSelects() {
     var people = {}, projects = {};
+    updates.forEach(function (u) { if (u.author && !people[u.author]) people[u.author] = 0; });
     events.forEach(function (e) {
       if (e.owner) people[e.owner] = (people[e.owner] || 0) + 1;
       projects[e.projectId] = e.projectTitle;
@@ -209,6 +237,7 @@
     var start = new Date(year, month, 1);
     start.setDate(1 - start.getDay());
     var evs = visibleEvents();
+    var ups = visibleUpdates();
     var todayIso = iso(new Date());
     var html = "";
     var i;
@@ -226,12 +255,19 @@
       });
       var inMonth = d.getMonth() === month;
       if (inMonth) monthCount += dayEvs.length;
+      var dayUps = ups.filter(function (u) { return u.date === key; });
+      if (inMonth) monthCount += dayUps.length;
       var shown = dayEvs.slice(0, 3);
       html += '<div class="cal-day' + (inMonth ? '' : ' other') + (key === todayIso ? ' today' : '') + '">' +
         '<div class="cal-day-num">' + d.getDate() + '</div>' +
         shown.map(function (e) {
           return '<a class="cal-chip cal-status-' + esc(e.status) + '" href="board.html?id=' + encodeURIComponent(e.projectId) + '&task=' + encodeURIComponent(e.id) + '" title="' + esc(e.name + (e.owner ? " — " + e.owner : "") + " (" + e.projectTitle + ")") + '">' + (e.owner ? '<span class="cal-chip-who">' + esc(initials(e.owner)) + '</span>' : '') + esc(e.name) + '</a>';
         }).join("") +
+        dayUps.slice(0, 2).map(function (u) {
+          return '<a class="cal-chip cal-update" href="board.html?id=' + encodeURIComponent(u.projectId) + '&task=' + encodeURIComponent(u.taskId) + '" title="' + esc(u.author + ": " + u.text + " — " + u.taskName + " (" + u.projectTitle + ")") + '">' +
+            '<span class="cal-chip-who">' + esc(initials(u.author)) + '</span>&#128172; ' + esc(u.text || u.taskName) + '</a>';
+        }).join("") +
+        (dayUps.length > 2 ? '<div class="cal-more" title="' + esc(dayUps.slice(2).map(function (u) { return u.author + ": " + u.text; }).join("\n")) + '">' + esc(tr("cal.more").replace("{n}", dayUps.length - 2)) + '</div>' : '') +
         (dayEvs.length > 3 ? '<div class="cal-more" title="' + esc(dayEvs.slice(3).map(function (e) { return e.name; }).join(", ")) + '">' + esc(tr("cal.more").replace("{n}", dayEvs.length - 3)) + '</div>' : '') +
       '</div>';
     }
@@ -282,9 +318,16 @@
   });
 
   // ---------------- events ----------------
-  document.getElementById("calPrevBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() - 1); renderGrid(); });
-  document.getElementById("calNextBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() + 1); renderGrid(); });
-  document.getElementById("calTodayBtn").addEventListener("click", function () { viewMonth = new Date(); viewMonth.setDate(1); renderGrid(); });
+  document.getElementById("calPrevBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() - 1); loadUpdates().then(renderGrid); });
+  document.getElementById("calNextBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() + 1); loadUpdates().then(renderGrid); });
+  document.getElementById("calTodayBtn").addEventListener("click", function () { viewMonth = new Date(); viewMonth.setDate(1); loadUpdates().then(renderGrid); });
+  var upToggle = document.getElementById("calUpdatesToggle");
+  upToggle.checked = showUpdates;
+  upToggle.addEventListener("change", function () {
+    showUpdates = upToggle.checked;
+    try { localStorage.setItem("pm-cal-show-updates", showUpdates ? "1" : "0"); } catch (e) {}
+    loadUpdates().then(function () { renderSelects(); renderGrid(); });
+  });
   document.getElementById("calPersonSel").addEventListener("change", function (e) { personFilter = e.target.value; renderGrid(); });
   document.getElementById("calProjectSel").addEventListener("change", function (e) { projectFilter = e.target.value; renderGrid(); });
   document.querySelector(".cal-filter").addEventListener("click", function (e) {
@@ -314,6 +357,7 @@
       .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
       .then(function (list) { events = list; loaded = true; })
       .catch(function () { loaded = false; })
+      .then(loadUpdates)
       .then(function () { renderSelects(); renderGrid(); });
     loadEmbed().then(renderEmbed);
   }).catch(function () {}); // requireAuth already redirected to login.html
