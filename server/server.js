@@ -579,9 +579,10 @@ async function loadGoogleEvents(url) {
 
 app.get("/api/settings/google-calendar", requireAuth, async (req, res) => {
   try {
-    const r = await pool.query("SELECT value FROM app_settings WHERE key = $1", [GOOGLE_ICAL_KEY]);
-    const url = r.rows.length ? r.rows[0].value : "";
-    res.json({ configured: !!url, url: req.user.role === "admin" ? url : undefined });
+    const r = await pool.query("SELECT key, value FROM app_settings WHERE key = ANY($1)", [[GOOGLE_ICAL_KEY, ICS_NAME_KEY]]);
+    const by = {}; r.rows.forEach((x) => { by[x.key] = x.value; });
+    const url = by[GOOGLE_ICAL_KEY] || "", icsName = by[ICS_NAME_KEY] || "";
+    res.json({ configured: !!(url || icsName), url: req.user.role === "admin" ? url : undefined, icsName: req.user.role === "admin" ? icsName : undefined });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load Google Calendar setting" });
@@ -598,10 +599,55 @@ app.put("/api/settings/google-calendar", requireAuth, async (req, res) => {
       [GOOGLE_ICAL_KEY, url]
     );
     icalCache = { url: "", at: 0, events: [] };
-    res.json({ configured: !!url, url });
+    const ics = await pool.query("SELECT 1 FROM app_settings WHERE key = $1 AND value <> ''", [ICS_NAME_KEY]);
+    res.json({ configured: !!(url || ics.rows.length), url });
   } catch (err) {
     console.error("[gcal] save failed:", err.message);
     res.status(400).json({ error: "Could not read that calendar feed" });
+  }
+});
+
+// A hand-uploaded .ics file (Google Calendar's "Export" download, Outlook, etc.)
+// — a one-time snapshot, unlike the live iCal feed above. Stored as raw text in
+// app_settings (validated by parsing it first) so every user sees it; admin-only
+// like the feed, since it replaces what the whole workspace sees.
+const ICS_TEXT_KEY = "ics_file_text";
+const ICS_NAME_KEY = "ics_file_name";
+let icsCache = { text: null, events: [] };
+async function loadIcsFileEvents() {
+  const r = await pool.query("SELECT value FROM app_settings WHERE key = $1", [ICS_TEXT_KEY]);
+  const text = r.rows.length ? r.rows[0].value : "";
+  if (!text) return [];
+  if (icsCache.text !== text) icsCache = { text, events: parseIcs(text) };
+  return icsCache.events;
+}
+
+app.put("/api/settings/ics-file", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  const text = String((req.body && req.body.text) || "");
+  const name = String((req.body && req.body.name) || "calendar.ics").slice(0, 200);
+  if (!/BEGIN:VCALENDAR/i.test(text)) return res.status(400).json({ error: "Not an .ics calendar file" });
+  const count = parseIcs(text).length;
+  if (!count) return res.status(400).json({ error: "No events found in that file" });
+  try {
+    for (const [key, value] of [[ICS_TEXT_KEY, text], [ICS_NAME_KEY, name]]) {
+      await pool.query(`INSERT INTO app_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, [key, value]);
+    }
+    res.json({ configured: true, icsName: name, count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save the calendar file" });
+  }
+});
+app.delete("/api/settings/ics-file", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  try {
+    await pool.query("DELETE FROM app_settings WHERE key = ANY($1)", [[ICS_TEXT_KEY, ICS_NAME_KEY]]);
+    const g = await pool.query("SELECT 1 FROM app_settings WHERE key = $1 AND value <> ''", [GOOGLE_ICAL_KEY]);
+    res.json({ configured: g.rows.length > 0, icsName: "" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to remove the calendar file" });
   }
 });
 
@@ -614,8 +660,13 @@ app.get("/api/calendar-google", requireAuth, async (req, res) => {
   try {
     const r = await pool.query("SELECT value FROM app_settings WHERE key = $1", [GOOGLE_ICAL_KEY]);
     const url = r.rows.length ? r.rows[0].value : "";
-    if (!url) return res.json([]);
-    res.json(expandEvents(await loadGoogleEvents(url), from, to));
+    const all = await loadIcsFileEvents();
+    let feedFailed = false;
+    let feed = [];
+    if (url) { try { feed = await loadGoogleEvents(url); } catch (e) { feedFailed = true; console.error("[gcal] feed failed:", e.message); } }
+    // a broken live feed shouldn't hide an uploaded file's events; only fail if that's all there is
+    if (feedFailed && !all.length) return res.status(502).json({ error: "Could not load Google Calendar" });
+    res.json(expandEvents(feed.concat(all), from, to));
   } catch (err) {
     console.error("[gcal] load failed:", err.message);
     res.status(502).json({ error: "Could not load Google Calendar" });

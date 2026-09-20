@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=113" />
+<link rel="stylesheet" href="shared/styles.css?v=114" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -142,6 +142,16 @@
             <button type="button" class="pf-btn pf-btn-primary" id="calGcalSaveBtn" data-i18n="cal.embedSave">Save link</button>
           </div>
         </div>
+        <div class="cal-gcal-admin" id="calIcsAdmin" hidden>
+          <div class="cal-gcal-title" data-i18n="cal.icsTitle">Import an .ics file</div>
+          <div class="cal-gcal-help" data-i18n="cal.icsHelp">Upload a calendar file exported from Google Calendar, Outlook or Apple Calendar (.ics). It is a snapshot — upload again to refresh it. Uploading replaces the previous file.</div>
+          <div class="cal-embed-admin">
+            <button type="button" class="pf-btn pf-btn-outline" id="calIcsBtn" data-i18n="cal.icsButton">Import .ics</button>
+            <input type="file" id="calIcsInput" accept=".ics,text/calendar" hidden />
+            <span class="cal-ics-name" id="calIcsName"></span>
+            <button type="button" class="pf-btn pf-btn-outline" id="calIcsRemoveBtn" data-i18n="cal.icsRemove" hidden>Remove</button>
+          </div>
+        </div>
         <div class="cal-embed-admin" id="calEmbedAdmin" hidden>
           <input type="text" class="pf-input" id="calEmbedInput" data-i18n-placeholder="cal.embedPlaceholder" placeholder="https://…" />
           <button type="button" class="pf-btn pf-btn-primary" id="calEmbedSaveBtn" data-i18n="cal.embedSave">Save link</button>
@@ -155,7 +165,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=99"></script>
+<script src="shared/shared.js?v=100"></script>
 <script>
 (function () {
   "use strict";
@@ -176,6 +186,7 @@
   var updates = [];
   var googleEvents = [];
   var googleConfigured = false;
+  var icsName = "";
   var showGoogle = true;
   try { showGoogle = localStorage.getItem("pm-cal-show-google") !== "0"; } catch (e) {}
   var showUpdates = false;
@@ -339,13 +350,17 @@
 
   function applyGoogleUi() {
     document.getElementById("calGoogleToggleWrap").hidden = !googleConfigured;
-    document.getElementById("calGcalAdmin").hidden = !(PM.currentUser && PM.currentUser.role === "admin");
+    var isAdmin = !!(PM.currentUser && PM.currentUser.role === "admin");
+    document.getElementById("calGcalAdmin").hidden = !isAdmin;
+    document.getElementById("calIcsAdmin").hidden = !isAdmin;
+    document.getElementById("calIcsName").textContent = icsName;
+    document.getElementById("calIcsRemoveBtn").hidden = !icsName;
   }
 
   function loadGoogleSetting() {
     return PM.authFetch(PM.API_BASE + "/settings/google-calendar")
       .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
-      .then(function (d) { googleConfigured = !!d.configured; document.getElementById("calGcalInput").value = d.url || ""; applyGoogleUi(); })
+      .then(function (d) { googleConfigured = !!d.configured; icsName = d.icsName || ""; document.getElementById("calGcalInput").value = d.url || ""; applyGoogleUi(); })
       .catch(function () {});
   }
 
@@ -382,6 +397,33 @@
     showGoogle = gToggle.checked;
     try { localStorage.setItem("pm-cal-show-google", showGoogle ? "1" : "0"); } catch (e) {}
     loadGoogle().then(renderGrid);
+  });
+  document.getElementById("calIcsBtn").addEventListener("click", function () { document.getElementById("calIcsInput").click(); });
+  document.getElementById("calIcsInput").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { PM.showToast(tr("cal.icsError")); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      PM.authFetch(PM.API_BASE + "/settings/ics-file", {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: file.name, text: reader.result }),
+      }).then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+        .then(function (d) {
+          googleConfigured = true; icsName = d.icsName || file.name; applyGoogleUi();
+          PM.showToast(tr("cal.icsImported").replace("{n}", d.count));
+          return loadGoogle();
+        }).then(renderGrid)
+        .catch(function () { PM.showToast(tr("cal.icsError")); });
+    };
+    reader.readAsText(file);
+  });
+  document.getElementById("calIcsRemoveBtn").addEventListener("click", function () {
+    PM.authFetch(PM.API_BASE + "/settings/ics-file", { method: "DELETE" })
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (d) { googleConfigured = !!d.configured; icsName = ""; applyGoogleUi(); return loadGoogle(); })
+      .then(renderGrid)
+      .catch(function () { PM.showToast(tr("cal.icsError")); });
   });
   document.getElementById("calGcalSaveBtn").addEventListener("click", function () {
     var url = document.getElementById("calGcalInput").value.trim();
