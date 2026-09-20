@@ -8,6 +8,7 @@ const fs = require("fs");
 const os = require("os");
 const { execFile } = require("child_process");
 const multer = require("multer");
+const { parseIcs, expandEvents } = require("./gcal");
 const pool = require("./db");
 const { sendProjectInviteEmail } = require("./mailer");
 const { runReminderCheck, getSettings: getReminderSettings, updateSettings: updateReminderSettings } = require("./reminders");
@@ -547,6 +548,77 @@ app.get("/api/calendar-updates", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load updates" });
+  }
+});
+
+// ---- Google Calendar import (iCal feed) ----
+// An admin pastes Google Calendar's "Secret address in iCal format" once; the
+// server fetches and parses that feed on demand (no OAuth, nothing copied into
+// the database, so it stays live). The URL is itself a credential — anyone
+// holding it can read the calendar — so only admins can read or change it, and
+// only https://calendar.google.com/ URLs are accepted, which also keeps this
+// from being usable to make the server fetch arbitrary internal addresses.
+const GOOGLE_ICAL_KEY = "google_ical_url";
+function isGoogleIcalUrl(u) {
+  try {
+    const x = new URL(u);
+    return x.protocol === "https:" && x.hostname === "calendar.google.com";
+  } catch (e) { return false; }
+}
+let icalCache = { url: "", at: 0, events: [] };
+async function loadGoogleEvents(url) {
+  if (icalCache.url === url && Date.now() - icalCache.at < 5 * 60 * 1000) return icalCache.events;
+  const r = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error("Google returned " + r.status);
+  const text = await r.text();
+  if (text.length > 15 * 1024 * 1024) throw new Error("Calendar feed too large");
+  const events = parseIcs(text);
+  icalCache = { url, at: Date.now(), events };
+  return events;
+}
+
+app.get("/api/settings/google-calendar", requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query("SELECT value FROM app_settings WHERE key = $1", [GOOGLE_ICAL_KEY]);
+    const url = r.rows.length ? r.rows[0].value : "";
+    res.json({ configured: !!url, url: req.user.role === "admin" ? url : undefined });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load Google Calendar setting" });
+  }
+});
+app.put("/api/settings/google-calendar", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  const url = String((req.body && req.body.url) || "").trim().slice(0, 2000);
+  if (url && !isGoogleIcalUrl(url)) return res.status(400).json({ error: "Must be a https://calendar.google.com/ iCal address" });
+  try {
+    if (url) await loadGoogleEvents(url); // fail now, not later, if the address doesn't actually work
+    await pool.query(
+      `INSERT INTO app_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [GOOGLE_ICAL_KEY, url]
+    );
+    icalCache = { url: "", at: 0, events: [] };
+    res.json({ configured: !!url, url });
+  } catch (err) {
+    console.error("[gcal] save failed:", err.message);
+    res.status(400).json({ error: "Could not read that calendar feed" });
+  }
+});
+
+app.get("/api/calendar-google", requireAuth, async (req, res) => {
+  const from = String(req.query.from || ""), to = String(req.query.to || "");
+  const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if (!isDate(from) || !isDate(to) || (new Date(to) - new Date(from)) / 86400000 > 62) {
+    return res.status(400).json({ error: "from and to (YYYY-MM-DD, max 62 days) are required" });
+  }
+  try {
+    const r = await pool.query("SELECT value FROM app_settings WHERE key = $1", [GOOGLE_ICAL_KEY]);
+    const url = r.rows.length ? r.rows[0].value : "";
+    if (!url) return res.json([]);
+    res.json(expandEvents(await loadGoogleEvents(url), from, to));
+  } catch (err) {
+    console.error("[gcal] load failed:", err.message);
+    res.status(502).json({ error: "Could not load Google Calendar" });
   }
 });
 

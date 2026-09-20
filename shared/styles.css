@@ -1683,6 +1683,10 @@
   .cal-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
   .cal-chip.cal-update { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-strong); font-weight: 500; }
   .cal-chip.cal-update .cal-chip-who { background: var(--accent); color: #fff; }
+  .cal-chip.cal-google { background: color-mix(in srgb, var(--line-blue) 18%, var(--surface)); color: var(--text); border: 1px solid color-mix(in srgb, var(--line-blue) 45%, transparent); font-weight: 500; }
+  .cal-gcal-admin { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .cal-gcal-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .cal-gcal-help { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; }
   .cal-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; color: var(--text-muted); }
   .cal-legend-item { display: inline-flex; align-items: center; gap: 6px; }
   .cal-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }

@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=112" />
+<link rel="stylesheet" href="shared/styles.css?v=113" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -120,6 +120,7 @@
             <select class="pf-input cal-select" id="calPersonSel" aria-label="Person"></select>
           </div>
           <label class="cal-toggle"><input type="checkbox" id="calUpdatesToggle" /> <span data-i18n="cal.showUpdates">Show updates & comments</span></label>
+          <label class="cal-toggle" id="calGoogleToggleWrap" hidden><input type="checkbox" id="calGoogleToggle" /> <span data-i18n="cal.showGoogle">Show Google Calendar</span></label>
           <div class="cal-filter">
             <button type="button" class="cal-filter-btn" data-filter="mine" data-i18n="cal.mine">My tasks</button>
             <button type="button" class="cal-filter-btn active" data-filter="team" data-i18n="cal.team">Whole team</button>
@@ -133,6 +134,14 @@
       </div>
 
       <div id="calExternalPane" hidden>
+        <div class="cal-gcal-admin" id="calGcalAdmin" hidden>
+          <div class="cal-gcal-title" data-i18n="cal.gcalTitle">Import from Google Calendar</div>
+          <div class="cal-gcal-help" data-i18n="cal.gcalHelp">In Google Calendar: Settings → your calendar → Integrate calendar → copy "Secret address in iCal format", then paste it here. Keep it private — anyone with this address can read the calendar.</div>
+          <div class="cal-embed-admin">
+            <input type="text" class="pf-input" id="calGcalInput" data-i18n-placeholder="cal.gcalPlaceholder" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" />
+            <button type="button" class="pf-btn pf-btn-primary" id="calGcalSaveBtn" data-i18n="cal.embedSave">Save link</button>
+          </div>
+        </div>
         <div class="cal-embed-admin" id="calEmbedAdmin" hidden>
           <input type="text" class="pf-input" id="calEmbedInput" data-i18n-placeholder="cal.embedPlaceholder" placeholder="https://…" />
           <button type="button" class="pf-btn pf-btn-primary" id="calEmbedSaveBtn" data-i18n="cal.embedSave">Save link</button>
@@ -146,7 +155,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=98"></script>
+<script src="shared/shared.js?v=99"></script>
 <script>
 (function () {
   "use strict";
@@ -165,6 +174,10 @@
 
   var personFilter = "", projectFilter = "";
   var updates = [];
+  var googleEvents = [];
+  var googleConfigured = false;
+  var showGoogle = true;
+  try { showGoogle = localStorage.getItem("pm-cal-show-google") !== "0"; } catch (e) {}
   var showUpdates = false;
   try { showUpdates = localStorage.getItem("pm-cal-show-updates") === "1"; } catch (e) {}
   function initials(name) {
@@ -193,6 +206,23 @@
       return true;
     });
   }
+
+  function gridWindow() {
+    var start = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+    start.setDate(1 - start.getDay());
+    return { from: iso(start), to: iso(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 41)) };
+  }
+
+  function loadGoogle() {
+    if (!googleConfigured || !showGoogle) { googleEvents = []; return Promise.resolve(); }
+    var w = gridWindow();
+    return PM.authFetch(PM.API_BASE + "/calendar-google?from=" + w.from + "&to=" + w.to)
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (list) { googleEvents = list; })
+      .catch(function () { googleEvents = []; PM.showToast(tr("cal.gcalError")); });
+  }
+
+  function loadLayers() { return Promise.all([loadUpdates(), loadGoogle()]); }
 
   // Fetches the comment layer for exactly the 6-week window the grid shows.
   function loadUpdates() {
@@ -255,6 +285,8 @@
       });
       var inMonth = d.getMonth() === month;
       if (inMonth) monthCount += dayEvs.length;
+      var dayG = (googleConfigured && showGoogle) ? googleEvents.filter(function (g) { return g.startDate <= key && key <= g.endDate; }) : [];
+      if (inMonth) monthCount += dayG.length;
       var dayUps = ups.filter(function (u) { return u.date === key; });
       if (inMonth) monthCount += dayUps.length;
       var shown = dayEvs.slice(0, 3);
@@ -263,6 +295,10 @@
         shown.map(function (e) {
           return '<a class="cal-chip cal-status-' + esc(e.status) + '" href="board.html?id=' + encodeURIComponent(e.projectId) + '&task=' + encodeURIComponent(e.id) + '" title="' + esc(e.name + (e.owner ? " — " + e.owner : "") + " (" + e.projectTitle + ")") + '">' + (e.owner ? '<span class="cal-chip-who">' + esc(initials(e.owner)) + '</span>' : '') + esc(e.name) + '</a>';
         }).join("") +
+        dayG.slice(0, 2).map(function (g) {
+          return '<div class="cal-chip cal-google" title="' + esc(g.title) + '">&#128197; ' + esc(g.title) + '</div>';
+        }).join("") +
+        (dayG.length > 2 ? '<div class="cal-more" title="' + esc(dayG.slice(2).map(function (g) { return g.title; }).join("\n")) + '">' + esc(tr("cal.more").replace("{n}", dayG.length - 2)) + '</div>' : '') +
         dayUps.slice(0, 2).map(function (u) {
           return '<a class="cal-chip cal-update" href="board.html?id=' + encodeURIComponent(u.projectId) + '&task=' + encodeURIComponent(u.taskId) + '" title="' + esc(u.author + ": " + u.text + " — " + u.taskName + " (" + u.projectTitle + ")") + '">' +
             '<span class="cal-chip-who">' + esc(initials(u.author)) + '</span>&#128172; ' + esc(u.text || u.taskName) + '</a>';
@@ -301,6 +337,18 @@
     note.innerHTML = esc(tr("cal.embedHint")) + ' <a href="' + esc(embedUrl) + '" target="_blank" rel="noopener">' + esc(tr("cal.embedOpen")) + '</a>';
   }
 
+  function applyGoogleUi() {
+    document.getElementById("calGoogleToggleWrap").hidden = !googleConfigured;
+    document.getElementById("calGcalAdmin").hidden = !(PM.currentUser && PM.currentUser.role === "admin");
+  }
+
+  function loadGoogleSetting() {
+    return PM.authFetch(PM.API_BASE + "/settings/google-calendar")
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (d) { googleConfigured = !!d.configured; document.getElementById("calGcalInput").value = d.url || ""; applyGoogleUi(); })
+      .catch(function () {});
+  }
+
   function loadEmbed() {
     return PM.authFetch(PM.API_BASE + "/settings/calendar-embed")
       .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
@@ -318,15 +366,31 @@
   });
 
   // ---------------- events ----------------
-  document.getElementById("calPrevBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() - 1); loadUpdates().then(renderGrid); });
-  document.getElementById("calNextBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() + 1); loadUpdates().then(renderGrid); });
-  document.getElementById("calTodayBtn").addEventListener("click", function () { viewMonth = new Date(); viewMonth.setDate(1); loadUpdates().then(renderGrid); });
+  document.getElementById("calPrevBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() - 1); loadLayers().then(renderGrid); });
+  document.getElementById("calNextBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() + 1); loadLayers().then(renderGrid); });
+  document.getElementById("calTodayBtn").addEventListener("click", function () { viewMonth = new Date(); viewMonth.setDate(1); loadLayers().then(renderGrid); });
   var upToggle = document.getElementById("calUpdatesToggle");
   upToggle.checked = showUpdates;
   upToggle.addEventListener("change", function () {
     showUpdates = upToggle.checked;
     try { localStorage.setItem("pm-cal-show-updates", showUpdates ? "1" : "0"); } catch (e) {}
     loadUpdates().then(function () { renderSelects(); renderGrid(); });
+  });
+  var gToggle = document.getElementById("calGoogleToggle");
+  gToggle.checked = showGoogle;
+  gToggle.addEventListener("change", function () {
+    showGoogle = gToggle.checked;
+    try { localStorage.setItem("pm-cal-show-google", showGoogle ? "1" : "0"); } catch (e) {}
+    loadGoogle().then(renderGrid);
+  });
+  document.getElementById("calGcalSaveBtn").addEventListener("click", function () {
+    var url = document.getElementById("calGcalInput").value.trim();
+    PM.authFetch(PM.API_BASE + "/settings/google-calendar", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url }),
+    }).then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (d) { googleConfigured = !!d.configured; applyGoogleUi(); PM.showToast(tr("cal.gcalSaved")); return loadGoogle(); })
+      .then(renderGrid)
+      .catch(function () { PM.showToast(tr("cal.gcalSaveError")); });
   });
   document.getElementById("calPersonSel").addEventListener("change", function (e) { personFilter = e.target.value; renderGrid(); });
   document.getElementById("calProjectSel").addEventListener("change", function (e) { projectFilter = e.target.value; renderGrid(); });
@@ -357,7 +421,8 @@
       .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
       .then(function (list) { events = list; loaded = true; })
       .catch(function () { loaded = false; })
-      .then(loadUpdates)
+      .then(loadGoogleSetting)
+      .then(loadLayers)
       .then(function () { renderSelects(); renderGrid(); });
     loadEmbed().then(renderEmbed);
   }).catch(function () {}); // requireAuth already redirected to login.html
