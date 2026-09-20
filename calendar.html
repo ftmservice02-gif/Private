@@ -166,7 +166,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=101"></script>
+<script src="shared/shared.js?v=102"></script>
 <script>
 (function () {
   "use strict";
@@ -187,6 +187,7 @@
   var updates = [];
   var googleEvents = [];
   var googleConfigured = false;
+  var jumpedToGoogle = false;
   var icsName = "";
   var showGoogle = true;
   try { showGoogle = localStorage.getItem("pm-cal-show-google") !== "0"; } catch (e) {}
@@ -232,6 +233,22 @@
       .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
       .then(function (list) { googleEvents = list; })
       .catch(function () { googleEvents = []; PM.showToast(tr("cal.gcalError")); });
+  }
+
+  // If the imported calendar has nothing around today (e.g. every event is
+  // years old), open once on the month that does have its events rather than
+  // an empty grid; the Today button still goes back.
+  function jumpToImportedIfEmpty() {
+    if (jumpedToGoogle || !googleConfigured || !showGoogle || googleEvents.length) return Promise.resolve();
+    jumpedToGoogle = true;
+    return PM.authFetch(PM.API_BASE + "/calendar-google/nearest?date=" + iso(new Date()))
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (d) {
+        if (!d.date) return;
+        var t = d.date.split("-");
+        viewMonth = new Date(+t[0], +t[1] - 1, 1);
+        return loadLayers();
+      }).catch(function () {});
   }
 
   function loadLayers() { return Promise.all([loadUpdates(), loadGoogle()]); }
@@ -469,6 +486,7 @@
       .catch(function () { loaded = false; })
       .then(loadGoogleSetting)
       .then(loadLayers)
+      .then(jumpToImportedIfEmpty)
       .then(function () { renderSelects(); renderGrid(); });
     loadEmbed().then(renderEmbed);
   }).catch(function () {}); // requireAuth already redirected to login.html

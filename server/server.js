@@ -651,6 +651,38 @@ app.delete("/api/settings/ics-file", requireAuth, async (req, res) => {
   }
 });
 
+// All imported events (live feed + uploaded file) as raw parsed events; a
+// failing feed only counts as a failure when there's nothing else to show.
+async function loadAllImportedEvents() {
+  const r = await pool.query("SELECT value FROM app_settings WHERE key = $1", [GOOGLE_ICAL_KEY]);
+  const url = r.rows.length ? r.rows[0].value : "";
+  const file = await loadIcsFileEvents();
+  let feed = [], feedFailed = false;
+  if (url) { try { feed = await loadGoogleEvents(url); } catch (e) { feedFailed = true; console.error("[gcal] feed failed:", e.message); } }
+  if (feedFailed && !file.length) throw new Error("feed failed");
+  return feed.concat(file);
+}
+
+// The imported event date closest to `date` (latest one on/before it, else the
+// first one after) — lets the calendar jump to where the imported events
+// actually are when the current month is empty (a calendar whose events are all
+// years old otherwise just looks broken).
+app.get("/api/calendar-google/nearest", requireAuth, async (req, res) => {
+  const date = String(req.query.date || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: "date (YYYY-MM-DD) is required" });
+  try {
+    const all = expandEvents(await loadAllImportedEvents(), "1990-01-01", "2100-12-31");
+    let before = "", after = "";
+    for (const e of all) {
+      if (e.startDate <= date) { if (e.startDate > before) before = e.startDate; }
+      else if (!after || e.startDate < after) after = e.startDate;
+    }
+    res.json({ date: before || after || null });
+  } catch (err) {
+    res.status(502).json({ error: "Could not load Google Calendar" });
+  }
+});
+
 app.get("/api/calendar-google", requireAuth, async (req, res) => {
   const from = String(req.query.from || ""), to = String(req.query.to || "");
   const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v);
