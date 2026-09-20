@@ -481,6 +481,64 @@ app.get("/api/all-projects-progress", requireAuth, async (req, res) => {
   }
 });
 
+// Every dated task across the projects this user can see, for calendar.html —
+// same visibility rule as /api/all-projects-progress above (admins see all,
+// everyone else only projects they're a member of). Tasks with neither a
+// start nor a due date have nothing to place on a calendar, so they're left out.
+app.get("/api/calendar-events", requireAuth, async (req, res) => {
+  try {
+    const isAdmin = req.user.role === "admin";
+    const result = await pool.query(
+      `SELECT t.id, t.name, t.owner, t.status, t.start_date, t.due_date,
+              p.id AS project_id, p.title AS project_title
+       FROM projects p
+       JOIN groups g ON g.project_id = p.id
+       JOIN tasks t ON t.group_id = g.id
+       WHERE (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
+         AND ($1 OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = $2))
+       ORDER BY COALESCE(t.start_date, t.due_date), t.name`,
+      [isAdmin, req.user.id]
+    );
+    res.json(result.rows.map((r) => ({
+      id: r.id, name: r.name, owner: r.owner || "", status: r.status || "not_started",
+      startDate: r.start_date, dueDate: r.due_date, projectId: r.project_id, projectTitle: r.project_title,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load calendar events" });
+  }
+});
+
+// The external calendar (Google Calendar / Outlook / etc.) URL calendar.html
+// embeds in its second tab — one workspace-wide value in app_settings, set by
+// an admin, readable by everyone signed in. Only http(s) URLs are accepted
+// since it ends up as an <iframe src>.
+app.get("/api/settings/calendar-embed", requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query("SELECT value FROM app_settings WHERE key = 'calendar_embed_url'");
+    res.json({ url: r.rows.length ? r.rows[0].value : "" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load calendar setting" });
+  }
+});
+app.put("/api/settings/calendar-embed", requireAuth, async (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  const url = String((req.body && req.body.url) || "").trim().slice(0, 2000);
+  if (url && !/^https?:\/\//i.test(url)) return res.status(400).json({ error: "URL must start with http:// or https://" });
+  try {
+    await pool.query(
+      `INSERT INTO app_settings (key, value) VALUES ('calendar_embed_url', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [url]
+    );
+    res.json({ url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save calendar setting" });
+  }
+});
+
 // Optionally accepts { groups, tasks } (the same shape as a saved board
 // state) to seed the project atomically from an imported Excel/MSP-XML file
 // — everything happens in one transaction, so a failure partway through

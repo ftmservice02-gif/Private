@@ -1,0 +1,287 @@
+<meta charset="utf-8" />
+<title>Project Management Plan : PMP — My Teams Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared/styles.css?v=110" />
+
+<button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
+</button>
+
+<div class="shell">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-top">
+        <span class="sb-top-label" data-i18n="sb.workspace">Workspace</span>
+        <div class="sb-top-icons">
+          <button class="sb-icon-btn" data-toast="เมนูเพิ่มเติมยังไม่เปิดใช้งานในตัวอย่างนี้" aria-label="เมนู">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+          </button>
+          <button class="sb-icon-btn" id="sidebarCollapseBtn" aria-label="ย่อแถบด้านข้าง">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 6l-6 6 6 6M18 6l-6 6 6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sb-logo-row">
+        <div class="sb-logo-badge">
+          <img src="fatima-logo.svg?v=3" alt="Fatima" />
+        </div>
+      </div>
+      <div class="sb-workspace-row sb-workspace-row--static">
+        <div class="sb-workspace-text">
+          <div class="sb-workspace-name" id="sbWorkspaceName" data-i18n="sb.mainWorkspace">Fatima workspace</div>
+          <div class="sb-workspace-caption" data-i18n="sb.caption">Project management</div>
+        </div>
+      </div>
+      <div class="sb-divider"></div>
+
+      <div class="sb-section-label" id="sbContentLabel">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
+        <span data-i18n="sb.content">Content</span>
+      </div>
+      <div class="sb-nav-list" id="sbNavList">
+        <a class="sb-nav-item" data-view="workspace" href="workspace.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span data-i18n="sb.manageWorkspace">Manage workspace</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="board" id="sbBoardLink" href="board.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>
+          <span id="sbBoardLabel">Test Project</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="dashboard" id="sbDashboardLink" href="dashboard.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-7"/></svg>
+          <span data-i18n="sb.dashboard">Dashboard and reporting</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="documents" id="sbDocumentsLink" href="documents.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+          <span data-i18n="sb.documentData">Document DATA</span>
+        </a>
+        <a class="sb-nav-item sb-nav-sub" data-view="delivery" id="sbDeliveryLink" href="delivery.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="7" width="15" height="11" rx="1.5"/><path d="M16 10h3.5a1.5 1.5 0 011.3.75L23 15v3h-2"/><circle cx="6" cy="18.5" r="1.6"/><circle cx="18" cy="18.5" r="1.6"/></svg>
+          <span data-i18n="sb.deliveryOrders">Delivery orders</span>
+        </a>
+        <a class="sb-nav-item" data-view="calendar" href="calendar.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          <span data-i18n="sb.calendar">My Teams Calendar</span>
+        </a>
+        <a class="sb-nav-item" data-view="users" href="users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 005 18.5V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M19 20v-1.5a3.5 3.5 0 00-2.5-3.36M14.5 4.1a3.5 3.5 0 010 6.8"/></svg>
+          <span data-i18n="sb.manageUsers">Manage users</span>
+        </a>
+      </div>
+
+      <div class="sb-spacer"></div>
+
+      <div class="sb-auth-row">
+        <span class="sb-auth-name" id="sbAuthName"></span>
+        <button class="sb-logout-btn" id="sbLogoutBtn" data-i18n="auth.logout" type="button">Log out</button>
+      </div>
+
+      <button class="lang-toggle-btn" id="langToggleBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 4 6 4 9s-1.5 6.3-4 9c-2.5-2.7-4-6-4-9s1.5-6.3 4-9z"/></svg>
+        <span id="langToggleLabel">ไทย</span>
+      </button>
+
+      <div class="sb-progress-card">
+        <div class="sb-progress-label" id="sbProgressLabel" data-i18n="sb.progressLabel">Project progress</div>
+        <div class="sb-progress-pct" id="sbProgressPct">0%</div>
+        <div class="sb-progress-sub" id="sbProgressSub"></div>
+        <a class="sb-progress-btn" id="sbProgressBtn" href="dashboard.html" data-i18n="sb.progressBtn">View details</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Main area ============ -->
+  <div class="main-area" id="mainArea">
+    <div class="view-panel active" id="calendarView">
+      <div class="db-breadcrumb">
+        <a href="workspace.html" data-i18n="ws.content">Content</a> / <span data-i18n="sb.calendar">My Teams Calendar</span>
+      </div>
+      <h1 class="db-title" data-i18n="cal.title">My Teams Calendar</h1>
+
+      <div class="cal-tabs">
+        <button type="button" class="cal-tab active" data-tab="tasks" data-i18n="cal.tabTasks">Team tasks</button>
+        <button type="button" class="cal-tab" data-tab="external" data-i18n="cal.tabExternal">External calendar</button>
+      </div>
+
+      <div id="calTasksPane">
+        <div class="cal-toolbar">
+          <div class="cal-nav">
+            <button type="button" class="pf-btn pf-btn-outline" id="calPrevBtn" aria-label="Previous month">&lsaquo;</button>
+            <button type="button" class="pf-btn pf-btn-outline" id="calTodayBtn" data-i18n="cal.today">Today</button>
+            <button type="button" class="pf-btn pf-btn-outline" id="calNextBtn" aria-label="Next month">&rsaquo;</button>
+            <span class="cal-month-label" id="calMonthLabel"></span>
+          </div>
+          <div class="cal-filter">
+            <button type="button" class="cal-filter-btn" data-filter="mine" data-i18n="cal.mine">My tasks</button>
+            <button type="button" class="cal-filter-btn active" data-filter="team" data-i18n="cal.team">Whole team</button>
+          </div>
+        </div>
+        <div class="cal-legend" id="calLegend"></div>
+        <div class="cal-grid-wrap">
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="no-updates" id="calEmpty" hidden></div>
+      </div>
+
+      <div id="calExternalPane" hidden>
+        <div class="cal-embed-admin" id="calEmbedAdmin" hidden>
+          <input type="text" class="pf-input" id="calEmbedInput" data-i18n-placeholder="cal.embedPlaceholder" placeholder="https://…" />
+          <button type="button" class="pf-btn pf-btn-primary" id="calEmbedSaveBtn" data-i18n="cal.embedSave">Save link</button>
+        </div>
+        <div class="cal-embed-note" id="calEmbedNote"></div>
+        <iframe class="cal-embed-frame" id="calEmbedFrame" title="External calendar" hidden></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="shared/shared.js?v=96"></script>
+<script>
+(function () {
+  "use strict";
+  var PM = window.PM;
+  function esc(s) { return PM.esc(s); }
+  function tr(key) { return PM.tr(key); }
+
+  var events = [];
+  var loaded = false;
+  var viewMonth = new Date(); viewMonth.setDate(1);
+  var filter = "team";
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function locale() { return PM.lang === "th" ? "th-TH" : "en-US"; }
+
+  function visibleEvents() {
+    if (filter !== "mine") return events;
+    var me = ((PM.currentUser && PM.currentUser.name) || "").trim().toLowerCase();
+    return events.filter(function (e) { return me && (e.owner || "").trim().toLowerCase() === me; });
+  }
+
+  function renderLegend() {
+    document.getElementById("calLegend").innerHTML = PM.STATUS_ORDER.map(function (s) {
+      return '<span class="cal-legend-item"><span class="cal-dot cal-status-' + s + '"></span>' + esc(PM.statusLabel(s)) + '</span>';
+    }).join("");
+  }
+
+  function renderGrid() {
+    var year = viewMonth.getFullYear(), month = viewMonth.getMonth();
+    document.getElementById("calMonthLabel").textContent = viewMonth.toLocaleDateString(locale(), { month: "long", year: "numeric" });
+
+    var start = new Date(year, month, 1);
+    start.setDate(1 - start.getDay());
+    var evs = visibleEvents();
+    var todayIso = iso(new Date());
+    var html = "";
+    var i;
+    for (i = 0; i < 7; i++) {
+      var wd = new Date(2024, 0, 7 + i); // a known Sunday, walked forward
+      html += '<div class="cal-weekday">' + esc(wd.toLocaleDateString(locale(), { weekday: "short" })) + '</div>';
+    }
+    var monthCount = 0;
+    for (i = 0; i < 42; i++) {
+      var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      var key = iso(d);
+      var dayEvs = evs.filter(function (e) {
+        var s = e.startDate || e.dueDate, en = e.dueDate || e.startDate;
+        return s <= key && key <= en;
+      });
+      var inMonth = d.getMonth() === month;
+      if (inMonth) monthCount += dayEvs.length;
+      var shown = dayEvs.slice(0, 3);
+      html += '<div class="cal-day' + (inMonth ? '' : ' other') + (key === todayIso ? ' today' : '') + '">' +
+        '<div class="cal-day-num">' + d.getDate() + '</div>' +
+        shown.map(function (e) {
+          return '<a class="cal-chip cal-status-' + esc(e.status) + '" href="board.html?id=' + encodeURIComponent(e.projectId) + '&task=' + encodeURIComponent(e.id) + '" title="' + esc(e.name + (e.owner ? " — " + e.owner : "") + " (" + e.projectTitle + ")") + '">' + esc(e.name) + '</a>';
+        }).join("") +
+        (dayEvs.length > 3 ? '<div class="cal-more" title="' + esc(dayEvs.slice(3).map(function (e) { return e.name; }).join(", ")) + '">' + esc(tr("cal.more").replace("{n}", dayEvs.length - 3)) + '</div>' : '') +
+      '</div>';
+    }
+    document.getElementById("calGrid").innerHTML = html;
+    var empty = document.getElementById("calEmpty");
+    empty.hidden = !(loaded ? monthCount === 0 : true);
+    empty.textContent = loaded ? tr("cal.noDate") : tr("cal.loadError");
+  }
+
+  function renderAll() {
+    renderLegend();
+    renderGrid();
+    PM.syncSidebarLinks();
+    PM.renderSidebarProgress();
+    renderEmbed();
+  }
+
+  // ---------------- external calendar tab ----------------
+  var embedUrl = "";
+  function renderEmbed() {
+    var frame = document.getElementById("calEmbedFrame");
+    var note = document.getElementById("calEmbedNote");
+    document.getElementById("calEmbedAdmin").hidden = !(PM.currentUser && PM.currentUser.role === "admin");
+    if (!embedUrl) {
+      frame.hidden = true; frame.removeAttribute("src");
+      note.innerHTML = esc(tr("cal.embedEmpty"));
+      return;
+    }
+    if (frame.getAttribute("src") !== embedUrl) frame.setAttribute("src", embedUrl);
+    frame.hidden = false;
+    note.innerHTML = esc(tr("cal.embedHint")) + ' <a href="' + esc(embedUrl) + '" target="_blank" rel="noopener">' + esc(tr("cal.embedOpen")) + '</a>';
+  }
+
+  function loadEmbed() {
+    return PM.authFetch(PM.API_BASE + "/settings/calendar-embed")
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (d) { embedUrl = d.url || ""; document.getElementById("calEmbedInput").value = embedUrl; })
+      .catch(function () {});
+  }
+
+  document.getElementById("calEmbedSaveBtn").addEventListener("click", function () {
+    var url = document.getElementById("calEmbedInput").value.trim();
+    PM.authFetch(PM.API_BASE + "/settings/calendar-embed", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url }),
+    }).then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (d) { embedUrl = d.url || ""; renderEmbed(); PM.showToast(tr("cal.embedSaved")); })
+      .catch(function () { PM.showToast(tr("cal.embedError")); });
+  });
+
+  // ---------------- events ----------------
+  document.getElementById("calPrevBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() - 1); renderGrid(); });
+  document.getElementById("calNextBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() + 1); renderGrid(); });
+  document.getElementById("calTodayBtn").addEventListener("click", function () { viewMonth = new Date(); viewMonth.setDate(1); renderGrid(); });
+  document.querySelector(".cal-filter").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-filter]");
+    if (!btn) return;
+    filter = btn.dataset.filter;
+    document.querySelectorAll(".cal-filter-btn").forEach(function (b) { b.classList.toggle("active", b === btn); });
+    renderGrid();
+  });
+  document.querySelector(".cal-tabs").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    document.querySelectorAll(".cal-tab").forEach(function (b) { b.classList.toggle("active", b === btn); });
+    document.getElementById("calTasksPane").hidden = btn.dataset.tab !== "tasks";
+    document.getElementById("calExternalPane").hidden = btn.dataset.tab !== "external";
+  });
+
+  // ---------------- init ----------------
+  PM.requireAuth().then(function () {
+    PM.resolveProjectId();
+    PM.state = PM.loadCachedState() || PM.seedState();
+    PM.applyViewerMode();
+    PM.initSidebar("calendar", renderAll);
+    renderAll();
+
+    PM.authFetch(PM.API_BASE + "/calendar-events")
+      .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+      .then(function (list) { events = list; loaded = true; })
+      .catch(function () { loaded = false; })
+      .then(function () { renderGrid(); });
+    loadEmbed().then(renderEmbed);
+  }).catch(function () {}); // requireAuth already redirected to login.html
+})();
+</script>
