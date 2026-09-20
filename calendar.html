@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=116" />
+<link rel="stylesheet" href="shared/styles.css?v=117" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -121,7 +121,11 @@
           </div>
           <label class="cal-toggle"><input type="checkbox" id="calUpdatesToggle" /> <span data-i18n="cal.showUpdates">Show updates & comments</span></label>
           <label class="cal-toggle" id="calGoogleToggleWrap" hidden><input type="checkbox" id="calGoogleToggle" /> <span data-i18n="cal.showGoogle">Show Google Calendar</span></label>
-          <div class="cal-filter">
+          <div class="cal-filter" id="calModeToggle">
+            <button type="button" class="cal-filter-btn active" data-mode="due" data-i18n="cal.modeDue">Deadlines</button>
+            <button type="button" class="cal-filter-btn" data-mode="timeline" data-i18n="cal.modeTimeline">Timeline</button>
+          </div>
+          <div class="cal-filter" id="calWhoToggle">
             <button type="button" class="cal-filter-btn" data-filter="mine" data-i18n="cal.mine">My tasks</button>
             <button type="button" class="cal-filter-btn active" data-filter="team" data-i18n="cal.team">Whole team</button>
           </div>
@@ -164,9 +168,20 @@
   </div>
 </div>
 
+<div class="panel-backdrop" id="calDayBackdrop"></div>
+<div class="pf-modal cal-day-pop" id="calDayPop" role="dialog" aria-label="Day">
+  <div class="pf-header">
+    <div class="pf-title" id="calDayTitle"></div>
+    <div class="pf-header-actions">
+      <button class="panel-close" id="calDayClose" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </div>
+  <div class="pf-body" id="calDayBody"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=103"></script>
+<script src="shared/shared.js?v=105"></script>
 <script>
 (function () {
   "use strict";
@@ -188,6 +203,8 @@
   var googleEvents = [];
   var googleConfigured = false;
   var jumpedToGoogle = false;
+  var mode = "due";
+  try { mode = localStorage.getItem("pm-cal-mode") === "timeline" ? "timeline" : "due"; } catch (e) {}
   var icsName = "";
   var showGoogle = true;
   try { showGoogle = localStorage.getItem("pm-cal-show-google") !== "0"; } catch (e) {}
@@ -322,6 +339,83 @@
       '<span class="cal-chip-who">' + esc(initials(u.author)) + '</span><span class="cal-bar-text">&#128172; ' + esc(u.text || u.taskName) + '</span></a>';
   }
 
+  // Everything that touches one day, for both the compact deadline cells and
+  // the day popup: tasks (tagged due / starts / ongoing), updates, imported events.
+  function dayItems(key) {
+    var tasks = visibleEvents().map(function (e) {
+      var s0 = e.startDate || e.dueDate, e0 = e.dueDate || e.startDate;
+      if (s0 > key || e0 < key) return null;
+      return { e: e, rel: e0 === key ? "due" : (s0 === key ? "start" : "ongoing") };
+    }).filter(Boolean);
+    return {
+      tasks: tasks,
+      updates: visibleUpdates().filter(function (u) { return u.date === key; }),
+      events: (googleConfigured && showGoogle) ? googleEvents.filter(function (g) { return g.startDate <= key && key <= g.endDate; }) : [],
+    };
+  }
+
+  function pillHtml(cls, href, title, who, text) {
+    var tag = href ? "a" : "div";
+    return '<' + tag + ' class="cal-pill ' + cls + '"' + (href ? ' href="' + href + '"' : '') + ' title="' + esc(title) + '">' +
+      (who ? '<span class="cal-chip-who">' + esc(initials(who)) + '</span>' : '') + '<span class="cal-bar-text">' + text + '</span></' + tag + '>';
+  }
+  function taskHref(e) { return "board.html?id=" + encodeURIComponent(e.projectId) + "&task=" + encodeURIComponent(e.id); }
+
+  // Deadline mode: a task shows once, on its due date (or its start date if it
+  // has no due date) — a month of overlapping long tasks would otherwise be a
+  // wall of bars. Ongoing/starting tasks are one click away in the day popup.
+  function renderDueGrid(start, month, todayIso) {
+    var html = "";
+    var MAX = 3;
+    for (var w = 0; w < 6; w++) {
+      html += '<div class="cal-week cal-week-due">';
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + i);
+        var key = iso(d), inMonth = d.getMonth() === month;
+        var di = dayItems(key);
+        var due = di.tasks.filter(function (t) { return t.rel === "due" || (t.rel === "start" && !t.e.dueDate); });
+        var rows = [];
+        due.forEach(function (t) { rows.push(pillHtml("cal-status-" + esc(t.e.status), taskHref(t.e), t.e.name + (t.e.owner ? " — " + t.e.owner : "") + " (" + t.e.projectTitle + ")", t.e.owner, esc(t.e.name))); });
+        di.events.forEach(function (g) { rows.push(pillHtml("cal-google", "", g.title, "", "&#128197; " + esc(g.title))); });
+        di.updates.forEach(function (u) { rows.push(pillHtml("cal-update", taskHref({ projectId: u.projectId, id: u.taskId }), u.author + ": " + u.text + " — " + u.taskName, u.author, "&#128172; " + esc(u.text || u.taskName))); });
+        html += '<div class="cal-cell' + (inMonth ? '' : ' other') + '" data-day="' + key + '">' +
+          '<div class="cal-day-num' + (key === todayIso ? ' today' : '') + '" data-day="' + key + '" title="' + esc(tr("cal.openDay")) + '"><span>' + d.getDate() + '</span></div>' +
+          rows.slice(0, MAX).join("") +
+          (rows.length > MAX ? '<button type="button" class="cal-more-btn" data-day="' + key + '">' + esc(tr("cal.more").replace("{n}", rows.length - MAX)) + '</button>' : '') +
+        '</div>';
+      }
+      html += '</div>';
+    }
+    return html;
+  }
+
+  function openDayPop(key) {
+    var di = dayItems(key);
+    var d = new Date(key + "T00:00:00");
+    document.getElementById("calDayTitle").textContent = d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    function sec(titleKey, list) {
+      return list.length ? '<div class="cal-pop-sec"><div class="cal-pop-h">' + esc(tr(titleKey)) + ' (' + list.length + ')</div>' + list.join("") + '</div>' : "";
+    }
+    function row(e) {
+      return '<a class="cal-pop-row" href="' + taskHref(e) + '"><span class="cal-dot cal-status-' + esc(e.status) + '"></span>' +
+        '<span class="cal-pop-main"><span class="cal-pop-name">' + esc(e.name) + '</span><span class="cal-pop-sub">' + esc((e.owner ? e.owner + " · " : "") + e.projectTitle) + '</span></span></a>';
+    }
+    var by = function (rel) { return di.tasks.filter(function (t) { return t.rel === rel; }).map(function (t) { return row(t.e); }); };
+    var html = sec("cal.popDue", by("due")) + sec("cal.popStart", by("start")) + sec("cal.popOngoing", by("ongoing")) +
+      sec("cal.popEvents", di.events.map(function (g) { return '<div class="cal-pop-row"><span class="cal-dot cal-google"></span><span class="cal-pop-main"><span class="cal-pop-name">' + esc(g.title) + '</span></span></div>'; })) +
+      sec("cal.popUpdates", di.updates.map(function (u) {
+        return '<a class="cal-pop-row" href="' + taskHref({ projectId: u.projectId, id: u.taskId }) + '"><span class="cal-chip-who cal-who-solid">' + esc(initials(u.author)) + '</span>' +
+          '<span class="cal-pop-main"><span class="cal-pop-name">' + esc(u.text || u.taskName) + '</span><span class="cal-pop-sub">' + esc(u.author + " · " + u.taskName) + '</span></span></a>';
+      }));
+    document.getElementById("calDayBody").innerHTML = html || '<div class="no-updates">' + esc(tr("cal.popEmpty")) + '</div>';
+    document.getElementById("calDayBackdrop").classList.add("open");
+    document.getElementById("calDayPop").classList.add("open");
+  }
+  function closeDayPop() {
+    document.getElementById("calDayBackdrop").classList.remove("open");
+    document.getElementById("calDayPop").classList.remove("open");
+  }
+
   function renderGrid() {
     var year = viewMonth.getFullYear(), month = viewMonth.getMonth();
     document.getElementById("calMonthLabel").textContent = viewMonth.toLocaleDateString(locale(), { month: "long", year: "numeric" });
@@ -331,14 +425,18 @@
     var items = buildItems();
     var todayIso = iso(new Date());
     var html = '<div class="cal-head">';
-    var i, w;
+    var i, w = 0;
     for (i = 0; i < 7; i++) {
       var wd = new Date(2024, 0, 7 + i); // a known Sunday, walked forward
       html += '<div class="cal-weekday">' + esc(wd.toLocaleDateString(locale(), { weekday: "short" })) + '</div>';
     }
     html += '</div>';
 
-    for (w = 0; w < 6; w++) {
+    if (mode === "due") {
+      document.getElementById("calGrid").innerHTML = html + renderDueGrid(start, month, todayIso);
+      w = 6; // skip the timeline loop below
+    }
+    for (; w < 6; w++) {
       var keys = [], days = [];
       for (i = 0; i < 7; i++) {
         var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + i);
@@ -370,7 +468,7 @@
       segs.forEach(function (sg) { html += barHtml(items[sg.idx], sg); });
       html += '</div>';
     }
-    document.getElementById("calGrid").innerHTML = html;
+    if (mode !== "due") document.getElementById("calGrid").innerHTML = html;
 
     var mStart = iso(new Date(year, month, 1)), mEnd = iso(new Date(year, month + 1, 0));
     var monthCount = items.filter(function (it) { return it.s <= mEnd && it.e >= mStart; }).length;
@@ -494,11 +592,11 @@
   });
   document.getElementById("calPersonSel").addEventListener("change", function (e) { personFilter = e.target.value; renderGrid(); });
   document.getElementById("calProjectSel").addEventListener("change", function (e) { projectFilter = e.target.value; renderGrid(); });
-  document.querySelector(".cal-filter").addEventListener("click", function (e) {
+  document.getElementById("calWhoToggle").addEventListener("click", function (e) {
     var btn = e.target.closest("[data-filter]");
     if (!btn) return;
     filter = btn.dataset.filter;
-    document.querySelectorAll(".cal-filter-btn").forEach(function (b) { b.classList.toggle("active", b === btn); });
+    document.querySelectorAll("#calWhoToggle .cal-filter-btn").forEach(function (b) { b.classList.toggle("active", b === btn); });
     renderGrid();
   });
   document.querySelector(".cal-tabs").addEventListener("click", function (e) {
@@ -508,6 +606,26 @@
     document.getElementById("calTasksPane").hidden = btn.dataset.tab !== "tasks";
     document.getElementById("calExternalPane").hidden = btn.dataset.tab !== "external";
   });
+
+  document.getElementById("calGrid").addEventListener("click", function (e) {
+    var more = e.target.closest("[data-day]");
+    if (more) { openDayPop(more.dataset.day); return; }
+  });
+  document.getElementById("calModeToggle").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-mode]");
+    if (!btn) return;
+    mode = btn.dataset.mode;
+    try { localStorage.setItem("pm-cal-mode", mode); } catch (x) {}
+    syncModeButtons();
+    renderGrid();
+  });
+  function syncModeButtons() {
+    document.querySelectorAll("#calModeToggle .cal-filter-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.mode === mode); });
+  }
+  syncModeButtons();
+  document.getElementById("calDayClose").addEventListener("click", closeDayPop);
+  document.getElementById("calDayBackdrop").addEventListener("click", closeDayPop);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDayPop(); });
 
   // ---------------- init ----------------
   PM.requireAuth().then(function () {
