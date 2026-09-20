@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=110" />
+<link rel="stylesheet" href="shared/styles.css?v=111" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -115,6 +115,10 @@
             <button type="button" class="pf-btn pf-btn-outline" id="calNextBtn" aria-label="Next month">&rsaquo;</button>
             <span class="cal-month-label" id="calMonthLabel"></span>
           </div>
+          <div class="cal-selects">
+            <select class="pf-input cal-select" id="calProjectSel" aria-label="Project"></select>
+            <select class="pf-input cal-select" id="calPersonSel" aria-label="Person"></select>
+          </div>
           <div class="cal-filter">
             <button type="button" class="cal-filter-btn" data-filter="mine" data-i18n="cal.mine">My tasks</button>
             <button type="button" class="cal-filter-btn active" data-filter="team" data-i18n="cal.team">Whole team</button>
@@ -141,7 +145,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=96"></script>
+<script src="shared/shared.js?v=97"></script>
 <script>
 (function () {
   "use strict";
@@ -158,10 +162,38 @@
   function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function locale() { return PM.lang === "th" ? "th-TH" : "en-US"; }
 
+  var personFilter = "", projectFilter = "";
+  function initials(name) {
+    var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+  }
+
   function visibleEvents() {
-    if (filter !== "mine") return events;
     var me = ((PM.currentUser && PM.currentUser.name) || "").trim().toLowerCase();
-    return events.filter(function (e) { return me && (e.owner || "").trim().toLowerCase() === me; });
+    return events.filter(function (e) {
+      if (filter === "mine" && !(me && (e.owner || "").trim().toLowerCase() === me)) return false;
+      if (personFilter && (e.owner || "") !== personFilter) return false;
+      if (projectFilter && e.projectId !== projectFilter) return false;
+      return true;
+    });
+  }
+
+  // People/project pickers are built from the events themselves, so they only
+  // ever list people who actually have dated work in a project you can see.
+  function renderSelects() {
+    var people = {}, projects = {};
+    events.forEach(function (e) {
+      if (e.owner) people[e.owner] = (people[e.owner] || 0) + 1;
+      projects[e.projectId] = e.projectTitle;
+    });
+    var pSel = document.getElementById("calPersonSel"), jSel = document.getElementById("calProjectSel");
+    pSel.innerHTML = '<option value="">' + esc(tr("cal.allPeople")) + '</option>' +
+      Object.keys(people).sort().map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + ' (' + people[n] + ')</option>'; }).join("");
+    jSel.innerHTML = '<option value="">' + esc(tr("cal.allProjects")) + '</option>' +
+      Object.keys(projects).sort(function (a, b) { return projects[a].localeCompare(projects[b]); })
+        .map(function (id) { return '<option value="' + esc(id) + '">' + esc(projects[id]) + '</option>'; }).join("");
+    pSel.value = personFilter; jSel.value = projectFilter;
   }
 
   function renderLegend() {
@@ -198,7 +230,7 @@
       html += '<div class="cal-day' + (inMonth ? '' : ' other') + (key === todayIso ? ' today' : '') + '">' +
         '<div class="cal-day-num">' + d.getDate() + '</div>' +
         shown.map(function (e) {
-          return '<a class="cal-chip cal-status-' + esc(e.status) + '" href="board.html?id=' + encodeURIComponent(e.projectId) + '&task=' + encodeURIComponent(e.id) + '" title="' + esc(e.name + (e.owner ? " — " + e.owner : "") + " (" + e.projectTitle + ")") + '">' + esc(e.name) + '</a>';
+          return '<a class="cal-chip cal-status-' + esc(e.status) + '" href="board.html?id=' + encodeURIComponent(e.projectId) + '&task=' + encodeURIComponent(e.id) + '" title="' + esc(e.name + (e.owner ? " — " + e.owner : "") + " (" + e.projectTitle + ")") + '">' + (e.owner ? '<span class="cal-chip-who">' + esc(initials(e.owner)) + '</span>' : '') + esc(e.name) + '</a>';
         }).join("") +
         (dayEvs.length > 3 ? '<div class="cal-more" title="' + esc(dayEvs.slice(3).map(function (e) { return e.name; }).join(", ")) + '">' + esc(tr("cal.more").replace("{n}", dayEvs.length - 3)) + '</div>' : '') +
       '</div>';
@@ -253,6 +285,8 @@
   document.getElementById("calPrevBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() - 1); renderGrid(); });
   document.getElementById("calNextBtn").addEventListener("click", function () { viewMonth.setMonth(viewMonth.getMonth() + 1); renderGrid(); });
   document.getElementById("calTodayBtn").addEventListener("click", function () { viewMonth = new Date(); viewMonth.setDate(1); renderGrid(); });
+  document.getElementById("calPersonSel").addEventListener("change", function (e) { personFilter = e.target.value; renderGrid(); });
+  document.getElementById("calProjectSel").addEventListener("change", function (e) { projectFilter = e.target.value; renderGrid(); });
   document.querySelector(".cal-filter").addEventListener("click", function (e) {
     var btn = e.target.closest("[data-filter]");
     if (!btn) return;
@@ -280,7 +314,7 @@
       .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
       .then(function (list) { events = list; loaded = true; })
       .catch(function () { loaded = false; })
-      .then(function () { renderGrid(); });
+      .then(function () { renderSelects(); renderGrid(); });
     loadEmbed().then(renderEmbed);
   }).catch(function () {}); // requireAuth already redirected to login.html
 })();
