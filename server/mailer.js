@@ -100,4 +100,45 @@ async function sendReminderEmail({ to, recipientName, message, projectId, taskId
   }
 }
 
-module.exports = { sendProjectInviteEmail, sendReminderEmail };
+// "You've been assigned a task" email — sent from PUT .../state when a task's
+// owner changes to a person who is a member of the project (see
+// notifyTaskAssignments in server.js). Same silent-skip-if-no-SMTP behavior as
+// the other emails here; the board edit that triggered it has already been saved.
+async function sendTaskAssignedEmail({ to, recipientName, taskName, projectTitle, projectId, taskId, dueDate, assignerName }) {
+  const t = getTransporter();
+  if (!t) {
+    console.warn("[mailer] SMTP_USER/SMTP_PASS not configured — skipping task-assigned email to", to);
+    return;
+  }
+  const baseUrl = (process.env.APP_BASE_URL || "http://localhost:8743").replace(/\/$/, "");
+  const link = baseUrl + "/board.html?id=" + encodeURIComponent(projectId || "") + "&task=" + encodeURIComponent(taskId || "");
+  const name = escapeHtml(recipientName || "");
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 480px; margin: 0 auto; color: #1f2329;">
+      <h2 style="color:#2f6fed; margin-bottom: 4px;">คุณได้รับมอบหมายงานใหม่</h2>
+      <p>${name ? "สวัสดีคุณ " + name + "," : "สวัสดีครับ/ค่ะ,"}</p>
+      <p><strong>${escapeHtml(assignerName || "ทีมงาน")}</strong> มอบหมายให้คุณเป็นผู้รับผิดชอบงาน</p>
+      <p style="background:#f5f6fa;border-radius:8px;padding:12px 14px;margin:14px 0;">
+        <strong>${escapeHtml(taskName)}</strong><br>
+        <span style="color:#8b909a;font-size:13px;">โครงการ: ${escapeHtml(projectTitle)}${dueDate ? "<br>กำหนดส่ง: " + escapeHtml(dueDate) : ""}</span>
+      </p>
+      <p style="margin: 20px 0;">
+        <a href="${link}" style="display:inline-block;background:#2f6fed;color:#fff;padding:10px 22px;border-radius:7px;text-decoration:none;font-weight:600;">เปิดงานนี้</a>
+      </p>
+      <p style="color:#8b909a;font-size:12px;">หากปุ่มด้านบนใช้งานไม่ได้ ให้เปิดลิงก์นี้แทน:<br>${link}</p>
+    </div>
+  `;
+  try {
+    await t.sendMail({
+      from: `"Project Management Plan : PMP" <${process.env.SMTP_USER}>`,
+      to,
+      subject: `คุณได้รับมอบหมายงาน: ${taskName}`,
+      html,
+    });
+    console.log("[mailer] task-assigned email sent to", to);
+  } catch (err) {
+    console.error("[mailer] Failed to send task-assigned email to", to, "-", err.message);
+  }
+}
+
+module.exports = { sendProjectInviteEmail, sendReminderEmail, sendTaskAssignedEmail };

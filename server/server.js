@@ -10,7 +10,7 @@ const { execFile } = require("child_process");
 const multer = require("multer");
 const { parseIcs, expandEvents } = require("./gcal");
 const pool = require("./db");
-const { sendProjectInviteEmail } = require("./mailer");
+const { sendProjectInviteEmail, sendTaskAssignedEmail } = require("./mailer");
 const { runReminderCheck, getSettings: getReminderSettings, updateSettings: updateReminderSettings } = require("./reminders");
 
 const app = express();
@@ -414,6 +414,57 @@ async function saveProjectState(projectId, state) {
     throw err;
   } finally {
     client.release();
+  }
+}
+
+// Emails a person when a task's owner becomes them. `owner` on a task is a
+// free-text name, so it's matched (case-insensitively) against the project's
+// members; anyone who isn't a member with an email address is skipped, as is
+// the person making the change (no point telling you that you assigned yourself).
+// Only real changes count: a task whose owner differs from what was stored
+// before this save, or a brand-new task — and a save that would send more than
+// MAX_ASSIGN_EMAILS_PER_SAVE (a bulk import, or restoring a whole board) is
+// treated as bulk and sends nothing, so it can never mass-mail the team.
+const MAX_ASSIGN_EMAILS_PER_SAVE = 10;
+async function ownersBefore(projectId) {
+  const r = await pool.query(
+    `SELECT t.id, t.owner FROM tasks t JOIN groups g ON g.id = t.group_id WHERE g.project_id = $1`,
+    [projectId]
+  );
+  const m = new Map();
+  r.rows.forEach((x) => m.set(x.id, (x.owner || "").trim().toLowerCase()));
+  return m;
+}
+async function notifyTaskAssignments(projectId, before, state, actor) {
+  try {
+    const changed = (state.tasks || []).filter((t) => {
+      const now = String(t.owner || "").trim().toLowerCase();
+      if (!now) return false;
+      return !before.has(t.id) || before.get(t.id) !== now;
+    });
+    if (!changed.length) return;
+    if (changed.length > MAX_ASSIGN_EMAILS_PER_SAVE) {
+      console.warn("[assign-mail] skipped", changed.length, "assignments in one save (looks like a bulk import/restore)");
+      return;
+    }
+    const members = await pool.query(
+      `SELECT u.id, u.name, u.email FROM project_members pm JOIN users u ON u.id = pm.user_id WHERE pm.project_id = $1`,
+      [projectId]
+    );
+    const byName = new Map();
+    members.rows.forEach((u) => { if (u.email) byName.set(u.name.trim().toLowerCase(), u); });
+    const proj = await pool.query("SELECT title FROM projects WHERE id = $1", [projectId]);
+    const projectTitle = proj.rows.length ? proj.rows[0].title : "";
+    for (const t of changed) {
+      const u = byName.get(String(t.owner).trim().toLowerCase());
+      if (!u || u.id === actor.id) continue;
+      sendTaskAssignedEmail({
+        to: u.email, recipientName: u.name, taskName: t.name || "", projectTitle, projectId,
+        taskId: t.id, dueDate: t.due || "", assignerName: actor.name,
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("[assign-mail] failed:", err.message);
   }
 }
 
@@ -846,7 +897,9 @@ app.put("/api/projects/:id/state", requireAuth, requireEditor, requireProjectAcc
     return res.status(400).json({ error: "Invalid state payload" });
   }
   try {
+    const before = await ownersBefore(req.params.id);
     await saveProjectState(req.params.id, state);
+    notifyTaskAssignments(req.params.id, before, state, req.user);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
