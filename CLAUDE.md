@@ -33,7 +33,12 @@ Browser  ──fetch (Bearer token)──►  Express API (server/, :8790)  ─�
   board content.
 - **Process management**: `ecosystem.config.js` (PM2) runs both processes in
   production — `pm-board-api` (the Express server) and `pm-board-static`
-  (`python3 -m http.server 8743` serving the repo root).
+  (`static-server.js`, port 8743). Unlike the `python3 -m http.server` used in
+  local dev, `static-server.js` serves only the frontend files (top-level
+  `.html`/`.svg`/`.png` and `shared/`; `server/`, `.git/`, dotfiles are 404 —
+  the plain Python server exposed `server/.env`) and proxies `/api/*` and
+  `/uploads/*` to the API on 8790, so a domain pointed at port 8743 alone
+  works (`PM.API_BASE` is same-origin `/api` when the page isn't on :8743).
 
 ## Folder structure
 
