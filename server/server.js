@@ -468,6 +468,29 @@ async function notifyTaskAssignments(projectId, before, state, actor) {
   }
 }
 
+// Copies the state about to be replaced into project_state_backups: at most
+// one every 5 minutes, plus always when this save drops the board to under
+// half its tasks (the shape of a bad save). Keeps the newest 30 per project.
+// Failing to back up never blocks the save itself.
+async function backupProjectState(projectId, existing, incomingTaskCount) {
+  try {
+    if (!existing || !existing.tasks.length) return;
+    const drastic = incomingTaskCount < existing.tasks.length / 2;
+    if (!drastic) {
+      const last = await pool.query("SELECT 1 FROM project_state_backups WHERE project_id = $1 AND saved_at > now() - interval '5 minutes' LIMIT 1", [projectId]);
+      if (last.rows.length) return;
+    }
+    await pool.query("INSERT INTO project_state_backups (project_id, task_count, state) VALUES ($1, $2, $3)", [projectId, existing.tasks.length, JSON.stringify(existing)]);
+    await pool.query(
+      `DELETE FROM project_state_backups WHERE project_id = $1 AND id NOT IN
+         (SELECT id FROM project_state_backups WHERE project_id = $1 ORDER BY saved_at DESC, id DESC LIMIT 30)`,
+      [projectId]
+    );
+  } catch (err) {
+    console.error("[backup] failed:", err.message);
+  }
+}
+
 // ---------------- multi-project routes ----------------
 
 app.get("/api/projects", requireAuth, async (req, res) => {
@@ -891,12 +914,52 @@ app.get("/api/projects/:id/state", requireAuth, requireProjectAccess, async (req
   }
 });
 
+// Admin-only: list a project's saved backups, and put one back (the current
+// board is itself backed up first, so a restore can be undone the same way).
+app.get("/api/projects/:id/backups", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await pool.query("SELECT id, saved_at, task_count FROM project_state_backups WHERE project_id = $1 ORDER BY saved_at DESC, id DESC", [req.params.id]);
+    res.json(r.rows.map((x) => ({ id: x.id, savedAt: x.saved_at, taskCount: x.task_count })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to list backups" });
+  }
+});
+app.post("/api/projects/:id/backups/:backupId/restore", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await pool.query("SELECT state FROM project_state_backups WHERE id = $1 AND project_id = $2", [req.params.backupId, req.params.id]);
+    if (!r.rows.length) return res.status(404).json({ error: "Backup not found" });
+    const state = r.rows[0].state;
+    const current = await loadProjectState(req.params.id);
+    if (current && current.tasks.length) {
+      await pool.query("INSERT INTO project_state_backups (project_id, task_count, state) VALUES ($1, $2, $3)", [req.params.id, current.tasks.length, JSON.stringify(current)]);
+    }
+    await saveProjectState(req.params.id, state);
+    res.json({ ok: true, taskCount: state.tasks.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to restore backup" });
+  }
+});
+
 app.put("/api/projects/:id/state", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
   const state = req.body;
   if (!state || !Array.isArray(state.groups) || !Array.isArray(state.tasks)) {
     return res.status(400).json({ error: "Invalid state payload" });
   }
   try {
+    // A save that empties a board that has real content is never a deliberate
+    // edit — it's a client that never managed to load the board (server
+    // restarting, network drop) writing its blank/sample starting state over
+    // it, which is exactly how a whole project was once lost. Refuse it; the
+    // rest of a board's tasks can still be deleted one at a time.
+    const existing = await loadProjectState(req.params.id);
+    const existingCount = existing ? existing.tasks.length : 0;
+    if (state.tasks.length === 0 && existingCount >= 3) {
+      console.warn("[state-guard] blocked an empty save over", existingCount, "tasks on project", req.params.id, "from", req.user.name);
+      return res.status(409).json({ error: "Refusing to replace this board's tasks with an empty board", code: "EMPTY_OVERWRITE_BLOCKED" });
+    }
+    await backupProjectState(req.params.id, existing, state.tasks.length);
     const before = await ownersBefore(req.params.id);
     await saveProjectState(req.params.id, state);
     notifyTaskAssignments(req.params.id, before, state, req.user);

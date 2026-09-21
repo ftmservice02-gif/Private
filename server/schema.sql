@@ -288,3 +288,17 @@ ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS columns JSONB;
 -- ("custom_<random>") and never colliding with a built-in key. A key here
 -- can also appear in `columns` above to actually show it.
 ALTER TABLE delivery_orders ADD COLUMN IF NOT EXISTS custom_columns JSONB;
+
+-- Safety net for the whole-board save (PUT /projects/:id/state deletes and
+-- reinserts every group/task, so a bad save loses the board for good): the
+-- state being replaced is copied here first (throttled, and always when the
+-- save drops most of the tasks), keeping the newest 30 per project. Restore
+-- goes through the admin-only endpoints in server.js.
+CREATE TABLE IF NOT EXISTS project_state_backups (
+  id BIGSERIAL PRIMARY KEY,
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  saved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  task_count INTEGER NOT NULL,
+  state JSONB NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_project_state_backups_project ON project_state_backups(project_id, saved_at DESC);

@@ -53,7 +53,7 @@
       "cal.title": "My Teams Calendar", "cal.tabTasks": "Team tasks", "cal.tabExternal": "External calendar",
       "cal.allPeople": "Everyone", "cal.allProjects": "All projects", "cal.showUpdates": "Show updates & comments", "cal.showGoogle": "Show imported calendar", "cal.gcalTitle": "Import from Google Calendar", "cal.gcalHelp": "In Google Calendar: Settings → your calendar → Integrate calendar → copy \"Secret address in iCal format\", then paste it here. Keep it private — anyone with this address can read the calendar.", "cal.gcalPlaceholder": "https://calendar.google.com/calendar/ical/…/basic.ics", "cal.gcalSaved": "Google Calendar connected", "cal.gcalSaveError": "Could not read that Google Calendar address", "cal.gcalError": "Could not load Google Calendar events",
       "cal.icsTitle": "Import an .ics file", "cal.icsHelp": "Upload a calendar file exported from Google Calendar, Outlook or Apple Calendar (.ics). It is a snapshot — upload again to refresh it. Uploading replaces the previous file.", "cal.icsButton": "Import .ics", "cal.icsRemove": "Remove", "cal.icsImported": "Imported {n} events", "cal.icsError": "Could not import that .ics file",
-      "cal.googleNone": "The imported calendar has no events in the dates shown here — use the arrows to look at other months.", "cal.openDay": "See everything on this day", "cal.modeDue": "Deadlines", "cal.modeTimeline": "Timeline", "cal.ongoingN": "{n} in progress", "cal.popDue": "Due", "cal.popStart": "Starting", "cal.popOngoing": "In progress", "cal.popEvents": "Calendar events", "cal.popUpdates": "Updates & comments", "cal.popEmpty": "Nothing on this day",
+      "cal.googleNone": "The imported calendar has no events in the dates shown here — use the arrows to look at other months.", "cal.openDay": "See everything on this day", "save.notLoaded": "Can\u2019t save yet \u2014 this board hasn\u2019t loaded from the server. Reload the page before making changes.", "cal.modeDue": "Deadlines", "cal.modeTimeline": "Timeline", "cal.ongoingN": "{n} in progress", "cal.popDue": "Due", "cal.popStart": "Starting", "cal.popOngoing": "In progress", "cal.popEvents": "Calendar events", "cal.popUpdates": "Updates & comments", "cal.popEmpty": "Nothing on this day",
       "cal.today": "Today", "cal.mine": "My tasks", "cal.team": "Whole team", "cal.more": "+{n} more",
       "cal.noDate": "No tasks with dates this month", "cal.loadError": "Could not load calendar (API unreachable)",
       "cal.embedPlaceholder": "Paste a Google Calendar / Outlook embed link (https://…)", "cal.embedSave": "Save link",
@@ -240,7 +240,7 @@
       "cal.title": "ปฏิทินทีมของฉัน", "cal.tabTasks": "งานของทีม", "cal.tabExternal": "ปฏิทินภายนอก",
       "cal.allPeople": "ทุกคน", "cal.allProjects": "ทุกโปรเจกต์", "cal.showUpdates": "แสดงการอัปเดต/คอมเมนต์", "cal.showGoogle": "แสดงปฏิทินที่นำเข้า", "cal.gcalTitle": "นำเข้าจาก Google Calendar", "cal.gcalHelp": "ใน Google Calendar: การตั้งค่า → เลือกปฏิทิน → ผสานรวมปฏิทิน → คัดลอก \"ที่อยู่ลับในรูปแบบ iCal\" แล้ววางที่นี่ เก็บเป็นความลับ — ใครมีที่อยู่นี้ก็อ่านปฏิทินได้", "cal.gcalPlaceholder": "https://calendar.google.com/calendar/ical/…/basic.ics", "cal.gcalSaved": "เชื่อมต่อ Google Calendar แล้ว", "cal.gcalSaveError": "อ่านที่อยู่ Google Calendar นี้ไม่ได้", "cal.gcalError": "โหลดกิจกรรมจาก Google Calendar ไม่ได้",
       "cal.icsTitle": "นำเข้าไฟล์ .ics", "cal.icsHelp": "อัปโหลดไฟล์ปฏิทินที่ส่งออกจาก Google Calendar, Outlook หรือ Apple Calendar (.ics) เป็นข้อมูล ณ ตอนที่ส่งออก — อัปโหลดใหม่เพื่ออัปเดต การอัปโหลดจะแทนที่ไฟล์เดิม", "cal.icsButton": "นำเข้า .ics", "cal.icsRemove": "ลบ", "cal.icsImported": "นำเข้า {n} กิจกรรมแล้ว", "cal.icsError": "นำเข้าไฟล์ .ics นี้ไม่ได้",
-      "cal.googleNone": "เชื่อมต่อ Google Calendar แล้ว แต่ไม่มีกิจกรรมในช่วงวันที่ที่แสดงอยู่ — ลองเลื่อนไปเดือนอื่น", "cal.openDay": "ดูทุกอย่างในวันนี้", "cal.modeDue": "กำหนดส่ง", "cal.modeTimeline": "ไทม์ไลน์", "cal.ongoingN": "กำลังทำ {n}", "cal.popDue": "ครบกำหนด", "cal.popStart": "เริ่มวันนี้", "cal.popOngoing": "กำลังดำเนินการ", "cal.popEvents": "กิจกรรมปฏิทิน", "cal.popUpdates": "อัปเดตและคอมเมนต์", "cal.popEmpty": "ไม่มีรายการในวันนี้",
+      "cal.googleNone": "เชื่อมต่อ Google Calendar แล้ว แต่ไม่มีกิจกรรมในช่วงวันที่ที่แสดงอยู่ — ลองเลื่อนไปเดือนอื่น", "cal.openDay": "ดูทุกอย่างในวันนี้", "save.notLoaded": "ยังบันทึกไม่ได้ — บอร์ดนี้ยังโหลดจากเซิร์ฟเวอร์ไม่สำเร็จ กรุณารีโหลดหน้าก่อนแก้ไข", "cal.modeDue": "กำหนดส่ง", "cal.modeTimeline": "ไทม์ไลน์", "cal.ongoingN": "กำลังทำ {n}", "cal.popDue": "ครบกำหนด", "cal.popStart": "เริ่มวันนี้", "cal.popOngoing": "กำลังดำเนินการ", "cal.popEvents": "กิจกรรมปฏิทิน", "cal.popUpdates": "อัปเดตและคอมเมนต์", "cal.popEmpty": "ไม่มีรายการในวันนี้",
       "cal.today": "วันนี้", "cal.mine": "งานของฉัน", "cal.team": "ทั้งทีม", "cal.more": "+อีก {n}",
       "cal.noDate": "เดือนนี้ไม่มีงานที่กำหนดวัน", "cal.loadError": "โหลดปฏิทินไม่ได้ (เชื่อมต่อ API ไม่ได้)",
       "cal.embedPlaceholder": "วางลิงก์ฝัง (embed) ของ Google Calendar / Outlook (https://…)", "cal.embedSave": "บันทึกลิงก์",
@@ -723,6 +723,9 @@
       var raw = localStorage.getItem(PM.STORAGE_KEY);
       if (raw) {
         var parsed = JSON.parse(raw);
+        // The cache is one slot shared by every project — never hand a page
+        // some other project's board as if it were the one it asked for.
+        if (parsed && parsed.id && PM.currentProjectId && parsed.id !== PM.currentProjectId) return null;
         if (parsed && Array.isArray(parsed.groups)) return migrate(parsed);
       }
     } catch (e) {}
@@ -757,10 +760,26 @@
   }
   PM.getSaveStatus = function () { return saveStatus; };
 
+  // The id of the project whose board was last successfully fetched from the
+  // server on this page. A page that failed to load (server restarting, network
+  // drop) falls back to cached/sample data so it can still render — but that
+  // fallback must never be saved, or it overwrites the real board with a
+  // stale or blank one. flushSave refuses unless the current project's real
+  // state has actually been loaded.
+  PM.loadedProjectId = null;
+  var blockedNoticeShown = false;
+  function saveAllowed() {
+    return !!PM.loadedProjectId && PM.loadedProjectId === PM.currentProjectId;
+  }
   var saveTimer = null;
   function flushSave() {
     clearTimeout(saveTimer);
     saveTimer = null;
+    if (!saveAllowed()) {
+      setSaveStatus("error");
+      if (!blockedNoticeShown) { blockedNoticeShown = true; PM.showToast(PM.tr("save.notLoaded")); }
+      return Promise.reject(new Error("board not loaded from server — not saving"));
+    }
     setSaveStatus("saving");
     try { localStorage.setItem(PM.STORAGE_KEY, JSON.stringify(PM.state)); } catch (e) {}
     var url = PM.currentProjectId ? (PM.API_BASE + "/projects/" + PM.currentProjectId + "/state") : (PM.API_BASE + "/state");
@@ -790,7 +809,7 @@
     return flushSave().catch(function () {});
   };
   window.addEventListener("beforeunload", function (e) {
-    if (!PM.state) return;
+    if (!PM.state || !saveAllowed()) return;
     try { localStorage.setItem(PM.STORAGE_KEY, JSON.stringify(PM.state)); } catch (e) {}
     if (saveTimer) {
       // Best-effort flush so a fast navigation away doesn't lose the last
@@ -913,6 +932,7 @@
       return r.json();
     }).then(function (data) {
       if (!data || !Array.isArray(data.groups)) throw new Error("bad payload");
+      PM.loadedProjectId = id || data.id || null;
       return migrate(data);
     });
   };
