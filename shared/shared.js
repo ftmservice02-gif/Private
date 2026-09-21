@@ -21,7 +21,16 @@
   // static server, one port over (see ecosystem.config.js). This is what
   // lets the same build work unmodified in dev (localhost) and once
   // deployed (LAN IP or a real hostname) without a per-environment edit.
-  PM.API_BASE = window.location.protocol + "//" + window.location.hostname + ":8790/api";
+  //
+  // Opened on the static server's own port (8743 — localhost in dev, or the
+  // server's LAN IP) the API is one port over on the same host. Opened any
+  // other way (a domain like https://pmp.fatima.co.th on the standard 80/443
+  // port, behind a reverse proxy) port 8790 isn't reachable from the browser
+  // and the API doesn't speak TLS, so it's called same-origin instead — the
+  // proxy must forward /api and /uploads to the API (port 8790).
+  PM.API_BASE = window.location.port === "8743"
+    ? window.location.protocol + "//" + window.location.hostname + ":8790/api"
+    : "/api";
 
   PM.STATUS_ORDER = ["not_started", "working", "stuck", "done"];
   PM.PRIORITY_ORDER = ["critical", "high", "medium", "low"];
