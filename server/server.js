@@ -293,6 +293,7 @@ async function loadProjectState(projectId) {
       name: g.name,
       color: g.color,
       collapsed: g.collapsed,
+      mainOwner: g.main_owner || "",
     })),
     tasks: groups.rows.flatMap((g) => tasksByGroup[g.id] || []),
   };
@@ -306,9 +307,9 @@ async function insertGroupsAndTasks(client, projectId, groups, tasks) {
   for (let gi = 0; gi < groups.length; gi++) {
     const g = groups[gi];
     await client.query(
-      `INSERT INTO groups (id, project_id, name, color, collapsed, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [g.id, projectId, g.name, g.color || null, !!g.collapsed, gi]
+      `INSERT INTO groups (id, project_id, name, color, collapsed, sort_order, main_owner)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [g.id, projectId, g.name, g.color || null, !!g.collapsed, gi, (g.mainOwner || "").trim() || null]
     );
   }
 

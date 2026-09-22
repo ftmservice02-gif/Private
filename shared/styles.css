@@ -327,16 +327,31 @@
   .group-collapse svg { transition: transform .15s; }
   .group.collapsed .group-collapse svg { transform: rotate(-90deg); }
   .group-name {
-    font-weight: 700; font-size: 15.5px; border: none; background: transparent; padding: 3px 6px;
+    font-weight: 700; font-size: 15.5px; font-family: inherit; border: none; background: transparent; padding: 3px 6px;
     border-radius: 6px; min-width: 60px;
+    /* Grow to fill whatever space .group-head-meta doesn't need, instead of
+       sitting at its old fixed ~180px width where a long name just clipped
+       inside the input with no visual sign there was more text. */
+    flex: 1 1 auto; min-width: 0;
+    /* A <textarea> now (not <input>), so it can wrap a long name onto a
+       second line instead of scrolling it off-screen — resize/overflow
+       stay off since JS (autosizeGroupName) grows the height to fit instead;
+       line-height matched to font-size keeps the collapsed single-line
+       height the same as the old input's. */
+    resize: none; overflow: hidden; white-space: pre-wrap; word-break: break-word;
+    line-height: 1.3; display: block;
   }
   .group-name:hover { background: var(--surface-2); }
   .group-name:focus { outline: 2px solid var(--focus); background: var(--surface); }
+  /* Groups the count/main-owner/kebab controls so they move as one unit and
+     .group-name (above) can claim the rest of the row's width. */
+  .group-head-meta { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
   .group-count {
     font-size: 12px; color: var(--text-muted); font-weight: 700; background: var(--surface-2);
-    padding: 2px 9px; border-radius: 10px;
+    padding: 2px 9px; border-radius: 10px; white-space: nowrap;
   }
-  .group-kebab-wrap { margin-left: auto; position: relative; opacity: 0; }
+  .group-head-meta [data-action="edit-group-owner"] { flex-shrink: 0; }
+  .group-kebab-wrap { position: relative; opacity: 0; }
   .group-head:hover .group-kebab-wrap { opacity: 1; }
   .group-kebab-wrap.open { opacity: 1; }
   .group-kebab {
@@ -1648,6 +1663,17 @@
        the other controls flow onto the line under it instead. */
     .topbar-title-row { flex-wrap: wrap; }
     .project-title-input { flex: 1 1 100%; max-width: 100%; font-size: 18px; }
+
+    /* Same "force onto its own full-width line" fix as .project-title-input
+       above, for the same reason: .group-head-meta (owner avatar, day-count
+       badge, kebab) is fixed-width and was squeezing .group-name down to a
+       ~180px box that silently clipped long names (see CLAUDE.md history —
+       reported as a long Thai group name being cut off on mobile). Wrapping
+       the row and giving the name its own line lets it use the full card
+       width instead. */
+    .group-head { flex-wrap: wrap; row-gap: 4px; }
+    .group-name { flex: 1 1 100%; max-width: 100%; }
+    .group-head-meta { margin-left: 34px; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }

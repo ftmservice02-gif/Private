@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=120" />
+<link rel="stylesheet" href="shared/styles.css?v=121" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -329,7 +329,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=110"></script>
+<script src="shared/shared.js?v=111"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -472,6 +472,16 @@
       return;
     }
     board.innerHTML = PM.state.groups.map(renderGroup).join("");
+    board.querySelectorAll(".group-name").forEach(autosizeGroupName);
+  }
+
+  // .group-name is a <textarea rows="1"> so a long name wraps instead of
+  // clipping (see the "why" comment where it's rendered) — this grows its
+  // height to fit the wrapped content, called on render and on every
+  // keystroke, and shrinks back down first so deleting text un-grows it too.
+  function autosizeGroupName(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
   }
 
   function colHeaders() {
@@ -516,12 +526,21 @@
         '<button class="group-collapse" data-action="toggle-collapse" data-group="' + g.id + '" aria-label="ย่อ/ขยายกลุ่ม">' +
           '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>' +
         '</button>' +
-        '<input class="group-name" style="color:' + g.color + '" data-field="rename-group" data-group="' + g.id + '" value="' + esc(g.name) + '" />' +
-        '<span class="group-count" title="' + esc(allTasks.length + (PM.lang === "th" ? " งาน" : " task" + (allTasks.length === 1 ? "" : "s"))) + '">' + esc(groupDaysLabel) + '</span>' +
-        '<div class="group-kebab-wrap' + (popoverOpen ? ' open' : '') + '">' +
-          '<button class="group-kebab" data-action="toggle-popover" data-group="' + g.id + '" aria-label="ตัวเลือกกลุ่ม">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>' +
-          '</button>' + popover +
+        // A <textarea> (not <input>) so a long name can wrap onto a second
+        // line instead of silently scrolling off-screen inside a single-line
+        // box with no visual sign there was more text (reported: a long Thai
+        // group name looked cut off on mobile). rows="1" + the auto-resize
+        // in the delegated "input" handler below keep it single-line until
+        // wrapped content actually needs more height.
+        '<textarea class="group-name" rows="1" style="color:' + g.color + '" data-field="rename-group" data-group="' + g.id + '">' + esc(g.name) + '</textarea>' +
+        '<div class="group-head-meta">' +
+          renderOwnerCellHtml(g.mainOwner, 'data-action="edit-group-owner" data-group="' + g.id + '"') +
+          '<span class="group-count" title="' + esc(allTasks.length + (PM.lang === "th" ? " งาน" : " task" + (allTasks.length === 1 ? "" : "s"))) + '">' + esc(groupDaysLabel) + '</span>' +
+          '<div class="group-kebab-wrap' + (popoverOpen ? ' open' : '') + '">' +
+            '<button class="group-kebab" data-action="toggle-popover" data-group="' + g.id + '" aria-label="ตัวเลือกกลุ่ม">' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>' +
+            '</button>' + popover +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div class="table-wrap">' +
@@ -2166,6 +2185,16 @@
       if (!item) return;
       openOwnerPicker(el, item);
     }
+    if (action === "edit-group-owner") {
+      var ownerGroup = findGroup(el.dataset.group);
+      if (!ownerGroup) return;
+      openOwnerPicker(el, ownerGroup, {
+        multi: false,
+        label: "board.mainOwner",
+        getValue: function (g) { return g.mainOwner || ""; },
+        setValue: function (g, v) { g.mainOwner = v; }
+      });
+    }
     if (action === "edit-sub-folder") {
       var subTask = findTask(el.dataset.task);
       var sub = findSub(el.dataset.task, el.dataset.sub);
@@ -2179,7 +2208,7 @@
     var field = el.dataset.field;
     if (!field) return;
 
-    if (field === "rename-group") { findGroup(el.dataset.group).name = el.value; persist(); return; }
+    if (field === "rename-group") { findGroup(el.dataset.group).name = el.value; autosizeGroupName(el); persist(); return; }
     if (field === "range-start" || field === "range-due") return; // committed on change (blur/Enter), not per keystroke
     if (field === "stuck-reason") {
       var stuckCtx = findUpdatable(el.dataset.item);
@@ -2235,7 +2264,12 @@
   board.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
     var el = e.target;
-    if (!el.classList || !el.classList.contains("task-name-input")) return;
+    if (!el.classList) return;
+    // .group-name is a <textarea> now (so long names can wrap instead of
+    // clipping), which would otherwise insert a newline on Enter like any
+    // multi-line field — group names stay single-purpose text, so Enter
+    // commits/blurs here same as it already did for task-name-input.
+    if (!el.classList.contains("task-name-input") && !el.classList.contains("group-name")) return;
     e.preventDefault();
     el.blur();
   });
@@ -2632,13 +2666,24 @@
     }
   }
 
-  // Multi-select: a task/subitem can have more than one owner now, so
-  // picking a name toggles it in the list instead of setting-and-closing —
-  // the popover stays open (same outside-click/Escape close as before) so
+  // Multi-select by default: a task/subitem can have more than one owner,
+  // so picking a name toggles it in the list instead of setting-and-closing
+  // — the popover stays open (same outside-click/Escape close as before) so
   // several people can be picked in one go. "Unassigned" clears the list.
-  function renderOwnerPickerList(pop, item) {
+  //
+  // A group's own `mainOwner` is deliberately just one person (not the same
+  // field as a task's `owner`), so this same popover also serves that in a
+  // single-select mode via `opts`: { multi: false, getValue(item),
+  // setValue(item, name) } — picking a name sets-and-closes instead, same as
+  // the multi-owner picker's own behavior did before tasks went multi-value.
+  function renderOwnerPickerList(pop, item, opts) {
+    opts = opts || {};
+    var multi = opts.multi !== false;
+    var getValue = opts.getValue || function (it) { return it.owner; };
+    var setValue = opts.setValue || function (it, v) { it.owner = v; };
+
     var q = ownerPickerQuery.toLowerCase();
-    var current = ownerNames(item.owner);
+    var current = multi ? ownerNames(getValue(item)) : (getValue(item) ? [getValue(item)] : []);
     var members = projectMembersFull.filter(function (u) { return !q || u.name.toLowerCase().indexOf(q) !== -1; });
     var listHtml = '<button class="owner-picker-row owner-picker-clear" data-owner-clear="1">' + esc(tr("board.unassigned")) + '</button>' +
       members.map(function (u) {
@@ -2651,34 +2696,40 @@
       }).join("") || '<div class="owner-picker-empty">' + esc(tr("ws.noAssetsMatch")) + '</div>';
 
     var searchHtml = '<div class="owner-picker-search"><input type="text" id="ownerPickerSearch" placeholder="' + esc(tr("common.search")) + '" value="' + esc(ownerPickerQuery) + '" /></div>';
-    pop.innerHTML = '<div class="group-popover-label">' + esc(tr("board.assignOwner")) + '</div>' + searchHtml + listHtml;
+    pop.innerHTML = '<div class="group-popover-label">' + esc(tr(opts.label || "board.assignOwner")) + '</div>' + searchHtml + listHtml;
 
     var searchInput = document.getElementById("ownerPickerSearch");
-    searchInput.addEventListener("input", function (e) { ownerPickerQuery = e.target.value; renderOwnerPickerList(pop, item); });
+    searchInput.addEventListener("input", function (e) { ownerPickerQuery = e.target.value; renderOwnerPickerList(pop, item, opts); });
     searchInput.addEventListener("keydown", function (e) { e.stopPropagation(); });
     searchInput.focus();
     var pos = searchInput.value.length;
     searchInput.setSelectionRange(pos, pos);
 
     pop.querySelector("[data-owner-clear]").addEventListener("click", function () {
-      item.owner = "";
+      setValue(item, "");
       persist(); render();
-      renderOwnerPickerList(pop, item);
+      if (multi) renderOwnerPickerList(pop, item, opts); else closeOwnerPicker();
     });
     pop.querySelectorAll("[data-owner-name]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var name = btn.dataset.ownerName;
-        var list = ownerNames(item.owner);
-        var idx = list.indexOf(name);
-        if (idx === -1) list.push(name); else list.splice(idx, 1);
-        item.owner = joinOwnerNames(list);
-        persist(); render();
-        renderOwnerPickerList(pop, item);
+        if (multi) {
+          var list = ownerNames(getValue(item));
+          var idx = list.indexOf(name);
+          if (idx === -1) list.push(name); else list.splice(idx, 1);
+          setValue(item, joinOwnerNames(list));
+          persist(); render();
+          renderOwnerPickerList(pop, item, opts);
+        } else {
+          setValue(item, name);
+          persist(); render();
+          closeOwnerPicker();
+        }
       });
     });
   }
 
-  function openOwnerPicker(anchorEl, item) {
+  function openOwnerPicker(anchorEl, item, opts) {
     closeOwnerPicker();
     ownerPickerQuery = "";
     var rect = anchorEl.getBoundingClientRect();
@@ -2698,7 +2749,7 @@
     if (!PM.currentProjectId) {
       pop.innerHTML = '<div class="owner-picker-empty">' + esc(tr("tb.inviteError")) + '</div>';
     } else if (projectMembersFull.length) {
-      renderOwnerPickerList(pop, item);
+      renderOwnerPickerList(pop, item, opts);
     } else {
       pop.innerHTML = '<div class="owner-picker-empty">' + esc(tr("board.noProjectMembers")) + '</div>';
       loadInviteCountOnly().then(function () {

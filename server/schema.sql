@@ -88,6 +88,11 @@ CREATE TABLE IF NOT EXISTS groups (
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 
+-- The one person primarily responsible for a whole group (as opposed to a
+-- task's own `owner`, which can now be several people) — a single free-text
+-- name, same convention as task.owner before it went multi-value.
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS main_owner TEXT;
+
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
   group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,

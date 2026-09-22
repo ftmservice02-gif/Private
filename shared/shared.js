@@ -152,6 +152,7 @@
       "board.importSubitemsSummary": "Found {count} item(s) — ready to add as subitems",
       "board.importSubitemsApply": "Add to this task", "board.importSubitemsDone": "Added {count} subitem(s)",
       "board.taskPlaceholder": "Task name", "board.subitemPlaceholder": "Subitem name", "board.assignOwner": "Assign owner",
+      "board.mainOwner": "Main owner",
       "board.assignFolder": "Set folder", "board.unassignedFolder": "No folder", "board.createFolder": "Create \"{name}\"",
       "board.rootFolder": "All folders", "board.selectFolder": "Use \"{name}\"", "board.openSubfolder": "Open subfolder",
       "board.folderCreateHint": "Type a name above and hit Create to add a new folder here.",
@@ -338,6 +339,7 @@
       "board.importSubitemsSummary": "พบ {count} รายการ — พร้อมเพิ่มเป็นงานย่อย",
       "board.importSubitemsApply": "เพิ่มเข้างานนี้", "board.importSubitemsDone": "เพิ่มงานย่อยแล้ว {count} รายการ",
       "board.taskPlaceholder": "ชื่องาน", "board.subitemPlaceholder": "ชื่องานย่อย", "board.assignOwner": "มอบหมายผู้รับผิดชอบ",
+      "board.mainOwner": "ผู้รับผิดชอบหลัก",
       "board.assignFolder": "ตั้งค่าโฟลเดอร์", "board.unassignedFolder": "ไม่มีโฟลเดอร์", "board.createFolder": "สร้าง \"{name}\"",
       "board.rootFolder": "โฟลเดอร์ทั้งหมด", "board.selectFolder": "ใช้ \"{name}\"", "board.openSubfolder": "เปิดโฟลเดอร์ย่อย",
       "board.folderCreateHint": "พิมพ์ชื่อในช่องค้นหาด้านบน แล้วกด \"สร้าง\" เพื่อเพิ่มโฟลเดอร์ใหม่ตรงนี้",
@@ -713,6 +715,9 @@
   };
 
   function migrate(s) {
+    s.groups.forEach(function (g) {
+      if (g.mainOwner === undefined) g.mainOwner = "";
+    });
     s.tasks.forEach(function (t) {
       if (!Array.isArray(t.updates)) t.updates = [];
       if (!Array.isArray(t.subitems)) t.subitems = [];
