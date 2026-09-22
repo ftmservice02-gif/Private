@@ -1357,6 +1357,7 @@
       return PM.loadNotifications().then(function (list) {
         notifications = list;
         updateBadge();
+        if (popover.style.display !== "none") renderNotifPopover();
       }).catch(function () {});
     }
 
@@ -1384,6 +1385,14 @@
     });
 
     refresh();
+    // A notification created while this page is just sitting open (someone
+    // @mentions you, a task gets assigned to you) otherwise never shows up
+    // until the next click or reload — poll so the badge/list catch up on
+    // their own. Paused while the tab is hidden so a pile of background
+    // tabs isn't all polling at once; catches up immediately on return.
+    var pollTimer = setInterval(function () { if (!document.hidden) refresh(); }, 30000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
+    window.addEventListener("beforeunload", function () { clearInterval(pollTimer); });
   };
 
   // Delegated on every page: (a) the many "not implemented in this demo"
