@@ -114,9 +114,7 @@
       <button class="icon-square-btn" id="topbarChatBtn" aria-label="Notifications" aria-haspopup="true">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-9 8.5A8.38 8.38 0 013 11.5a8.5 8.5 0 0117 0z"/></svg>
       </button>
-      <div class="avatar-circle" data-toast="โปรไฟล์ของคุณ" title="โปรไฟล์">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
-      </div>
+      <div class="avatar-circle" id="topbarUserAvatar"></div>
       <button class="invite-btn" id="inviteBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5 7-5s7 1.7 7 5M17 8h5M19.5 5.5v5"/></svg>
         <span data-i18n="tb.invite">Invite</span><span id="inviteCountBadge"></span>
@@ -822,6 +820,18 @@
     var el = document.getElementById("boardTitle");
     el.textContent = PM.state.title || "";
     el.title = PM.state.title || "";
+  }
+
+  // The topbar avatar was a generic placeholder icon regardless of who was
+  // signed in — shows the actual logged-in user's initials (same
+  // avatarColor/initials as an owner avatar elsewhere) and their name on hover.
+  function syncUserAvatar() {
+    var el = document.getElementById("topbarUserAvatar");
+    if (!el || !PM.currentUser) return;
+    var name = PM.currentUser.name || "";
+    el.style.background = avatarColor(name);
+    el.title = name;
+    el.innerHTML = '<span style="color:#fff;font-size:12px;font-weight:700;">' + esc(initials(name)) + '</span>';
   }
 
   // ---------------- project day budget ----------------
@@ -3181,7 +3191,7 @@
     PM.applyViewerMode();
     PM.resolveProjectId();
     PM.state = PM.loadCachedState() || PM.seedState();
-    syncBoardTitleInput(); syncBudgetInput();
+    syncBoardTitleInput(); syncBudgetInput(); syncUserAvatar();
     applyColumnVisibility();
     PM.initSidebar("board", render);
     render();
