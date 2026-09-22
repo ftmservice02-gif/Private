@@ -121,19 +121,6 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5 7-5s7 1.7 7 5M17 8h5M19.5 5.5v5"/></svg>
         <span data-i18n="tb.invite">Invite</span><span id="inviteCountBadge"></span>
       </button>
-      <button class="icon-square-btn" data-toast="คัดลอกลิงก์บอร์ดแล้ว">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 15l6-6M10 6l1-1a3.5 3.5 0 015 5l-1 1M14 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>
-      </button>
-      <div style="position:relative;">
-        <button class="icon-square-btn" id="topMenuBtn" aria-label="เมนูบอร์ด">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
-        </button>
-        <div class="group-popover" id="topMenuPopover" style="display:none; width: 210px;">
-          <div class="group-popover-label" data-i18n="topmenu.boardData">Board data</div>
-          <button class="popover-delete" style="color:var(--text);" id="loadSampleBtn" data-i18n="topmenu.loadSample">Load sample project</button>
-          <button class="popover-delete" id="resetBoardBtn" data-i18n="topmenu.resetBoard">Reset board (clear all)</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -343,7 +330,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=107"></script>
+<script src="shared/shared.js?v=108"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -2255,20 +2242,6 @@
     render();
   });
 
-  // ---------------- top menu: load sample / reset ----------------
-
-  var topMenuBtn = document.getElementById("topMenuBtn");
-  var topMenuPopover = document.getElementById("topMenuPopover");
-  topMenuBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    topMenuPopover.style.display = topMenuPopover.style.display === "none" ? "block" : "none";
-  });
-  document.addEventListener("click", function (e) {
-    if (topMenuPopover.style.display !== "none" && !e.target.closest("#topMenuPopover") && e.target !== topMenuBtn) {
-      topMenuPopover.style.display = "none";
-    }
-  });
-
   // ---------------- hide columns (Owner / Status / Due date / Timeline / Priority) ----------------
   var HIDE_COL_DEFS = [
     { key: "owner", storageKey: "epmb_hideOwner", width: "60px" },
@@ -2445,24 +2418,6 @@
       sizePopover.style.display = "none";
     }
   });
-  document.getElementById("loadSampleBtn").addEventListener("click", function () {
-    PM.state = PM.seedState();
-    activePanelTaskId = null; selected.clear();
-    syncBoardTitleInput(); syncBudgetInput();
-    topMenuPopover.style.display = "none";
-    persist(); render();
-    showToast("Loaded sample project");
-  });
-  document.getElementById("resetBoardBtn").addEventListener("click", function () {
-    if (!confirm("Clear all board data and start fresh? This cannot be undone.")) return;
-    PM.state = PM.emptyState();
-    activePanelTaskId = null; selected.clear();
-    syncBoardTitleInput(); syncBudgetInput();
-    topMenuPopover.style.display = "none";
-    persist(); render();
-    showToast("Board cleared");
-  });
-
   // ---------------- updates panel events ----------------
 
   document.getElementById("panelCloseBtn").addEventListener("click", closePanel);
