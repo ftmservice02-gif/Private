@@ -1,9 +1,10 @@
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project Management Plan : PMP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=118" />
+<link rel="stylesheet" href="shared/styles.css?v=120" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -99,7 +100,7 @@
     <div class="app view-panel active" id="boardView">
   <!-- ============ Top bar ============ -->
   <div class="topbar">
-    <div style="display:flex;align-items:center;gap:6px;">
+    <div class="topbar-title-row">
       <div id="boardTitle" class="project-title-input" contenteditable="true" role="textbox" aria-label="Project name">IT Project</div>
       <button class="chev-btn" data-toast="เมนูโปรเจกต์ยังไม่เปิดใช้งานในตัวอย่างนี้" aria-label="เมนูโปรเจกต์">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M6 9l6 6 6-6"/></svg>
@@ -560,7 +561,7 @@
 
     var row = '<div class="row-grid task-row' + (activePanelTaskId === t.id ? ' panel-open' : '') + '" data-task="' + t.id + '">' +
       '<div class="cell row-checkbox"><input type="checkbox" data-action="select" data-key="task:' + t.id + '"' + (checked ? ' checked' : '') + ' aria-label="เลือกงาน" /></div>' +
-      '<div class="cell"><button class="expand-toggle' + (open ? ' open' : '') + (hasSub ? '' : ' no-sub') + '" data-action="toggle-sub" data-task="' + t.id + '" aria-label="ขยายงานย่อย">' +
+      '<div class="cell col-expand"><button class="expand-toggle' + (open ? ' open' : '') + (hasSub ? '' : ' no-sub') + '" data-action="toggle-sub" data-task="' + t.id + '" aria-label="ขยายงานย่อย">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></button></div>' +
       '<div class="cell task-name-cell">' +
         '<div class="task-name-input" contenteditable="true" data-field="name" data-task="' + t.id + '" data-placeholder="' + tr("board.taskPlaceholder") + '">' + esc(t.name) + '</div>' +
@@ -568,7 +569,7 @@
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>' +
           t.subitems.length + '</span>' : '') +
       '</div>' +
-      '<div class="cell">' + bubbleHtml + '</div>' +
+      '<div class="cell col-bubble">' + bubbleHtml + '</div>' +
       '<div class="cell col-owner">' + ownerHtml + '</div>' +
       '<div class="cell col-status"><span class="status-wrap">' +
         '<select class="pill status-' + t.status + '" data-field="status" data-task="' + t.id + '">' + statusOpts + '</select>' +
@@ -640,8 +641,8 @@
 
     return '<div class="sub-row-grid subitem-row' + (activePanelTaskId === s.id ? ' panel-open' : '') + '" data-sub="' + s.id + '">' +
       '<div class="cell row-checkbox"><input type="checkbox" data-action="select" data-key="sub:' + taskId + ':' + s.id + '"' + (checked ? ' checked' : '') + ' aria-label="เลือกงานย่อย" /></div>' +
-      '<div class="cell"><div class="task-name-input" contenteditable="true" data-field="sub-name" data-task="' + taskId + '" data-sub="' + s.id + '" data-placeholder="' + tr("board.subitemPlaceholder") + '">' + esc(s.name) + '</div></div>' +
-      '<div class="cell">' + subBubbleHtml + '</div>' +
+      '<div class="cell sub-name-cell"><div class="task-name-input" contenteditable="true" data-field="sub-name" data-task="' + taskId + '" data-sub="' + s.id + '" data-placeholder="' + tr("board.subitemPlaceholder") + '">' + esc(s.name) + '</div></div>' +
+      '<div class="cell col-bubble">' + subBubbleHtml + '</div>' +
       '<div class="cell col-owner">' + ownerHtml + '</div>' +
       '<div class="cell col-status"><span class="status-wrap">' +
         '<select class="pill status-' + s.status + '" data-field="sub-status" data-task="' + taskId + '" data-sub="' + s.id + '">' + statusOpts + '</select>' +

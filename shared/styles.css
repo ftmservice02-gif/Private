@@ -108,6 +108,7 @@
     padding: 14px 22px; background: var(--surface); border-bottom: 1px solid var(--border);
     flex-wrap: wrap; position: relative; z-index: 1;
   }
+  .topbar-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .project-name-btn {
     display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: text;
     font-size: 21px; font-weight: 700; color: var(--text); padding: 3px 4px; border-radius: 6px;
@@ -1582,6 +1583,71 @@
   @media (max-width: 760px) {
     .topbar-actions .tb-icon-btn span, .invite-btn span { display: none; }
     .sidebar { position: fixed; z-index: 40; height: 100vh; box-shadow: var(--shadow); }
+  }
+
+  /* Board task/subitem rows (board.html) — the desktop layout is a 9-column
+     CSS grid with a fixed 820px min-width, so a phone just got a horizontally
+     scrolling wall of columns. Below this width each row becomes a 2-line
+     card instead: name (+ its own controls) on top, owner/status/due
+     underneath — using the SAME cells the desktop grid already renders
+     (col-owner, col-status, col-due, etc. are real classes on real elements,
+     not something added just for this), just re-placed via grid-template-areas.
+     Timeline and folder are dropped here — folder's chip already duplicates
+     the task name shown right above it, and timeline duplicates due date;
+     neither earns its space on a phone screen. */
+  @media (max-width: 700px) {
+    .row-grid, .sub-row-grid { min-width: 0; width: 100%; }
+    /* Two classes each (not just .col-headers) so this reliably beats the
+       .row-grid/.sub-row-grid "display: grid" rules below at equal
+       specificity — this element carries both classes at once. */
+    .row-grid.col-headers, .sub-row-grid.sub-col-headers { display: none; }
+
+    .row-grid {
+      display: grid;
+      grid-template-columns: 20px 18px 1fr auto;
+      grid-template-areas:
+        "check  expand name   bubble"
+        "owner  owner  status due";
+      row-gap: 4px; padding: 10px 0;
+    }
+    .row-checkbox { grid-area: check; }
+    .col-expand { grid-area: expand; }
+    .task-name-cell { grid-area: name; }
+    .col-bubble { grid-area: bubble; justify-self: end; }
+    .col-owner { grid-area: owner; justify-content: flex-start; padding-left: 4px; }
+    .col-status { grid-area: status; }
+    .due-cell.col-due { grid-area: due; justify-self: end; }
+    .col-timeline, .col-folder { display: none; }
+
+    .sub-row-grid {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      grid-template-areas:
+        "check  name   bubble"
+        "owner  status due";
+      row-gap: 4px; padding: 8px 0;
+    }
+    .sub-row-grid .row-checkbox { grid-area: check; }
+    .sub-name-cell { grid-area: name; }
+    .sub-row-grid .col-bubble { grid-area: bubble; justify-self: end; }
+    .sub-row-grid .col-owner { grid-area: owner; justify-content: flex-start; padding-left: 4px; }
+    .sub-row-grid .col-status { grid-area: status; }
+    .sub-row-grid .due-cell.col-due { grid-area: due; justify-self: end; }
+    .sub-row-grid .col-folder { display: none; }
+
+    /* The status <select> and date field can be as narrow as their content
+       on desktop (fixed column widths guaranteed room); a phone's "status /
+       due" line needs them to not overflow each other. */
+    .col-status .status-wrap, .due-cell.col-due .date-field { max-width: 100%; }
+
+    /* The title row was a plain flex row that never wrapped — its
+       fixed-width siblings (chevron, save status, Save button) left the
+       title almost no room to shrink into, and since its own text can break
+       at any character it absorbed the entire squeeze and rendered one
+       letter per line. Forcing it onto its own full-width line fixes that;
+       the other controls flow onto the line under it instead. */
+    .topbar-title-row { flex-wrap: wrap; }
+    .project-title-input { flex: 1 1 100%; max-width: 100%; font-size: 18px; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
