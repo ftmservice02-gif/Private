@@ -471,6 +471,14 @@
     var parts = name.trim().split(/\s+/);
     return (parts[0][0] || "").toUpperCase();
   };
+  // A task/subitem's `owner` field can now hold more than one person —
+  // stored as a single comma-separated string (e.g. "Anan, Malee") rather
+  // than a schema change, since it was already free text. These two are the
+  // canonical split/join so every page treats the format the same way.
+  PM.ownerNames = function (s) {
+    return String(s || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+  };
+  PM.joinOwnerNames = function (arr) { return (arr || []).join(", "); };
   PM.fmtDate = function (s) {
     if (!s) return "";
     var d = new Date(s + "T00:00:00");

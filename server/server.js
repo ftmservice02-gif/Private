@@ -417,14 +417,22 @@ async function saveProjectState(projectId, state) {
   }
 }
 
-// Emails a person when a task's owner becomes them. `owner` on a task is a
-// free-text name, so it's matched (case-insensitively) against the project's
-// members; anyone who isn't a member with an email address is skipped, as is
-// the person making the change (no point telling you that you assigned yourself).
-// Only real changes count: a task whose owner differs from what was stored
-// before this save, or a brand-new task — and a save that would send more than
-// MAX_ASSIGN_EMAILS_PER_SAVE (a bulk import, or restoring a whole board) is
-// treated as bulk and sends nothing, so it can never mass-mail the team.
+// A task's `owner` field can hold more than one person now — a single
+// comma-separated string ("Anan, Malee") rather than a schema change, since
+// it was already free text. Kept in sync with PM.ownerNames on the client.
+function ownerNamesLower(s) {
+  return String(s || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+}
+
+// Emails a person when they're added as one of a task's owner(s). Matched
+// (case-insensitively) against the project's members; anyone who isn't a
+// member with an email address is skipped, as is the person making the
+// change (no point telling you that you assigned yourself). Only people
+// newly added count — someone already an owner before this save doesn't get
+// re-emailed just because a co-owner was added or the task was otherwise
+// touched. A save that would send more than MAX_ASSIGN_EMAILS_PER_SAVE (a
+// bulk import, or restoring a whole board) is treated as bulk and sends
+// nothing, so it can never mass-mail the team.
 const MAX_ASSIGN_EMAILS_PER_SAVE = 10;
 async function ownersBefore(projectId) {
   const r = await pool.query(
@@ -432,19 +440,23 @@ async function ownersBefore(projectId) {
     [projectId]
   );
   const m = new Map();
-  r.rows.forEach((x) => m.set(x.id, (x.owner || "").trim().toLowerCase()));
+  r.rows.forEach((x) => m.set(x.id, new Set(ownerNamesLower(x.owner))));
   return m;
 }
 async function notifyTaskAssignments(projectId, before, state, actor) {
   try {
-    const changed = (state.tasks || []).filter((t) => {
-      const now = String(t.owner || "").trim().toLowerCase();
-      if (!now) return false;
-      return !before.has(t.id) || before.get(t.id) !== now;
-    });
-    if (!changed.length) return;
-    if (changed.length > MAX_ASSIGN_EMAILS_PER_SAVE) {
-      console.warn("[assign-mail] skipped", changed.length, "assignments in one save (looks like a bulk import/restore)");
+    const additions = []; // [{ task, addedLower: [lowercased names newly on this task] }]
+    for (const t of state.tasks || []) {
+      const now = ownerNamesLower(t.owner);
+      if (!now.length) continue;
+      const prev = before.get(t.id) || new Set();
+      const added = now.filter((n) => !prev.has(n));
+      if (added.length) additions.push({ task: t, addedLower: added });
+    }
+    if (!additions.length) return;
+    const totalAssignments = additions.reduce((sum, a) => sum + a.addedLower.length, 0);
+    if (totalAssignments > MAX_ASSIGN_EMAILS_PER_SAVE) {
+      console.warn("[assign-mail] skipped", totalAssignments, "assignments in one save (looks like a bulk import/restore)");
       return;
     }
     const members = await pool.query(
@@ -455,13 +467,15 @@ async function notifyTaskAssignments(projectId, before, state, actor) {
     members.rows.forEach((u) => { if (u.email) byName.set(u.name.trim().toLowerCase(), u); });
     const proj = await pool.query("SELECT title FROM projects WHERE id = $1", [projectId]);
     const projectTitle = proj.rows.length ? proj.rows[0].title : "";
-    for (const t of changed) {
-      const u = byName.get(String(t.owner).trim().toLowerCase());
-      if (!u || u.id === actor.id) continue;
-      sendTaskAssignedEmail({
-        to: u.email, recipientName: u.name, taskName: t.name || "", projectTitle, projectId,
-        taskId: t.id, dueDate: t.due || "", assignerName: actor.name,
-      }).catch(() => {});
+    for (const { task: t, addedLower } of additions) {
+      for (const lowerName of addedLower) {
+        const u = byName.get(lowerName);
+        if (!u || u.id === actor.id) continue;
+        sendTaskAssignedEmail({
+          to: u.email, recipientName: u.name, taskName: t.name || "", projectTitle, projectId,
+          taskId: t.id, dueDate: t.due || "", assignerName: actor.name,
+        }).catch(() => {});
+      }
     }
   } catch (err) {
     console.error("[assign-mail] failed:", err.message);

@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=117" />
+<link rel="stylesheet" href="shared/styles.css?v=118" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -181,7 +181,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=109"></script>
+<script src="shared/shared.js?v=110"></script>
 <script>
 (function () {
   "use strict";
@@ -216,11 +216,16 @@
     return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
   }
 
+  // A task's owner field can hold more than one person now — a single
+  // comma-separated string (see PM.ownerNames), not a schema change.
+  function ownerNames(s) { return PM.ownerNames(s); }
+
   function visibleEvents() {
     var me = ((PM.currentUser && PM.currentUser.name) || "").trim().toLowerCase();
     return events.filter(function (e) {
-      if (filter === "mine" && !(me && (e.owner || "").trim().toLowerCase() === me)) return false;
-      if (personFilter && (e.owner || "") !== personFilter) return false;
+      var owners = ownerNames(e.owner);
+      if (filter === "mine" && !(me && owners.some(function (n) { return n.toLowerCase() === me; }))) return false;
+      if (personFilter && owners.indexOf(personFilter) === -1) return false;
       if (projectFilter && e.projectId !== projectFilter) return false;
       return true;
     });
@@ -288,7 +293,7 @@
     var people = {}, projects = {};
     updates.forEach(function (u) { if (u.author && !people[u.author]) people[u.author] = 0; });
     events.forEach(function (e) {
-      if (e.owner) people[e.owner] = (people[e.owner] || 0) + 1;
+      ownerNames(e.owner).forEach(function (n) { people[n] = (people[n] || 0) + 1; });
       projects[e.projectId] = e.projectTitle;
     });
     var pSel = document.getElementById("calPersonSel"), jSel = document.getElementById("calProjectSel");
@@ -328,7 +333,7 @@
       var e = it.ev;
       return '<a class="' + cls + ' cal-status-' + esc(e.status) + '" ' + pos + ' href="board.html?id=' + encodeURIComponent(e.projectId) + '&task=' + encodeURIComponent(e.id) +
         '" title="' + esc(e.name + (e.owner ? " — " + e.owner : "") + " (" + e.projectTitle + ")") + '">' +
-        (e.owner ? '<span class="cal-chip-who">' + esc(initials(e.owner)) + '</span>' : '') + '<span class="cal-bar-text">' + esc(e.name) + '</span></a>';
+        whoChipHtml(e.owner) + '<span class="cal-bar-text">' + esc(e.name) + '</span></a>';
     }
     if (it.kind === 1) {
       return '<div class="' + cls + ' cal-google" ' + pos + ' title="' + esc(it.g.title) + '"><span class="cal-bar-text">&#128197; ' + esc(it.g.title) + '</span></div>';
@@ -336,7 +341,17 @@
     var u = it.u;
     return '<a class="' + cls + ' cal-update" ' + pos + ' href="board.html?id=' + encodeURIComponent(u.projectId) + '&task=' + encodeURIComponent(u.taskId) +
       '" title="' + esc(u.author + ": " + u.text + " — " + u.taskName + " (" + u.projectTitle + ")") + '">' +
-      '<span class="cal-chip-who">' + esc(initials(u.author)) + '</span><span class="cal-bar-text">&#128172; ' + esc(u.text || u.taskName) + '</span></a>';
+      whoChipHtml(u.author) + '<span class="cal-bar-text">&#128172; ' + esc(u.text || u.taskName) + '</span></a>';
+  }
+
+  // Small avatar-initials badge shared by barHtml/pillHtml — `ownerStr` can
+  // be one name (an update's author) or several comma-separated ones (a
+  // task's owners); only the first person's initials fit in the chip, the
+  // rest are still in the element's own title tooltip.
+  function whoChipHtml(ownerStr) {
+    var names = ownerNames(ownerStr);
+    if (!names.length) return "";
+    return '<span class="cal-chip-who">' + esc(initials(names[0])) + '</span>';
   }
 
   // Everything that touches one day, for both the compact deadline cells and
@@ -357,7 +372,7 @@
   function pillHtml(cls, href, title, who, text) {
     var tag = href ? "a" : "div";
     return '<' + tag + ' class="cal-pill ' + cls + '"' + (href ? ' href="' + href + '"' : '') + ' title="' + esc(title) + '">' +
-      (who ? '<span class="cal-chip-who">' + esc(initials(who)) + '</span>' : '') + '<span class="cal-bar-text">' + text + '</span></' + tag + '>';
+      whoChipHtml(who) + '<span class="cal-bar-text">' + text + '</span></' + tag + '>';
   }
   function taskHref(e) { return "board.html?id=" + encodeURIComponent(e.projectId) + "&task=" + encodeURIComponent(e.id); }
 

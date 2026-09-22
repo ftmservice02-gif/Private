@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=117" />
+<link rel="stylesheet" href="shared/styles.css?v=118" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -328,7 +328,7 @@
 <script src="shared/vendor/xlsx.full.min.js"></script>
 <script src="shared/vendor/pdf.min.js"></script>
 <script src="shared/vendor/tesseract.min.js"></script>
-<script src="shared/shared.js?v=109"></script>
+<script src="shared/shared.js?v=110"></script>
 <script src="shared/project-import.js?v=9"></script>
 <script>
 (function () {
@@ -385,6 +385,28 @@
   function daysBetweenInclusive(a, b) { return PM.daysBetweenInclusive(a, b); }
   function avatarColor(n) { return PM.avatarColor(n); }
   function initials(n) { return PM.initials(n); }
+  function ownerNames(s) { return PM.ownerNames(s); }
+  function joinOwnerNames(arr) { return PM.joinOwnerNames(arr); }
+
+  // Shared by the task row, the subitem row, and (implicitly, via the same
+  // markup shape) anywhere else a task/subitem's owner(s) need to render as
+  // a clickable avatar — up to 2 shown overlapping, "+N" for the rest, or
+  // the dashed empty-state button when nobody's assigned. `attrs` carries
+  // the data-action/data-task(/data-sub) that wires it into the existing
+  // delegated click handler (openOwnerPicker), unchanged by having 0/1/many owners.
+  function renderOwnerCellHtml(ownerStr, attrs) {
+    var names = ownerNames(ownerStr);
+    if (!names.length) {
+      return '<button class="owner-avatar empty" ' + attrs + ' title="' + esc(tr("board.assignOwner")) + '">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>';
+    }
+    var shown = names.slice(0, 2);
+    var extra = names.length - shown.length;
+    return '<button class="owner-avatar-group" ' + attrs + ' title="' + esc(names.join(", ")) + '">' +
+      shown.map(function (n) { return '<span class="owner-avatar-mini" style="background:' + avatarColor(n) + '">' + esc(initials(n)) + '</span>'; }).join("") +
+      (extra > 0 ? '<span class="owner-avatar-mini more">+' + extra + '</span>' : "") +
+    '</button>';
+  }
   function uid() { return PM.uid(); }
   function showToast(msg) { PM.showToast(msg); }
   function persist() { PM.persist(); }
@@ -406,10 +428,13 @@
   // owned by one of the selected project members. Empty set = no filter.
   var personFilterSet = new Set();
 
+  function anyOwnerInSet(ownerStr, set) {
+    return ownerNames(ownerStr).some(function (n) { return set.has(n); });
+  }
   function taskMatchesPersonFilter(t) {
     if (personFilterSet.size === 0) return true;
-    if (personFilterSet.has(t.owner)) return true;
-    return t.subitems.some(function (s) { return personFilterSet.has(s.owner); });
+    if (anyOwnerInSet(t.owner, personFilterSet)) return true;
+    return t.subitems.some(function (s) { return anyOwnerInSet(s.owner, personFilterSet); });
   }
 
   // "Filter" toolbar filter — restricts the board to tasks (or subitems)
@@ -514,10 +539,7 @@
     var checked = selected.has("task:" + t.id);
     var taskOverdue = overdueDays(t.due, t.status);
 
-    var ownerHtml = t.owner
-      ? '<button class="owner-avatar" style="background:' + avatarColor(t.owner) + '" data-action="edit-owner" data-task="' + t.id + '" title="' + esc(t.owner) + '">' + esc(initials(t.owner)) + '</button>'
-      : '<button class="owner-avatar empty" data-action="edit-owner" data-task="' + t.id + '" title="' + tr("board.assignOwner") + '">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>';
+    var ownerHtml = renderOwnerCellHtml(t.owner, 'data-action="edit-owner" data-task="' + t.id + '"');
 
     var statusOpts = PM.STATUS_ORDER.map(function (k) {
       return '<option value="' + k + '"' + (k === t.status ? ' selected' : '') + '>' + statusLabel(k) + '</option>';
@@ -593,10 +615,7 @@
   function renderSubRow(t, s) {
     var taskId = t.id;
     var checked = selected.has("sub:" + taskId + ":" + s.id);
-    var ownerHtml = s.owner
-      ? '<button class="owner-avatar" style="background:' + avatarColor(s.owner) + '" data-action="edit-sub-owner" data-task="' + taskId + '" data-sub="' + s.id + '" title="' + esc(s.owner) + '">' + esc(initials(s.owner)) + '</button>'
-      : '<button class="owner-avatar empty" data-action="edit-sub-owner" data-task="' + taskId + '" data-sub="' + s.id + '" title="' + tr("board.assignOwner") + '">' +
-          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>';
+    var ownerHtml = renderOwnerCellHtml(s.owner, 'data-action="edit-sub-owner" data-task="' + taskId + '" data-sub="' + s.id + '"');
     var statusOpts = PM.STATUS_ORDER.map(function (k) {
       return '<option value="' + k + '"' + (k === s.status ? ' selected' : '') + '>' + statusLabel(k) + '</option>';
     }).join("");
@@ -955,10 +974,13 @@
     }
 
     var ownerBtn = document.getElementById("panelOwnerBtn");
-    if (task.owner) {
-      ownerBtn.style.background = avatarColor(task.owner);
-      ownerBtn.title = task.owner;
-      ownerBtn.innerHTML = '<span style="color:#fff;font-size:11px;font-weight:700;">' + esc(initials(task.owner)) + '</span>';
+    var panelOwnerNames = ownerNames(task.owner);
+    if (panelOwnerNames.length) {
+      ownerBtn.style.position = "relative";
+      ownerBtn.style.background = avatarColor(panelOwnerNames[0]);
+      ownerBtn.title = panelOwnerNames.join(", ");
+      ownerBtn.innerHTML = '<span style="color:#fff;font-size:11px;font-weight:700;">' + esc(initials(panelOwnerNames[0])) + '</span>' +
+        (panelOwnerNames.length > 1 ? '<span class="owner-avatar-badge">' + (panelOwnerNames.length - 1) + '</span>' : "");
     } else {
       ownerBtn.style.background = "";
       ownerBtn.title = tr("board.assignOwner");
@@ -2609,15 +2631,21 @@
     }
   }
 
+  // Multi-select: a task/subitem can have more than one owner now, so
+  // picking a name toggles it in the list instead of setting-and-closing —
+  // the popover stays open (same outside-click/Escape close as before) so
+  // several people can be picked in one go. "Unassigned" clears the list.
   function renderOwnerPickerList(pop, item) {
     var q = ownerPickerQuery.toLowerCase();
+    var current = ownerNames(item.owner);
     var members = projectMembersFull.filter(function (u) { return !q || u.name.toLowerCase().indexOf(q) !== -1; });
-    var listHtml = '<button class="owner-picker-row owner-picker-clear" data-owner-name="">' + esc(tr("board.unassigned")) + '</button>' +
+    var listHtml = '<button class="owner-picker-row owner-picker-clear" data-owner-clear="1">' + esc(tr("board.unassigned")) + '</button>' +
       members.map(function (u) {
-        var active = item.owner === u.name;
+        var active = current.indexOf(u.name) !== -1;
         return '<button class="owner-picker-row' + (active ? ' active' : '') + '" data-owner-name="' + esc(u.name) + '">' +
           '<span class="owner-avatar" style="width:22px;height:22px;font-size:10px;background:' + PM.avatarColor(u.name) + '">' + esc(PM.initials(u.name)) + '</span>' +
           '<span>' + esc(u.name) + '</span>' +
+          (active ? '<svg class="owner-picker-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : '') +
         '</button>';
       }).join("") || '<div class="owner-picker-empty">' + esc(tr("ws.noAssetsMatch")) + '</div>';
 
@@ -2631,11 +2659,20 @@
     var pos = searchInput.value.length;
     searchInput.setSelectionRange(pos, pos);
 
+    pop.querySelector("[data-owner-clear]").addEventListener("click", function () {
+      item.owner = "";
+      persist(); render();
+      renderOwnerPickerList(pop, item);
+    });
     pop.querySelectorAll("[data-owner-name]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        item.owner = btn.dataset.ownerName;
+        var name = btn.dataset.ownerName;
+        var list = ownerNames(item.owner);
+        var idx = list.indexOf(name);
+        if (idx === -1) list.push(name); else list.splice(idx, 1);
+        item.owner = joinOwnerNames(list);
         persist(); render();
-        closeOwnerPicker();
+        renderOwnerPickerList(pop, item);
       });
     });
   }
