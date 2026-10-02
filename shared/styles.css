@@ -663,6 +663,20 @@
   .folder-chip.readonly { cursor: default; }
   .folder-chip.readonly:hover { border-color: var(--border); }
   .folder-chip.inherited { color: var(--text-faint); font-weight: 500; font-style: italic; }
+
+  /* Wraps a row's folder chip plus its "upload a file directly into this
+     folder" button (see startFolderUpload in board.html) — the chip keeps
+     its own truncating width, the upload button stays a fixed size next to
+     it and only shows up on row hover, same reveal-on-hover pattern as
+     .group-kebab-wrap, so a row at rest looks exactly like it did before. */
+  .folder-cell-wrap { display: flex; align-items: center; gap: 4px; min-width: 0; width: 100%; }
+  .folder-cell-wrap .folder-chip { min-width: 0; flex-shrink: 1; }
+  .folder-upload-btn {
+    flex-shrink: 0; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 5px; color: var(--text-faint); cursor: pointer; opacity: 0; transition: opacity .12s, background .12s, color .12s;
+  }
+  .row-grid:hover .folder-upload-btn, .sub-row-grid:hover .folder-upload-btn { opacity: 1; }
+  .folder-upload-btn:hover { background: var(--accent); color: #fff; }
   .owner-input {
     border: 1px solid var(--accent); background: var(--surface); padding: 5px 7px; border-radius: 6px;
     font-size: 12.5px; width: 88px;
@@ -1778,6 +1792,7 @@
   body.pm-viewer-mode select[data-field],
   body.pm-viewer-mode .owner-avatar,
   body.pm-viewer-mode .folder-chip:not(.readonly),
+  body.pm-viewer-mode .folder-upload-btn,
   body.pm-viewer-mode .stuck-reason-btn,
   body.pm-viewer-mode .timeline-pill,
   body.pm-viewer-mode .pf-btn,

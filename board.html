@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=122" />
+<link rel="stylesheet" href="shared/styles.css?v=123" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -230,6 +230,11 @@
 </div>
 <!-- /shell -->
 
+<!-- Single shared input for every row's "upload into this folder" button
+     (see startFolderUpload) — one hidden <input type=file>, re-targeted per
+     click, instead of one per row. -->
+<input type="file" id="folderUploadInput" style="display:none;" />
+
 <!-- ============ Updates side panel ============ -->
 <div class="panel-backdrop" id="panelBackdrop"></div>
 <div class="updates-panel" id="updatesPanel" role="dialog" aria-label="Task updates">
@@ -373,6 +378,7 @@
   function tr(key) { return PM.tr(key); }
   function esc(s) { return PM.esc(s); }
   var folderChipIconSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>';
+  var folderUploadIconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>';
   function statusLabel(k) { return PM.statusLabel(k); }
   function fmtDate(s) { return PM.fmtDate(s); }
   function fmtRangeEnd(a, b) { return PM.fmtRangeEnd(a, b); }
@@ -569,7 +575,10 @@
     // are the ones that get to freely pick a subfolder underneath it (see
     // renderSubRow). The old free-form t.folder column/value is preserved
     // in the database but no longer read here.
-    var folderHtml = '<span class="folder-chip readonly" title="' + esc(t.name || tr("board.taskPlaceholder")) + '">' + folderChipIconSvg + '<span class="folder-chip-label">' + esc(t.name) + '</span></span>';
+    var folderHtml = '<span class="folder-cell-wrap">' +
+        '<span class="folder-chip readonly" title="' + esc(t.name || tr("board.taskPlaceholder")) + '">' + folderChipIconSvg + '<span class="folder-chip-label">' + esc(t.name) + '</span></span>' +
+        '<button type="button" class="folder-upload-btn" data-action="upload-task-folder" data-task="' + t.id + '" title="' + esc(tr("doc.uploadHere")) + '" aria-label="' + esc(tr("doc.uploadHere")) + '">' + folderUploadIconSvg + '</button>' +
+      '</span>';
 
     var timelineActive = t.status === "working";
     var updateCount = (t.updates || []).length;
@@ -648,9 +657,12 @@
     var subFolderSegs = s.folder ? s.folder.split("/") : [];
     var subFolderLabel = subFolderSegs.length ? subFolderSegs[subFolderSegs.length - 1] : t.name;
     var subFolderFullPath = t.name + (s.folder ? "/" + s.folder : "");
-    var subFolderHtml = '<button class="folder-chip' + (s.folder ? '' : ' inherited') + '" data-action="edit-sub-folder" data-task="' + taskId + '" data-sub="' + s.id + '" title="' + esc(subFolderFullPath) + '">' +
-        folderChipIconSvg + '<span class="folder-chip-label">' + esc(subFolderLabel) + '</span>' +
-      '</button>';
+    var subFolderHtml = '<span class="folder-cell-wrap">' +
+        '<button class="folder-chip' + (s.folder ? '' : ' inherited') + '" data-action="edit-sub-folder" data-task="' + taskId + '" data-sub="' + s.id + '" title="' + esc(subFolderFullPath) + '">' +
+          folderChipIconSvg + '<span class="folder-chip-label">' + esc(subFolderLabel) + '</span>' +
+        '</button>' +
+        '<button type="button" class="folder-upload-btn" data-action="upload-sub-folder" data-task="' + taskId + '" data-sub="' + s.id + '" title="' + esc(tr("doc.uploadHere")) + '" aria-label="' + esc(tr("doc.uploadHere")) + '">' + folderUploadIconSvg + '</button>' +
+      '</span>';
 
     var subUpdateCount = (s.updates || []).length;
     var subBubbleHtml = '<button class="update-bubble-btn' + (subUpdateCount ? ' has-updates' : '') + '" data-action="open-panel" data-task="' + s.id + '" data-tooltip="Update Progress" aria-label="เปิดอัปเดตงานย่อย">' +
@@ -2201,6 +2213,14 @@
       if (!subTask || !sub) return;
       openFolderPicker(el, sub, subTask);
     }
+    if (action === "upload-task-folder") {
+      var uploadTask = findTask(el.dataset.task);
+      if (uploadTask) startFolderUpload(uploadTask);
+    }
+    if (action === "upload-sub-folder") {
+      var uploadSub = findSub(el.dataset.task, el.dataset.sub);
+      if (uploadSub) startFolderUpload(uploadSub);
+    }
   });
 
   board.addEventListener("input", function (e) {
@@ -3026,6 +3046,53 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && document.getElementById("folderPickerPopover")) closeFolderPicker();
+  });
+
+  // "Upload a file directly into this folder" — the small button next to a
+  // task's or subitem's folder chip (see folderHtml/subFolderHtml above).
+  // Goes straight into that item's own update thread as its own update,
+  // same chip markup and same item.updates array wireComposeAttach() uses
+  // from the compose box — this is just a second way to trigger the exact
+  // same attach, skipping the detour through "open panel, click attach".
+  var folderUploadTarget = null; // a task or a subitem object, straight from PM.state
+  function startFolderUpload(item) {
+    folderUploadTarget = item;
+    document.getElementById("folderUploadInput").click();
+  }
+  document.getElementById("folderUploadInput").addEventListener("change", function (e) {
+    var input = e.target;
+    var file = input.files[0];
+    var item = folderUploadTarget;
+    if (!file || !item) { input.value = ""; return; }
+    if (file.size > 15 * 1024 * 1024) {
+      showToast(tr("panel.attachTooLarge"));
+      input.value = "";
+      return;
+    }
+    var fd = new FormData();
+    fd.append("file", file);
+    showToast(tr("panel.attachUploading"));
+    PM.authFetch(PM.API_BASE + "/uploads", { method: "POST", body: fd }).then(function (r) {
+      if (!r.ok) throw new Error("upload failed");
+      return r.json();
+    }).then(function (data) {
+      var origin = PM.API_BASE.replace(/\/api$/, "");
+      var fullUrl = origin + data.url;
+      var isImage = (data.mime || "").indexOf("image/") === 0;
+      var chip = isImage
+        ? '<a href="' + esc(fullUrl) + '" target="_blank" rel="noopener"><img src="' + esc(fullUrl) + '" alt="' + esc(data.name) + '" class="update-image-attachment" /></a><br>'
+        : '<a href="' + esc(fullUrl) + '" target="_blank" rel="noopener" class="update-attachment">📎 ' +
+          esc(data.name) + " (" + esc(formatFileSize(data.size)) + ")</a>&nbsp;";
+      item.updates = item.updates || [];
+      item.updates.push({
+        id: uid(), author: (PM.currentUser && PM.currentUser.name) || "", time: new Date().toISOString(),
+        text: chip, likes: 0, liked: false, isHtml: true, parentId: null
+      });
+      PM.saveNow(); render();
+      showToast(tr("panel.attachAdded"));
+    }).catch(function () {
+      showToast(tr("panel.attachError"));
+    }).then(function () { input.value = ""; folderUploadTarget = null; });
   });
 
   // ---------------- new task / new group menu ----------------
