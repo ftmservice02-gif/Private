@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="shared/styles.css?v=121" />
+<link rel="stylesheet" href="shared/styles.css?v=122" />
 
 <button class="sidebar-reopen" id="sidebarReopenBtn" aria-label="เปิดแถบด้านข้าง">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
@@ -118,9 +118,14 @@
 </div>
 <!-- /shell -->
 
+<!-- Single shared input for every folder's upload button (see wireDocUpload) —
+     one hidden <input type=file>, re-targeted per click, instead of one per
+     folder row. -->
+<input type="file" id="docUploadInput" style="display:none;" />
+
 <div class="toast" id="toast"></div>
 
-<script src="shared/shared.js?v=111"></script>
+<script src="shared/shared.js?v=112"></script>
 <script>
 (function () {
   "use strict";
@@ -141,6 +146,7 @@
   var fileStackIconSvg = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
   var foldersIconSvg = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>';
   var emptyBoxIconSvg = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>';
+  var uploadIconSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>';
 
   // File-type badge: a small colored square with a 3-letter extension
   // label (image files get the picture glyph instead) — quick visual
@@ -252,14 +258,21 @@
   // buildDocFolderTree can seed empty folder nodes for them, keeping
   // Document DATA in sync with whatever folders exist on the board right
   // now, not just the ones that happen to already hold a file.
+  //
+  // Each entry also carries the taskId/subitemId that folder *is* — not
+  // just a file that happens to live under it — so buildDocFolderTree can
+  // mark exactly that one node as a real upload target (see ownerTaskId
+  // below): a deeper "virtual" folder implied by a subitem's own nested
+  // "Configs/2024" value (i.e. just "Configs") isn't itself anything on the
+  // board, so it never gets an upload button, only its real leaf does.
   function extractFolderSegLists(state) {
     var lists = [];
     var groupById = groupNameLookup(state);
     (state.tasks || []).forEach(function (t) {
       var taskSegs = taskRootSegs(groupById, t);
-      lists.push(taskSegs);
+      lists.push({ segs: taskSegs, taskId: t.id, subitemId: null });
       (t.subitems || []).forEach(function (s) {
-        lists.push(subitemSegs(taskSegs, s));
+        lists.push({ segs: subitemSegs(taskSegs, s), taskId: t.id, subitemId: s.id });
       });
     });
     return lists;
@@ -358,7 +371,11 @@
       });
       return node;
     }
-    (folderSegLists || []).forEach(function (segs) { ensureSegs(segs); });
+    (folderSegLists || []).forEach(function (entry) {
+      var node = ensureSegs(entry.segs);
+      node.ownerTaskId = entry.taskId;
+      node.ownerSubitemId = entry.subitemId;
+    });
     files.forEach(function (f) { ensureSegs(f.folderSegs).files.push(f); });
     var origin = PM.API_BASE.replace(/\/api$/, "");
     (stuckEntries || []).forEach(function (entry) {
@@ -429,12 +446,23 @@
     var childrenHtml = childKeys.map(function (k) { return renderDocFolderNode(projectId, node.children[k]); }).join("");
     var reasonHtml = (node.isProblem && node.reason) ? '<div class="doc-problem-reason">' + esc(node.reason) + '</div>' : "";
 
+    // Only a folder that's actually a task's or subitem's own folder (see
+    // the comment on extractFolderSegLists) gets an upload button — a
+    // "virtual" intermediate folder implied by a deeper nested value isn't
+    // itself anything on the board to attach the file to.
+    var uploadBtnHtml = (node.ownerTaskId && !PM.isViewer()) ?
+      '<button type="button" class="doc-folder-upload" data-action="doc-upload-file" ' +
+        'data-project="' + esc(projectId) + '" data-task="' + esc(node.ownerTaskId) + '" data-subitem="' + esc(node.ownerSubitemId || "") + '" ' +
+        'title="' + esc(tr("doc.uploadHere")) + '" aria-label="' + esc(tr("doc.uploadHere")) + '">' + uploadIconSvg + '</button>'
+      : '';
+
     return '<div class="doc-folder' + (collapsed ? ' collapsed' : '') + (node.isProblem ? ' doc-folder-problem' : '') + '">' +
         '<div class="doc-folder-head" data-action="toggle-doc-folder" data-folder-key="' + esc(folderKey) + '">' +
           '<button class="doc-folder-toggle">' + (collapsed ? chevronRightSvg : chevronDownSvg) + '</button>' +
           '<span class="doc-folder-icon">' + folderIconSvg + '</span>' +
           '<span class="doc-folder-name">' + esc(node.name) + '</span>' +
           '<span class="doc-folder-count">' + countFilesInNode(node) + '</span>' +
+          uploadBtnHtml +
         '</div>' +
         '<div class="doc-file-list">' + reasonHtml + fileRowsHtml + childrenHtml + '</div>' +
       '</div>';
@@ -446,7 +474,7 @@
     // just files inside it — so creating a folder makes it findable here
     // right away, before anything's ever been attached to it.
     var matchedFolderSegLists = docSearchQuery
-      ? entry.folderSegLists.filter(function (segs) { return segs.join(" / ").toLowerCase().indexOf(docSearchQuery.toLowerCase()) !== -1; })
+      ? entry.folderSegLists.filter(function (e) { return e.segs.join(" / ").toLowerCase().indexOf(docSearchQuery.toLowerCase()) !== -1; })
       : entry.folderSegLists;
     var matchedStuckEntries = (entry.stuckEntries || []).filter(stuckEntryMatchesSearch);
     if (docSearchQuery && filtered.length === 0 && matchedFolderSegLists.length === 0 && matchedStuckEntries.length === 0) return "";
@@ -525,6 +553,13 @@
         deleteDocAttachment(el.dataset);
       });
     });
+    wrap.querySelectorAll('[data-action="doc-upload-file"]').forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        startDocUpload(el.dataset);
+      });
+    });
   }
 
   // Admin-only "delete this one file" from Document DATA — see the comment
@@ -565,6 +600,59 @@
       PM.showToast((err && err.message) || tr("doc.deleteFileError"));
     });
   }
+
+  // "Upload a file directly into this folder" — one shared hidden
+  // <input type=file> (see the comment on #docUploadInput in the markup)
+  // re-targeted per click via this var, so every folder's upload button
+  // can reuse the same element instead of each needing its own.
+  var docUploadTarget = null; // { project, task, subitem }
+  function startDocUpload(ds) {
+    docUploadTarget = { project: ds.project, task: ds.task, subitem: ds.subitem || null };
+    document.getElementById("docUploadInput").click();
+  }
+  document.getElementById("docUploadInput").addEventListener("change", function (e) {
+    var input = e.target;
+    var file = input.files[0];
+    var target = docUploadTarget;
+    if (!file || !target) { input.value = ""; return; }
+    if (file.size > 15 * 1024 * 1024) {
+      PM.showToast(tr("panel.attachTooLarge"));
+      input.value = "";
+      return;
+    }
+    var fd = new FormData();
+    fd.append("file", file);
+    PM.showToast(tr("panel.attachUploading"));
+    PM.authFetch(PM.API_BASE + "/uploads", { method: "POST", body: fd }).then(function (r) {
+      if (!r.ok) throw new Error("upload failed");
+      return r.json();
+    }).then(function (uploaded) {
+      var origin = PM.API_BASE.replace(/\/api$/, "");
+      // Attach it to that exact task/subitem's update thread server-side —
+      // see the comment on POST /api/projects/:id/attachments for why this
+      // is a dedicated endpoint rather than the usual load-state/mutate/
+      // PUT-whole-state dance every other board edit goes through.
+      return PM.authFetch(PM.API_BASE + "/projects/" + encodeURIComponent(target.project) + "/attachments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: target.task,
+          subitemId: target.subitem,
+          url: origin + uploaded.url,
+          name: uploaded.name,
+          size: uploaded.size,
+          mime: uploaded.mime
+        })
+      });
+    }).then(function (r) {
+      if (!r.ok) throw new Error("attach failed");
+      PM.showToast(tr("panel.attachAdded"));
+      return loadAllProjectsDocuments();
+    }).then(render).catch(function (err) {
+      console.error(err);
+      PM.showToast(tr("panel.attachError"));
+    }).then(function () { input.value = ""; docUploadTarget = null; });
+  });
 
   var searchInput = document.getElementById("docSearchInput");
   searchInput.addEventListener("input", function (e) { docSearchQuery = e.target.value; render(); });

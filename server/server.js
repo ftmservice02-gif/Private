@@ -17,6 +17,12 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 
+// Same helper mailer.js has (kept separate — this one's used for building a
+// small HTML chip server-side, not an email).
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 // ---------------- auth ----------------
 
 const SESSION_DAYS = 30;
@@ -1737,6 +1743,59 @@ app.post("/api/uploads", requireAuth, requireEditor, (req, res) => {
 });
 
 app.use("/uploads", express.static(uploadsDir));
+
+// Drops an already-uploaded file (POST /api/uploads above) straight into a
+// task's or subitem's update thread as its own update — i.e. "upload into
+// this folder" from Document DATA, which has no board open and no PM.state
+// to mutate. Deliberately a single targeted INSERT instead of the usual
+// load-whole-state/mutate/PUT-whole-state dance every other board edit
+// uses: that flow would require loading another project's full state into
+// a page that doesn't otherwise hold one, and overwrite the *entire*
+// groups/tasks/subitems/updates set transactionally — on a project someone
+// else might be actively editing on the board right now, racing their
+// unsaved changes. A single row insert can't clobber anything.
+app.post("/api/projects/:id/attachments", requireAuth, requireEditor, requireProjectAccess, async (req, res) => {
+  const { taskId, subitemId, url, name, size, mime } = req.body || {};
+  if (!taskId || !url || !name) return res.status(400).json({ error: "taskId, url, and name are required" });
+  try {
+    const taskRow = await pool.query(
+      `SELECT t.id FROM tasks t JOIN groups g ON t.group_id = g.id WHERE t.id = $1 AND g.project_id = $2`,
+      [taskId, req.params.id]
+    );
+    if (!taskRow.rows.length) return res.status(404).json({ error: "Task not found in this project" });
+    if (subitemId) {
+      const subRow = await pool.query("SELECT id FROM subitems WHERE id = $1 AND task_id = $2", [subitemId, taskId]);
+      if (!subRow.rows.length) return res.status(404).json({ error: "Subitem not found on this task" });
+    }
+
+    const isImage = (mime || "").indexOf("image/") === 0;
+    const sizeLabel = typeof size === "number" ? " (" + (size < 1024 * 1024 ? (size / 1024).toFixed(1) + " KB" : (size / 1024 / 1024).toFixed(1) + " MB") + ")" : "";
+    // Same chip markup wireComposeAttach() builds in board.html, so this
+    // renders identically there and parses identically in Document DATA's
+    // collectAttachmentsFromUpdates — one rendering/extraction path for
+    // every attachment regardless of where it was uploaded from.
+    const text = isImage
+      ? `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="${escapeHtml(name)}" class="update-image-attachment" /></a><br>`
+      : `<a href="${url}" target="_blank" rel="noopener" class="update-attachment">\u{1F4CE} ${escapeHtml(name)}${escapeHtml(sizeLabel)}</a>&nbsp;`;
+
+    const sortRes = await pool.query(
+      subitemId
+        ? "SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM updates WHERE subitem_id = $1"
+        : "SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM updates WHERE task_id = $1 AND subitem_id IS NULL",
+      [subitemId || taskId]
+    );
+    const id = crypto.randomBytes(6).toString("hex");
+    await pool.query(
+      `INSERT INTO updates (id, task_id, subitem_id, author, time, text, likes, liked, sort_order, is_html, parent_id)
+       VALUES ($1, $2, $3, $4, now(), $5, 0, false, $6, true, NULL)`,
+      [id, taskId, subitemId || null, req.user.name, text, sortRes.rows[0].next]
+    );
+    res.status(201).json({ ok: true, id: id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to attach file" });
+  }
+});
 
 // ---------------- .mpp import (Microsoft Project native file) ----------------
 // The browser has no way to parse .mpp — it's a proprietary binary format —
